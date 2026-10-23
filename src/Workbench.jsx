@@ -1,0 +1,17 @@
+import React, { useEffect,useRef,useState } from 'react';
+import { ArrowRight, Feather, Lightbulb, LoaderCircle, Sparkles } from 'lucide-react';
+import { useGeneration, GenerationStatus } from './Generation';
+import { TaskMeter,useTaskMeter } from './Billing.jsx';
+export { ReferenceHome, ReferenceTools, MarketCard, ToolPoster } from './Dashboard';
+
+export function QuickStartDialog({ initial, createWork }) {
+  const defaultNames={玄幻:'万象之外',都市:'长街来客',言情:'心动有回音',悬疑:'雨夜第七人',科幻:'第七次日落',仙侠:'山海问道',历史:'故城旧事',奇幻:'昨日来信',武侠:'风起时',末世:'黎明之前',游戏:'最后的玩家',现实:'人间小事',青春:'那年夏天',治愈:'等风来的日子'};
+  const [title,setTitle]=useState(defaultNames[initial.genre]||'新的故事');
+  const [outline,setOutline]=useState(`最初的灵感\n${initial.idea}\n\n创作方向\n${initial.genre} · ${initial.audience} · ${initial.perspective} · ${initial.kind}\n\n故事起点\n让主角遇见一个打破日常的意外。从一个具体的场景切入，将灵感中的人物与冲突放进故事。\n\n中段推进\n主角主动寻找答案，逐步发现事件的另一面。每一条线索都带来新的选择，也让他付出代价。\n\n收束方向\n让主角面对最难的选择，回应最初的悬念，为故事留下有余韵的结尾。`);
+  const [characters,setCharacters]=useState(''),[text,setText]=useState(''),[busy,setBusy]=useState(false);
+  const autoStarted=useRef(false);
+  const generation=useGeneration();const meter=useTaskMeter('outline',{inputChars:initial.idea?.length||0});
+  const run=()=>meter.run(async()=>{setBusy(true);try{const result=await generation.generate({task:'plan',prompt:initial.idea,context:{creationMode:initial.mode||'灵感共创',genre:initial.genre,audience:initial.audience,perspective:initial.perspective,kind:initial.kind},target:meter.outputChars,mode:meter.model},()=>({structured:{title,outline,characters:'主角：明确一个想要完成的目标，并为他设置一个必须克服的阻碍。',text:''},source:'demo'}));setTitle(result.structured.title);setOutline(result.structured.outline);setCharacters(result.structured.characters);setText(result.structured.text);}finally{setBusy(false);}});
+  useEffect(()=>{if(initial.autoGenerate&&generation.mode==='ai'&&!autoStarted.current){autoStarted.current=true;run();}},[generation.mode]);
+  return <><div className="quick-start-heading"><span className="modal-symbol"><Feather size={24}/></span><GenerationStatus generation={generation} busy={busy}/></div><h2>确认创作规划</h2><p className="modal-desc">生成并修改规划，确认后保存为自己的作品。</p><label className="field">作品名称<input autoFocus disabled={busy} maxLength={50} value={title} onChange={e=>setTitle(e.target.value)}/></label><div className="quick-start-tags"><span>{initial.genre}</span><span>{initial.audience}</span><span>{initial.perspective}</span><span>{initial.kind}</span></div><label className="field">初始创作规划<textarea disabled={busy} rows={8} value={outline} onChange={e=>setOutline(e.target.value)}/></label>{characters&&<label className="field">人物设定<textarea disabled={busy} rows={4} value={characters} onChange={e=>setCharacters(e.target.value)}/></label>}{text&&<label className="field">开篇正文<textarea disabled={busy} rows={5} value={text} onChange={e=>setText(e.target.value)}/></label>}<TaskMeter meter={meter}/><button className="button secondary full" disabled={busy} onClick={run}>{busy?<LoaderCircle size={16} className="spin"/>:<Sparkles size={16}/>} {busy?'正在生成规划…':generation.mode==='ai'?'生成总纲、人物与开篇':'体验示例规划'}</button><div className="soft-notice"><Lightbulb size={17}/>{generation.source==='ai'?'规划已根据本次灵感生成，保存前请确认。':'当前初始规划是可编辑的写作框架。配置模型并切换真实模式后，可以生成专属内容。'}</div><button className="button primary full" disabled={!title.trim()||busy} onClick={()=>createWork({title:title.trim(),kind:initial.kind,genre:initial.genre,idea:initial.idea,outline,characters,text})}>保存规划，进入编辑器<ArrowRight size={16}/></button></>;
+}

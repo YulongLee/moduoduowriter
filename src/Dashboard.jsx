@@ -1,0 +1,59 @@
+import React, { useState } from 'react';
+import { ArrowRight, ArrowUpRight, BookMarked, BookOpen, Check, ChevronDown, ChevronRight, Clapperboard, Feather, FileText, Lightbulb, ListTree, MessagesSquare, PenLine, Plus, RefreshCw, Search, Sparkles, Star, Type, Upload, UsersRound, WandSparkles, Workflow } from 'lucide-react';
+import {useGeneration} from './Generation';
+import { BookCover } from './Art';
+import { tools, inspirations, workWords } from './data';
+
+const genres=['玄幻','都市','言情','悬疑','科幻','仙侠','历史','奇幻','武侠','末世','游戏','现实','青春','治愈'];
+const ideas=['离职后，我继承了一家能修复记忆的旧书店','全城停电那晚，只有失踪十年的灯塔亮了','穿越成小说里的反派，我决定先救下主角','重逢的第一天，他归还了那封迟到的情书','星舰最后一位乘客，是来自未来的自己','她的每一幅画，都会在第二天变成现实','最后一班地铁，把我送回了十年前的夏天','我在末日开了一家只接受故事付款的旅馆'];
+const posterIcons={ideas:Lightbulb,outline:ListTree,character:UsersRound,polish:WandSparkles,continue:Feather,dialogue:MessagesSquare,review:BookMarked,title:Type};
+const posterCopy={ideas:['灵感，发生。','IDEA TO STORY'],outline:['搭一个新世界','BUILD YOUR WORLD'],character:['让人物鲜活','CHARACTER STUDIO'],polish:['文字的另一种可能','REFINE YOUR WORDS'],continue:['故事，继续。','THE NEXT CHAPTER'],dialogue:['听见角色的声音','LINES THAT LIVE'],review:['再读一遍好故事','READ. REFLECT. REFINE.'],title:['让故事被记住','FIRST IMPRESSIONS']};
+
+export function ToolPoster({tool}) {
+  const Icon=posterIcons[tool.id]||Sparkles;
+  const copy=posterCopy[tool.id]||[tool.title,'MODUODUO STUDIO'];
+  return <div className={`market-poster poster-${tool.id}`} aria-hidden="true"><span className="poster-series">墨多多 · 创作工具</span><span className="poster-number">0{tools.findIndex(t=>t.id===tool.id)+1}</span><div className="poster-orbit"/><Icon className="poster-symbol" size={51} strokeWidth={1.25}/><strong>{copy[0]}</strong><span className="poster-subtitle">{copy[1]}</span></div>;
+}
+export function MarketCard({tool,favorite,onFavorite,onOpen}) {
+  return <article className="market-card"><button className="market-cover-button" onClick={onOpen} aria-label={`查看${tool.title}`}><ToolPoster tool={tool}/><span className="poster-open"><ArrowUpRight size={17}/></span></button><div className="market-card-content"><span className="market-category">{tool.category}</span><button className="market-title" onClick={onOpen}>{tool.title}</button><p>{tool.desc}</p><div className="market-tags">{tool.tags.map(tag=><span key={tag}>{tag}</span>)}</div><div className="market-author"><span><span className="status-dot"/>创作工具</span><button aria-label={favorite?`取消收藏${tool.title}`:`收藏${tool.title}`} className={favorite?'subscribed':''} aria-pressed={favorite} onClick={onFavorite}>{favorite?<><Star size={14} fill="currentColor"/>已收藏</>:<><Star size={14}/>收藏</>}</button></div></div></article>;
+}
+
+function Generator({setModal,notify}) {
+ const generation=useGeneration();
+  const [prompt,setPrompt]=useState('');
+  const [genre,setGenre]=useState('玄幻');
+  const [audience,setAudience]=useState('全频');
+  const [perspective,setPerspective]=useState('第三人称');
+  const [length,setLength]=useState('长篇小说');
+  const [mode,setMode]=useState('灵感共创');
+  const [batch,setBatch]=useState(0);
+  const submit=e=>{e.preventDefault();if(!prompt.trim())return notify('先写下一点灵感，或者选择下方的示例');setModal({type:'quick-start',autoGenerate:true,idea:prompt.trim(),genre,audience,perspective,kind:length,mode});};
+  return <section className="instant-section"><div className="instant-title"><span className="ai-label"><Sparkles size={14}/>AI 创作起点<span>{generation.mode==='ai'?'已连接':'示例'}</span></span><h2>一句话，开启你的<br/><span>下一部好故事。</span></h2><p>从一个想法出发，逐步完善大纲、人物与正文。</p></div><form className="instant-composer" onSubmit={submit}><textarea aria-label="一句话故事灵感" maxLength={500} value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="写下一个人物、一个场景，或者一个你想讲的故事…"/><details className="composer-settings"><summary><span><span>{genre}</span><i/> {length}<i/>{perspective}</span><span>创作设定<ChevronDown size={13}/></span></summary><div className="composer-options"><label>故事题材<select aria-label="故事题材" value={genre} onChange={e=>setGenre(e.target.value)}>{genres.map(g=><option key={g}>{g}</option>)}</select></label><label>目标读者<select aria-label="目标读者" value={audience} onChange={e=>setAudience(e.target.value)}>{['男频','女频','全频'].map(v=><option key={v}>{v}</option>)}</select></label><label>叙述视角<select aria-label="叙述视角" value={perspective} onChange={e=>setPerspective(e.target.value)}><option>第一人称</option><option>第三人称</option></select></label><label>作品篇幅<select aria-label="作品篇幅" value={length} onChange={e=>setLength(e.target.value)}><option>短篇故事</option><option>长篇小说</option></select></label></div></details><div className="composer-bottom"><select aria-label="创作模式" value={mode} onChange={e=>setMode(e.target.value)}><option>灵感共创</option><option>长篇规划</option></select><span>{prompt.length}/500</span><button className="instant-submit" type="submit">开始创作<ArrowUpRight size={16}/></button></div></form><div className="prompt-suggestions"><div>{ideas.slice(batch*2,batch*2+2).map((text,i)=><button key={text} onClick={()=>{setPrompt(text);setGenre(['悬疑','都市','奇幻','言情'][batch]);}}><Sparkles size={12}/>{text}</button>)}</div><button className="refresh-ideas" aria-label="换一批灵感" onClick={()=>setBatch((batch+1)%4)}><RefreshCw size={15}/></button></div></section>;
+}
+
+function Inspiration({setModal,navigate}) {
+  const [index,setIndex]=useState(0);
+  const idea=inspirations[index];
+  return <aside className="dashboard-rail"><section className="rail-inspiration"><div className="rail-card-title"><span><Lightbulb size={16}/>今天的灵感</span><button className="icon-button" aria-label="切换今日灵感" onClick={()=>setIndex((index+1)%inspirations.length)}><RefreshCw size={14}/></button></div><span className="inspiration-quote" aria-hidden="true">“</span><blockquote>{idea.quote}</blockquote><div className="rail-tags">{idea.tags.map(tag=><span key={tag}>{tag}</span>)}</div><button onClick={()=>setModal({type:'create',idea:idea.prompt})}>写下这个故事<ArrowUpRight size={16}/></button></section><button className="dashboard-guide" onClick={()=>navigate('workflows')}><span className="type-icon"><Workflow size={22}/></span><div><strong>第一次开始创作？</strong><p>跟着工作流，把想法写成初稿。</p></div><ArrowUpRight size={18}/></button></aside>;
+}
+
+export function ReferenceHome({works,navigate,setModal,notify,favorites,toggleFavorite,onImport}) {
+  const [tab,setTab]=useState('推荐工具');
+  const list=tab==='我的收藏'?tools.filter(t=>favorites.includes(t.id)):tools.slice(0,4);
+  const entries=[['小说写作','大纲、人物与章节',BookOpen,'novels'],['剧本创作','分集与分场对白',Clapperboard,'scripts'],['小说拆书','结构、人物与节奏',BookMarked,'dismantle'],['创作工作流','一步步完成初稿',Workflow,'workflows']];
+  return <div className="reference-home"><div className="page-heading compact-welcome"><div><span className="page-kicker"><Feather size={14}/>让好故事发生</span><h1>创作工作台</h1><p>欢迎回来。今天，继续你的故事。</p></div><div className="heading-actions"><button className="button secondary" onClick={onImport}><Upload size={16}/>导入文稿</button><button className="button primary" onClick={()=>setModal({type:'create'})}><Plus size={17}/>新建作品</button></div></div><div className="dashboard-overview"><span><BookOpen size={14}/><strong>{works.length}</strong>部作品</span><i/><span><Type size={14}/><strong>{works.reduce((sum,w)=>sum+workWords(w),0).toLocaleString()}</strong>字已落笔</span><i/><span><FileText size={14}/><strong>{works.reduce((sum,w)=>sum+w.chapters.length,0)}</strong>个章节</span></div><div className="dashboard-top-grid"><Generator setModal={setModal} notify={notify}/><Inspiration setModal={setModal} navigate={navigate}/></div>
+    <section className="recent-strip"><div className="section-heading"><div><h2>继续写作</h2><span>你的故事，未完待续</span></div><button className="text-button" onClick={()=>navigate('works')}>全部作品<ArrowRight size={14}/></button></div><div>{works.slice(0,3).map(work=><button className="recent-story" key={work.id} onClick={()=>navigate(`editor/${work.id}`)}><BookCover work={work}/><div><span>{work.genre} · {work.kind}</span><strong>{work.title}</strong><small>{workWords(work).toLocaleString()} 字 · {work.updated}</small></div><ArrowUpRight size={18}/></button>)}{!works.length&&<button className="recent-story recent-create" onClick={()=>setModal({type:'create'})}><Plus size={25}/><div><strong>开启你的第一部作品</strong><small>从一句话开始</small></div><ArrowRight size={18}/></button>}</div></section>
+    <section className="dashboard-entries">{entries.map(([title,desc,Icon,route])=><button key={route} onClick={()=>navigate(route)}><span className="type-icon"><Icon size={22}/></span><div><h3>{title}</h3><p>{desc}</p></div><ArrowUpRight size={15}/></button>)}</section>
+    <section className="home-market"><div className="section-heading"><div><h2>你的创作工具箱</h2><span>把难题交给好工具</span></div><button className="text-button" onClick={()=>navigate('tools')}>探索全部<ArrowRight size={14}/></button></div><div className="home-tool-tabs">{['推荐工具','我的收藏'].map(v=><button key={v} className={tab===v?'active':''} aria-pressed={tab===v} onClick={()=>setTab(v)}>{v}{v==='我的收藏'&&<small>{favorites.length}</small>}</button>)}</div><div className="market-grid home-market-grid">{list.map(tool=><MarketCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>toggleFavorite(tool.id)} onOpen={()=>setModal({type:'tool',tool})}/>)}</div>{!list.length&&<div className="market-empty"><Star size={28}/><h3>还没有收藏工具</h3><p>收藏常用工具，下次创作更快找到。</p><button onClick={()=>setTab('推荐工具')}>看看推荐工具<ArrowRight size={14}/></button></div>}</section></div>;
+}
+
+export function ReferenceTools({favorites,toggleFavorite,setModal,navigate}) {
+  const [category,setCategory]=useState('全部');
+  const [tab,setTab]=useState('工具广场');
+  const [query,setQuery]=useState('');
+  const [sort,setSort]=useState('推荐排序');
+  const list=tools.filter(t=>(category==='全部'||t.category===category)&&(tab!=='我的收藏'||favorites.includes(t.id))&&`${t.title}${t.desc}${t.tags.join('')}`.includes(query.trim()));
+  if(sort==='名称排序')list.sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));
+  return <div className="reference-tools"><div className="page-heading market-page-heading"><div><span className="page-kicker"><Sparkles size={14}/>创作工具箱</span><h1>AI 工具广场</h1><p>从第一颗灵感到最后一次修改，找到需要的那一步。</p></div><div className="heading-actions"><button className="button secondary" onClick={()=>navigate('workflows')}><Workflow size={16}/>探索创作工作流<ArrowUpRight size={15}/></button></div></div><div className="market-top-tabs">{['工具广场','我的收藏','创作工作流'].map(v=><button key={v} className={tab===v?'active':''} aria-pressed={tab===v} onClick={()=>v==='创作工作流'?navigate('workflows'):setTab(v)}>{v}{v==='我的收藏'&&<small>{favorites.length}</small>}</button>)}</div><div className="market-filters"><span>分类</span><div>{['全部','灵感构思','大纲规划','人物设定','正文创作','修改润色'].map(v=><button key={v} aria-pressed={category===v} className={category===v?'active':''} onClick={()=>setCategory(v)}>{v}</button>)}</div></div><div className="market-list-toolbar"><span>{tab==='我的收藏'?'我的收藏':'全部工具'}<small>{list.length} 款</small></span><div><label><Search size={16}/><input aria-label="搜索工具" placeholder="搜索工具名称、关键词" value={query} onChange={e=>setQuery(e.target.value)}/></label><select aria-label="工具排序" value={sort} onChange={e=>setSort(e.target.value)}><option>推荐排序</option><option>名称排序</option></select></div></div><div className="market-grid full-market-grid">{list.map(tool=><MarketCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>toggleFavorite(tool.id)} onOpen={()=>setModal({type:'tool',tool})}/>)}</div>{!list.length&&<div className="market-empty"><Search size={30}/><h3>{tab==='我的收藏'?'还没有收藏这类工具':'暂时没有找到相关工具'}</h3><p>试试其他分类，或者换个关键词。</p><button onClick={()=>{setQuery('');setCategory('全部');setTab('工具广场');}}>浏览全部工具<ArrowRight size={14}/></button></div>}<p className="market-data-note"><InfoNote/>工具会引用所选作品与章节，生成后可预览采纳；示例模式不会调用模型。</p></div>;
+}
+function InfoNote(){return <FileText size={13}/>;}

@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createServer} from 'node:http';
+import {createApi} from '../server/api.mjs';
+import {createWorkspaceClient,mergeCollection,workspaceBackup} from '../src/workspace.js';
+const directory=await mkdtemp(join(tmpdir(),'mdd-workspace-test-'));let handler=createApi({directory}),server=createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));let base=`http://127.0.0.1:${server.address().port}`,cookie='';
+const request=async(path,body,options={})=>{const res=await fetch(base+path,{method:options.method||(body===undefined?'GET':'POST'),headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1',...(cookie?{Cookie:cookie}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});const data=await res.json();if(!res.ok)throw Object.assign(new Error(data.error),{status:res.status});if(res.headers.get('set-cookie'))cookie=res.headers.get('set-cookie').split(';')[0];return data;};
+const storage=()=>{const map=new Map();return {getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};};
+const sample={id:'sample',title:'测试故事',kind:'长篇小说',genre:'悬疑',chapters:[{id:'c1',title:'第一章',text:'原始正文'}],outline:'找出旧信来历',characters:'修复师'};
+const wait=async test=>{const until=Date.now()+2500;while(!test()){if(Date.now()>until)throw new Error('Timed out waiting for save');await new Promise(r=>setTimeout(r,5));}};
+let a,b;
+try {
+ assert.equal((await request('/api/auth/status')).configured,false);
+ a=createWorkspaceClient({storage:storage(),request,defaults:{works:[sample]}});await a.initialize();assert.equal((await request('/api/data')).collections.works.data[0].chapters[0].text,'原始正文');
+ b=createWorkspaceClient({storage:storage(),request,defaults:{}});await b.initialize();assert.equal(b.entries.works.data.length,1);
+ a.set('works',prev=>prev.map(w=>({...w,chapters:w.chapters.map(c=>({...c,text:'A 窗口修改'}))})));await wait(()=>a.state.status==='saved');
+ b.set('works',prev=>prev.map(w=>({...w,chapters:w.chapters.map(c=>({...c,text:'B 窗口并发修改'}))})));await wait(()=>b.state.status==='saved');
+ const saved=(await request('/api/data')).collections.works.data;assert.equal(saved.length,2);assert.ok(saved.some(w=>w.chapters[0].text==='A 窗口修改'));assert.ok(saved.some(w=>w.chapters[0].text==='B 窗口并发修改'));assert.ok(saved.some(w=>w.title.endsWith('（冲突副本）')));
+ await a.refresh();assert.equal(a.entries.works.data.length,2);a.stop();b.stop();
+ const records=(await request('/api/data')).collections;await assert.rejects(request('/api/data/works',{revision:0,data:[]},{method:'PUT'}),e=>e.status===409);
+ await assert.rejects(request('/api/data/works',{revision:records.works.revision,data:[{id:'broken'}]},{method:'PUT'}),e=>e.status===400);
+ console.log('PASS browser-cache migration, persistent server save, multi-window reconciliation, conflict copies and schema validation');
+ const local=storage();let unavailable=true;const flaky=async(...args)=>{if(unavailable)throw Error('Offline');return request(...args);};
+ a=createWorkspaceClient({storage:local,request:flaky,defaults:{}});a.set('favorites',['outline']);a.stop();unavailable=false;b=createWorkspaceClient({storage:local,request:flaky,defaults:{}});await b.initialize();assert.deepEqual(b.entries.favorites.data,['outline']);b.stop();
+ console.log('PASS offline edits survive client recreation and resume saving after reconnect');
+ const fullCache={getItem(){return null;},setItem(){throw Error('QuotaExceeded');}};const memory=createWorkspaceClient({storage:fullCache,request,defaults:{works:[sample]}});memory.set('works',[{...sample,title:'缓存已满时的最新文稿'}]);assert.equal(workspaceBackup(memory).works[0].title,'缓存已满时的最新文稿');memory.stop();
+ console.log('PASS backup snapshots retain live records when browser cache is full');
+ const registered=await request('/api/auth/register',{username:'test_owner',password:'safe-test-password-123'});assert.equal(registered.user.username,'test_owner');assert.ok(cookie.startsWith('mdd_session='));assert.equal((await request('/api/auth/status')).user.username,'test_owner');
+ const loginCookie=cookie;cookie='';await assert.rejects(request('/api/data'),e=>e.status===401);await assert.rejects(request('/api/settings'),e=>e.status===401);await assert.rejects(request('/api/auth/login',{username:'test_owner',password:'wrong-password'}),e=>e.status===401);
+ await request('/api/auth/login',{username:'test_owner',password:'safe-test-password-123'});assert.equal((await request('/api/data')).collections.works.data.length,2);await request('/api/auth/logout',{});await assert.rejects(request('/api/data'),e=>e.status===401);
+ cookie=loginCookie;await request('/api/auth/logout',{});cookie='';await request('/api/auth/login',{username:'test_owner',password:'safe-test-password-123'});
+ const sqlite=await readFile(join(directory,'studio.sqlite'));assert.ok(!sqlite.includes(Buffer.from('safe-test-password-123')),'Plaintext passwords must not enter the database');
+ console.log('PASS first-owner registration, hashed passwords, protected API access, session login and logout');
+ server.closeAllConnections();await new Promise(r=>server.close(r));handler.close();handler=createApi({directory});server=createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${server.address().port}`;assert.equal((await request('/api/data')).collections.works.data.length,2);assert.equal((await request('/api/auth/status')).user.username,'test_owner');
+ console.log('PASS records and valid owner session survive application service restart');
+}finally{a?.stop();b?.stop();server.closeAllConnections();await new Promise(r=>server.close(r));handler.close();await rm(directory,{recursive:true,force:true});}

@@ -1,0 +1,35 @@
+{
+  "name": "moduoduo-writing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "node scripts/check.mjs",
+    "check:design": "node scripts/design-check.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:interactions": "node scripts/interactions.mjs",
+    "test:billing": "node scripts/billing-check.mjs",
+    "test:api": "node scripts/api-check.mjs",
+    "test:functions": "node scripts/functionality-check.mjs",
+    "test:generation": "node scripts/generation-check.mjs",
+    "test": "npm run check && npm run test:interactions && npm run test:billing && npm run test:api && npm run test:functions && npm run test:generation && npm run test:cloud && npm run test:workspace && npm run test:pipeline && npm run check:design",
+    "test:cloud": "node scripts/cloud-check.mjs",
+    "test:workspace": "node scripts/workspace-check.mjs",
+    "test:pipeline": "node scripts/pipeline-check.mjs"
+  },
+  "dependencies": {
+    "ali-oss": "^6.23.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "react-test-renderer": "^19.3.1",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
