@@ -23,6 +23,7 @@ import { WorkbenchFrame } from './Navigation';
 import { WorkCard, WorksPage } from './Library';
 import { AccountBilling, BillingProvider, MembershipPage, TaskMeter, useBilling, useTaskMeter } from './Billing.jsx';
 import './workbench.css';
+import './home.css';
 
 const iconMap = { BookOpen, Feather, Clapperboard, ScanText, Lightbulb, ListTree, UsersRound, WandSparkles, MessagesSquare, Type };
 const navItems = [
@@ -93,7 +94,7 @@ export function WritingApp() {
   {workSaveError&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>文稿暂未写入本地存储。请先导出作品备份，避免刷新后丢失本次修改。</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
   {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
-    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content")} key={`${route}-${workspaceRevision}`}>
+    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content")} key={`${route}-${workspaceRevision}`}>
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
      {route === 'novels' && <NovelDesk {...common}/>}

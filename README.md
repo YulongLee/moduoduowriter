@@ -113,7 +113,8 @@ npm run build
 ## 文件说明
 
 - `src/main.jsx`：工作台、编辑器与各功能入口。
-- `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：一句话创作首页与文字剧本工作台。
+- `src/HomeDesk.jsx`、`src/home.css`：一句话创作、继续写作、常用工具与作品首页。
+- `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：共享工具海报、工具广场与文字剧本工作台。
 - `src/Navigation.jsx`：常驻简化图标、鼠标悬停展开文字菜单的桌面侧栏，顶部操作与独立移动导航抽屉。
 - `src/Art.jsx`、`public/art/`：书封、装饰插画与本地原创绘画素材；生成提示词见「视觉素材提示词.md」。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和 AI/备份设置。
@@ -128,6 +129,6 @@ npm run build
 - `src/StudioPages.jsx`：分镜与投稿业务。
 - `src/backup.js`：备份校验、合并和恢复。
 - `src/Billing.jsx`、`src/billing.js`：模拟会员与计费。
-- `src/studio.css`、`src/workbench.css`、`src/billing.css`：全站视觉变量、工作台、响应式与会员页面样式。
+- `src/studio.css`、`src/workbench.css`、`src/home.css`、`src/billing.css`：全站视觉变量、工作台、响应式与会员页面样式。
 
 功能设计与定价依据见「功能与交互设计.md」「视觉设计规范.md」「变现模式与定价设计.md」。
