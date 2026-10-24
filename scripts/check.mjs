@@ -12,7 +12,7 @@ try {
   const { BillingProvider } = await server.ssrLoadModule('/src/Billing.jsx');
   const startup=renderToString(React.createElement(App));assert.ok(startup.includes('正在打开创作空间'));assert.ok(!startup.includes('搜索作品名称'));
   const pages = [
-    ['home', '一句话，开启你的'], ['works', '搜索作品名称'],
+    ['home', '一句话生成'], ['works', '搜索作品名称'],
     ['novels', '小说写作'], ['tools', 'AI 工具广场'], ['workflows', '从灵感到黄金三章'],
     ['dismantle', '点击上传 TXT 文稿'], ['scripts', '新建剧本'],
     ['video', '视频相关功能已暂缓'], ['submit', '保存投稿计划'],

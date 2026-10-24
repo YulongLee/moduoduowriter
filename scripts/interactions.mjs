@@ -116,7 +116,7 @@ try {
   let homeRoute,homeImport=false;
   function HomeHarness(){const [favorites,setFavorites]=useState([]);return React.createElement(ReferenceHome,{works:initialWorks,favorites,toggleFavorite:id=>setFavorites(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id]),setModal:m=>modal=m,navigate:route=>homeRoute=route,onImport(){homeImport=true;},notify});}
   await act(async()=>{renderer=TestRenderer.create(React.createElement(HomeHarness));});
-  const home=renderer.root.findByProps({className:'home-v2'});assert.equal(home.children[0].props.className,'home-hero-grid');assert.equal(home.children[0].findAllByType('section')[0].props['aria-label'],'一句话创作');assert.equal(textOf(renderer.root.findByType('h1')),'一句话，开启你的下一部好故事');
+  const home=renderer.root.findByProps({className:'home-v2'});const composer=home.findAllByType('section')[0];assert.equal(composer.props['aria-label'],'一句话创作');assert.equal(textOf(renderer.root.findByType('h1')),'一句话生成爆款小说');assert.ok(textOf(composer).includes('小说大纲、人物设定和开篇正文'));assert.equal(composer.findAllByProps({'aria-label':'继续创作与创作概况'}).length,0);assert.equal(home.findByProps({className:'home-books-section'}).findAllByProps({'aria-label':'继续创作与创作概况'}).length,1);
   await click(findButton(renderer,'导入文稿'));assert.equal(homeImport,true);
   assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);
   await click(renderer.root.findAllByType('button').find(button=>textOf(button).startsWith('我的收藏')));assert.ok(textOf(renderer.root).includes('还没有收藏工具'));
