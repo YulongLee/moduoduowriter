@@ -1,16 +1,16 @@
 /* 墨多多 · Modern writing studio. Foundations, components, then responsive rules. */
 :root {
-  --canvas: #F6F7F8;
+  --canvas: #F7F9F8;
   --surface: #FFFFFF;
   --surface-soft: #F8F9FA;
   --text: #202622;
   --muted: #657168;
   --subtle: #7D877F;
   --line: #E4E8E5;
-  --accent: #222D26;
-  --accent-hover: #3A493E;
-  --accent-soft: #EEF3E9;
-  --highlight: #D7F56A;
+  --accent: #167D45;
+  --accent-hover: #106537;
+  --accent-soft: #EDF7F0;
+  --highlight: #D9F2E1;
   --positive: #22724C;
   --gold: #806534;
   --gold-soft: #FAF6EC;
@@ -23,7 +23,7 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --inverse: #29352C;
+  --inverse: #183C2B;
   --inverse-text: #F4F7ED;
   --inverse-muted: #CBD6C5;
 }

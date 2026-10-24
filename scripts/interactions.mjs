@@ -21,7 +21,7 @@ try {
   const { Editor } = await server.ssrLoadModule('/src/main.jsx');
   const { initialWorks } = await server.ssrLoadModule('/src/data.js');
   const { DismantleDesk, NovelDesk } = await server.ssrLoadModule('/src/ProductDesk.jsx');
-  const { ReferenceTools } = await server.ssrLoadModule('/src/Workbench.jsx');
+  const { ReferenceTools, ReferenceHome } = await server.ssrLoadModule('/src/Workbench.jsx');
   const { WorksPage } = await server.ssrLoadModule('/src/Library.jsx');
   const { readStoredArray, writeStoredValue } = await server.ssrLoadModule('/src/storage.js');
   const notices=[];
@@ -112,6 +112,23 @@ try {
   assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className==='market-card').length,8);
   await act(async()=>renderer.unmount());
   console.log('PASS favorite, unfavorite, favorite filter, search and empty-state recovery');
+  let homeRoute;
+  function HomeHarness(){const [favorites,setFavorites]=useState([]);return React.createElement(ReferenceHome,{works:initialWorks,favorites,toggleFavorite:id=>setFavorites(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id]),setModal:m=>modal=m,navigate:route=>homeRoute=route,onImport(){},notify});}
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(HomeHarness));});
+  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className==='market-card').length,8);
+  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
+  const choose=async(label,value)=>click(renderer.root.findByProps({'aria-label':label}).findAllByType('button').find(b=>textOf(b).trim()===value));
+  await choose('故事题材','悬疑');await choose('目标读者','女频');await choose('叙述视角','第一人称');await choose('作品篇幅','短篇故事');
+  await act(async()=>renderer.root.findByProps({'aria-label':'一句话故事灵感'}).props.onChange({target:{value:'  停摆钟楼里的明日来信  '}}));
+  await act(async()=>renderer.root.findByProps({'aria-label':'创作模式'}).props.onChange({target:{value:'长篇规划'}}));
+  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
+  assert.deepEqual({type:modal.type,idea:modal.idea,genre:modal.genre,audience:modal.audience,perspective:modal.perspective,kind:modal.kind,mode:modal.mode,autoGenerate:modal.autoGenerate},{type:'quick-start',idea:'停摆钟楼里的明日来信',genre:'悬疑',audience:'女频',perspective:'第一人称',kind:'短篇故事',mode:'长篇规划',autoGenerate:true});
+  await click(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').find(b=>textOf(b).startsWith('投稿中心')));assert.equal(homeRoute,'submit');
+  await click(renderer.root.findByProps({'aria-label':'收藏故事灵感发生器'}));await click(renderer.root.findAllByType('button').find(b=>textOf(b).startsWith('我的收藏')));assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className==='market-card').length,1);
+  await click(findButton(renderer,'示例模式'));assert.equal(modal.type,'settings');await act(async()=>renderer.unmount());
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(ReferenceHome,{works:[],favorites:[],toggleFavorite(){},setModal:m=>modal=m,navigate(){},onImport(){},notify}));});assert.ok(textOf(renderer.root).includes('创建第一部作品'));assert.ok(!textOf(renderer.root).includes('NaN'));await act(async()=>renderer.unmount());
+  console.log('PASS reference-style home creation settings, empty-input validation, actionable shortcuts, shared favorites, model settings and empty workspace');
+
 
   await act(async()=>{renderer=TestRenderer.create(React.createElement(NovelDesk,{works:initialWorks,navigate(){},setModal:value=>{modal=value;},onImport(){}}));});
   await click(renderer.root.findAllByType('button').find(button=>button.props.className==='novel-start start-short'));

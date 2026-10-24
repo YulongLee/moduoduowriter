@@ -1,7 +1,7 @@
 import React from 'react';
 
 export function Brand({ small = false }) {
- return <svg width={small?28:38} height={small?28:38} viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="11" fill="currentColor"/><path d="M11 28V12.5L20 18.5L29 12.5V28M20 18.5V30" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M26 8H32V14" stroke="#D7F56A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+ return <svg width={small?28:38} height={small?28:38} viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="11" fill="currentColor"/><path d="M11 28V12.5L20 18.5L29 12.5V28M20 18.5V30" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M26 8H32V14" stroke="#A9E5BB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
 }
 
 export function HeroArt() {
