@@ -25,6 +25,8 @@ import { WorkCard, WorksPage } from './Library';
 import { AccountBilling, BillingProvider, MembershipPage, TaskMeter, useBilling, useTaskMeter } from './Billing.jsx';
 import './workbench.css';
 import './home.css';
+import './saas.css';
+import './editor.css';
 
 const iconMap = { BookOpen, Feather, Clapperboard, ScanText, Lightbulb, ListTree, UsersRound, WandSparkles, MessagesSquare, Type };
 const navItems = [

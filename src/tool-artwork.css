@@ -1,0 +1,14 @@
+.tool-artwork { position:relative;isolation:isolate;overflow:hidden;height:126px;background-color:#E9EDE9;background-image:var(--tool-image),var(--cover-spring);background-size:cover;background-position:center 54%; }
+.tool-artwork:after { content:'';position:absolute;inset:0;background:linear-gradient(180deg,#FFFFFF06 25%,#15291D40);pointer-events:none; }
+.tool-artwork>span { position:absolute;left:14px;bottom:12px;z-index:1;padding:4px 8px;border:1px solid #FFFFFF80;border-radius:5px;background:#FFFFFEED;color:#26382F;font-size:12px;font-weight:500;line-height:1.4; }
+.tool-artwork>svg { position:absolute;right:13px;top:13px;z-index:1;padding:5px;box-sizing:content-box;border:1px solid #FFFFFF66;border-radius:50%;color:#FFFFFF;background:#19342C40; }
+.artwork-ideas { background-position:center 73%; }
+.artwork-outline { background-position:center 48%; }
+.artwork-character { background-position:78% 56%; }
+.artwork-polish { background-position:center 64%; }
+.artwork-continue { background-position:center 52%; }
+.artwork-dialogue { background-position:78% 60%; }
+.artwork-review { background-position:30% 44%; }
+.artwork-title { background-position:72% 74%; }
+.script-tool-card .tool-artwork { height:132px; }
+@media(max-width:600px) { .tool-artwork { height:130px; } }

@@ -116,7 +116,9 @@ npm run build
 
 - `src/main.jsx`：工作台、编辑器与各功能入口。
 - `src/HomeDesk.jsx`、`src/home.css`：一句话创作、继续写作、常用工具与作品首页。
-- `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：共享工具海报、工具广场与文字剧本工作台。
+- `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：工具广场与文字剧本工作台。
+- `src/ToolArtwork.jsx`、`src/tool-artwork.css`：首页、工具广场和文字剧本共用的原创工具封面。
+- `src/Library.jsx`、`src/library.css`：作品书架、最近编辑、真实统计、筛选与列表视图。
 - `src/Navigation.jsx`：常驻简化图标、鼠标悬停展开文字菜单的桌面侧栏，顶部操作与独立移动导航抽屉。
 - `src/Art.jsx`、`public/art/`：书封、装饰插画与本地原创绘画素材；生成提示词见「视觉素材提示词.md」。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和创作/备份设置。
@@ -132,6 +134,8 @@ npm run build
 - `src/StudioPages.jsx`：分镜与投稿业务。
 - `src/backup.js`：备份校验、合并和恢复。
 - `src/Billing.jsx`、`src/billing.js`：模拟会员与计费。
-- `src/studio.css`、`src/workbench.css`、`src/home.css`、`src/billing.css`：全站视觉变量、工作台、响应式与会员页面样式。
+- `src/studio.css`、`src/workbench.css`、`src/billing.css`：全站视觉变量、结构、交互状态与会员页面样式。
+- `src/saas.css`：全站统一的导航、控件、功能页和弹窗视觉系统。
+- `src/editor.css`：编辑器的章节导航、正文稿纸、AI 面板与移动布局。
 
-功能设计与定价依据见「功能与交互设计.md」「视觉设计规范.md」「变现模式与定价设计.md」。
+功能设计与定价依据见「功能与交互设计.md」「视觉设计规范.md」「变现模式与定价设计.md」。本轮公开参考与整体改版说明见「SaaS设计参考与改版说明.md」，素材生成记录见「视觉素材提示词.md」。

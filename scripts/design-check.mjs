@@ -41,9 +41,9 @@ const pairs = [
   ['辅助文字 / 紫色面板', '--muted', '--violet-soft'],
   ['辅助文字 / 暖金面板', '--muted', '--amber-soft'],
   ['辅助文字 / 表单底色', '--muted', '--surface-soft'],
-  ['剧本主视觉正文', '--inverse-text', '--violet-deep'],
-  ['剧本主视觉说明', '--violet-muted', '--violet-deep'],
-  ['剧本主操作', '--violet-deep', '--highlight']
+  ['剧本主视觉正文', '--text', '--accent-soft'],
+  ['剧本主视觉说明', '--muted', '--accent-soft'],
+  ['剧本主操作', '--surface', '--accent']
 ];
 for (const [name, foreground, background] of pairs) {
   assert.ok(tokens[foreground] && tokens[background], `${name}: missing color token`);

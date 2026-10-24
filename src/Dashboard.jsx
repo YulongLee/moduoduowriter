@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import {ArrowRight, ArrowUpRight, BookMarked, Feather, FileText, Lightbulb, ListTree, MessagesSquare, Search, Sparkles, Star, Type, UsersRound, WandSparkles, Workflow} from 'lucide-react';
+import {ArrowRight, FileText, Search, Sparkles, Star, Workflow} from 'lucide-react';
 import { tools } from './data';
-
-const posterIcons={ideas:Lightbulb,outline:ListTree,character:UsersRound,polish:WandSparkles,continue:Feather,dialogue:MessagesSquare,review:BookMarked,title:Type};
-const posterCopy={ideas:['灵感，发生。','IDEA TO STORY'],outline:['搭一个新世界','BUILD YOUR WORLD'],character:['让人物鲜活','CHARACTER STUDIO'],polish:['文字的另一种可能','REFINE YOUR WORDS'],continue:['故事，继续。','THE NEXT CHAPTER'],dialogue:['听见角色的声音','LINES THAT LIVE'],review:['再读一遍好故事','READ. REFLECT. REFINE.'],title:['让故事被记住','FIRST IMPRESSIONS']};
+import {ToolArtwork} from './ToolArtwork';
 
 export function ToolPoster({tool}) {
-  const Icon=posterIcons[tool.id]||Sparkles;
-  const copy=posterCopy[tool.id]||[tool.title,'MODUODUO STUDIO'];
-  return <div className={`market-poster poster-${tool.id}`} aria-hidden="true"><span className="poster-series">墨多多 · 创作工具</span><span className="poster-number">0{tools.findIndex(t=>t.id===tool.id)+1}</span><div className="poster-orbit"/><div className="poster-paper"><i/><i/><i/><i/></div><Icon className="poster-symbol" size={51} strokeWidth={1.25}/><strong>{copy[0]}</strong><span className="poster-subtitle">{copy[1]}</span></div>;
+  return <ToolArtwork tool={tool}/>;
 }
 export function MarketCard({tool,favorite,onFavorite,onOpen}) {
-  return <article className="market-card"><button className="market-cover-button" onClick={onOpen} aria-label={`查看${tool.title}`}><ToolPoster tool={tool}/><span className="poster-open"><ArrowUpRight size={17}/></span></button><div className="market-card-content"><span className="market-category">{tool.category}</span><button className="market-title" onClick={onOpen}>{tool.title}</button><p>{tool.desc}</p><div className="market-tags">{tool.tags.map(tag=><span key={tag}>{tag}</span>)}</div><div className="market-author"><span><span className="status-dot"/>创作工具</span><button aria-label={favorite?`取消收藏${tool.title}`:`收藏${tool.title}`} className={favorite?'subscribed':''} aria-pressed={favorite} onClick={onFavorite}>{favorite?<><Star size={14} fill="currentColor"/>已收藏</>:<><Star size={14}/>收藏</>}</button></div></div></article>;
+  return <article className="market-card"><button className="market-cover-button" onClick={onOpen} aria-label={`查看${tool.title}`}><ToolPoster tool={tool}/></button><div className="market-card-content"><span className="market-category">{tool.category}</span><button className="market-title" onClick={onOpen}>{tool.title}</button><p>{tool.desc}</p><div className="market-tags">{tool.tags.map(tag=><span key={tag}>{tag}</span>)}</div><div className="market-author"><span><span className="status-dot"/>创作工具</span><button aria-label={favorite?`取消收藏${tool.title}`:`收藏${tool.title}`} className={favorite?'subscribed':''} aria-pressed={favorite} onClick={onFavorite}>{favorite?<><Star size={14} fill="currentColor"/>已收藏</>:<><Star size={14}/>收藏</>}</button></div></div></article>;
 }
 
 export {Generator, ReferenceHome} from './HomeDesk';

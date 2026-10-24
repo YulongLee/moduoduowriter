@@ -127,6 +127,7 @@ try {
   await click(findButton(renderer,'创作设置'));assert.equal(modal.type,'settings');
   await click(findButton(renderer,'备份恢复'));assert.equal(modal.type,'settings');
   await click(renderer.root.findByProps({'aria-label':'使用帮助'}));assert.equal(modal.type,'help');
+  await click(findButton(renderer,'查看创作方案'));assert.equal(homeRoute,'membership');
   await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
   const choose=async(label,value)=>click(renderer.root.findByProps({'aria-label':label}).findAllByType('button').find(b=>textOf(b).trim()===value));
   await choose('故事题材','悬疑');await choose('目标读者','女频');await choose('叙述视角','第一人称');await choose('作品篇幅','短篇故事');
