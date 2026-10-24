@@ -27,16 +27,7 @@ const pairs = [
   ['会员说明', '--gold', '--gold-soft'],
   ['深色套餐正文', '--inverse-text', '--inverse'],
   ['深色套餐辅助文字', '--inverse-muted', '--inverse'],
-  ['强调按钮', '--inverse', '--highlight'],
-  ['曜黑导航正文', '--inverse-text', '--ink'],
-  ['曜黑导航辅助文字', '--inverse-muted', '--ink'],
-  ['深色抬升区域', '--inverse-muted', '--ink-raised'],
-  ['导航选中项', '--inverse-text', '--nav-active'],
-  ['墨绿主视觉正文', '--inverse-text', '--brand-deep'],
-  ['墨绿主视觉说明', '--inverse-muted', '--brand-deep'],
-  ['墨绿主视觉强调', '--dark-accent', '--brand-deep'],
-  ['深色链接', '--dark-accent', '--ink-raised'],
-  ['深色选中项', '--ink', '--highlight']
+  ['强调按钮', '--inverse', '--highlight']
 ];
 for (const [name, foreground, background] of pairs) {
   assert.ok(tokens[foreground] && tokens[background], `${name}: missing color token`);

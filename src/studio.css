@@ -1,29 +1,22 @@
-/* 墨多多 · 墨绿与曜黑品牌，浅色稿纸承载长文阅读。 */
+/* 墨多多 · Modern writing studio. Foundations, components, then responsive rules. */
 :root {
-  --canvas: #F0F2F1;
+  --canvas: #F5F6F2;
   --surface: #FFFFFF;
-  --surface-soft: #F7F9F8;
-  --text: #181D1B;
-  --muted: #59635E;
-  --subtle: #66736C;
-  --line: #DBE1DD;
-  --accent: #14543E;
-  --accent-hover: #0D3D2C;
-  --accent-soft: #E4F0E9;
-  --highlight: #D4EBDD;
-  --positive: #176345;
-  --brand-deep: #103D2B;
-  --ink: #111715;
-  --ink-raised: #1B2420;
-  --ink-hover: #263A30;
-  --dark-line: #33483D;
-  --dark-accent: #A5D8BC;
-  --nav-active: #1B5F44;
+  --surface-soft: #FAFBF8;
+  --text: #213A30;
+  --muted: #66716A;
+  --subtle: #7D877F;
+  --line: #E3E8E2;
+  --accent: #245D49;
+  --accent-hover: #184535;
+  --accent-soft: #EAF2EC;
+  --highlight: #DCECCF;
+  --positive: #22724C;
   --gold: #80683D;
   --gold-soft: #F8F2E7;
   --radius: 16px;
-  --shadow-soft: 0 4px 22px #11171508;
-  --shadow-raised: 0 12px 32px #11171512;
+  --shadow-soft: 0 4px 22px #203D2D05;
+  --shadow-raised: 0 12px 32px #203D2D0D;
   --cover-fog: url("/art/cover-fog.webp");
   --cover-spring: url("/art/cover-spring.webp");
   --cover-orbit: url("/art/cover-orbit.webp");
@@ -35,9 +28,9 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --inverse: #111715;
-  --inverse-text: #F5F8F6;
-  --inverse-muted: #BDCFC4;
+  --inverse: #183D31;
+  --inverse-text: #F8F7EE;
+  --inverse-muted: #CEDBD2;
 }
 * {
   box-sizing: border-box;
@@ -100,8 +93,8 @@ a {
   color: var(--accent);
 }
 ::selection {
-  background: var(--highlight);
-  color: var(--ink);
+  background: #DEEFAC;
+  color: #202622;
 }
 ::-webkit-scrollbar {
   width: 5px;
