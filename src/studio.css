@@ -20,7 +20,7 @@
   --cover-fog: url("/art/cover-fog.webp");
   --cover-spring: url("/art/cover-spring.webp");
   --cover-orbit: url("/art/cover-orbit.webp");
-  --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
   --serif: 'Songti SC', 'STSong', 'SimSun', serif;
   font-family: var(--sans);
   color: var(--text);
@@ -270,7 +270,7 @@ a {
 }
 .brand>span {
   font-size: 23px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -.6px;
   line-height: 1.4;
 }
@@ -470,7 +470,7 @@ a {
   flex-shrink: 0;
   background: #E9ECD9;
   color: #4D593D;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 16px;
 }
 .avatar.small {
@@ -610,7 +610,7 @@ a {
 }
 .page-heading h1,.desk-heading h1 {
   font-size: 30px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -.7px;
   line-height: 1.5;
 }
@@ -1150,7 +1150,7 @@ a {
   margin-top: 21px;
 }
 .rail-inspiration blockquote {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 24px;
   line-height: 1.8;
   white-space: pre-line;
@@ -2412,7 +2412,7 @@ a {
   color: #DCE8C8;
 }
 .novel-cover-art>span {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 25px;
   line-height: 1.7;
   letter-spacing: 6px;
@@ -2450,7 +2450,7 @@ a {
   left: 17px;
   top: 22px;
   font-size: 23px;
-  font-family: var(--serif);
+  font-family: var(--sans);
   line-height: 1.7;
   color: #806D47;
   letter-spacing: 2px;
@@ -3045,7 +3045,7 @@ a {
   margin-bottom: 15px;
 }
 .research-empty-report h3 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 29px;
   line-height: 1.8;
   font-weight: 600;
@@ -3116,7 +3116,7 @@ a {
   padding: 27px 26px 22px;
 }
 .reading-report-heading h3 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 26px;
   line-height: 1.7;
   font-weight: 600;
@@ -3709,7 +3709,7 @@ a {
   color: #6C7C54;
 }
 .learning-hero h2 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 31px;
   line-height: 1.8;
   font-weight: 600;
@@ -3788,7 +3788,7 @@ a {
   font-size: 12px;
 }
 .lesson-content {
-  font-family: var(--serif);
+  font-family: var(--sans);
   color: #45513F;
   font-size: 16px;
   line-height: 2;
@@ -4070,7 +4070,7 @@ a {
   height: 28px;
 }
 .font-control {
-  font-family: Georgia,serif;
+  font-family: var(--sans);
   font-size: 15px;
 }
 .font-size {
@@ -4100,7 +4100,7 @@ a {
   font-size: 27px;
   line-height: 1.8;
   font-weight: 600;
-  font-family: var(--serif);
+  font-family: var(--sans);
   padding: 0;
   background: transparent;
   border: 0;
@@ -4138,10 +4138,10 @@ a {
   background: transparent;
   outline: none;
   box-shadow: none;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 17px;
-  line-height: 2.15;
-  letter-spacing: .3px;
+  line-height: 1.95;
+  letter-spacing: 0;
   color: #2C3829;
 }
 .manuscript-text:focus {
@@ -4375,7 +4375,7 @@ a {
   font-size: 12px;
 }
 .ai-answer>p {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 14px;
   line-height: 1.95;
   color: #46583C;
@@ -4888,7 +4888,7 @@ a {
   border: 1px solid #DCE8C6;
   display: grid;
   place-items: center;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 29px;
   color: var(--muted);
   margin-bottom: 23px;
@@ -4980,7 +4980,7 @@ a {
   height: 305px;
   min-height: 200px;
   padding: 17px;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 15px;
   color: #415B33;
   background: #fff;

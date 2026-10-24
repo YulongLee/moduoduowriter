@@ -114,6 +114,7 @@ npm run build
 
 - `src/main.jsx`：工作台、编辑器与各功能入口。
 - `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：一句话创作首页与文字剧本工作台。
+- `src/Navigation.jsx`：可记住桌面收起状态的侧栏、顶部操作与独立移动导航抽屉。
 - `src/Art.jsx`、`public/art/`：书封、装饰插画与本地原创绘画素材；生成提示词见「视觉素材提示词.md」。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和 AI/备份设置。
 - `src/Workspace.jsx`、`src/workspace.js`、`server/store.mjs`：自动保存、浏览器迁移、修订合并和 SQLite。
