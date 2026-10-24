@@ -288,29 +288,6 @@ a {
   color: var(--muted);
   margin-top: 3px;
 }
-.sidebar-create {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 41px;
-  padding: 10px 13px;
-  background: var(--highlight);
-  color: var(--inverse);
-  border-radius: 8px;
-  margin: 29px 0 24px;
-  font-size: 13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.sidebar-create:hover {
-  background: #E2F991;
-}
-.sidebar-create>span {
-  color: #637844;
-  margin-left: auto;
-  font-size: 15px;
-}
 .sidebar nav {
   flex-shrink: 1;
   flex: 1;

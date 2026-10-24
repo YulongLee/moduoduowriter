@@ -117,7 +117,7 @@ try {
   function HomeHarness(){const [favorites,setFavorites]=useState([]);return React.createElement(ReferenceHome,{works:initialWorks,favorites,toggleFavorite:id=>setFavorites(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id]),setModal:m=>modal=m,navigate:route=>homeRoute=route,onImport(){homeImport=true;},notify});}
   await act(async()=>{renderer=TestRenderer.create(React.createElement(HomeHarness));});
   const home=renderer.root.findByProps({className:'home-v2'});assert.equal(home.children[0].props.className,'home-hero-grid');assert.equal(home.children[0].findAllByType('section')[0].props['aria-label'],'一句话创作');assert.equal(textOf(renderer.root.findByType('h1')),'一句话，开启你的下一部好故事');
-  await click(findButton(renderer,'导入文稿'));assert.equal(homeImport,true);await click(findButton(renderer,'新建作品'));assert.equal(modal.type,'create');
+  await click(findButton(renderer,'导入文稿'));assert.equal(homeImport,true);
   assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);
   await click(renderer.root.findAllByType('button').find(button=>textOf(button).startsWith('我的收藏')));assert.ok(textOf(renderer.root).includes('还没有收藏工具'));
   await click(findButton(renderer,'看看推荐工具'));assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);
