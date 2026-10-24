@@ -27,14 +27,16 @@ export function HeroArt() {
 }
 
 export function BookCover({ work, large = false }) {
- return <div className={`book-cover cover-${work.cover || 'plain'} ${large ? 'large' : ''}`}>
-   <div className="book-spine"/>
-   {work.cover === 'fog' && <><div className="fog-moon"/><div className="fog-building b1"/><div className="fog-building b2"/><div className="fog-building b3"/><div className="fog-road"/></>}
-   {work.cover === 'spring' && <><div className="spring-sun"/><div className="spring-hill h1"/><div className="spring-hill h2"/><div className="spring-flower">✳</div></>}
-   {work.cover === 'orbit' && <><div className="orbit-planet"/><div className="orbit-ring"/><div className="orbit-star">✧</div></>}
-   {!['fog','spring','orbit'].includes(work.cover) && <div className="plain-ornament">墨</div>}
-   <span className="cover-kicker">墨 多 多 原 创</span>
-   <strong>{work.title}</strong>
-   <span className="cover-subtitle">{work.subtitle || 'A STORY TO BE TOLD'}</span>
- </div>
+ const illustrated=['fog','spring','orbit'].includes(work.cover);
+ return <div className={`book-cover cover-${work.cover || 'plain'} ${large ? 'large' : ''} ${illustrated?'illustrated-cover':''}`}>
+   <div className="book-cover-art"/><div className="book-spine"/>
+   {!illustrated&&<div className="plain-ornament">墨</div>}
+   <span className="cover-kicker">墨 多 多 · 故 事 集</span>
+   <strong>{work.title}</strong><span className="cover-subtitle">{work.subtitle || 'A STORY TO BE TOLD'}</span>
+ </div>;
+}
+
+export function StudioArt({variant='books'}) {
+ const books=[{cover:'fog',title:'长夜来信',subtitle:'LETTERS IN THE MIST'},{cover:'spring',title:'等风也等你',subtitle:'WHEN THE WIND COMES'},{cover:'orbit',title:'第七次日落',subtitle:'THE SEVENTH SUNSET'}];
+ return <div className={`studio-art studio-art-${variant}`} aria-hidden="true"><span className="studio-art-glow"/><div className="studio-art-books">{books.map((work,i)=><div className={`studio-art-book art-book-${i+1}`} key={work.cover}><BookCover work={work}/></div>)}</div><span className="studio-art-spark spark-one">✦</span><span className="studio-art-spark spark-two">✧</span><span className="studio-art-caption">好故事，未完待续。</span></div>;
 }

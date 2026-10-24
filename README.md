@@ -1,6 +1,6 @@
 # 墨多多写作
 
-围绕小说、剧本与内容编辑的本地创作应用，包含可编辑的作品、工作流、拆书、分镜和投稿记录，以及可配置的 AI 服务接口。当前界面按竞品截图调整为绿色创作工作台，保留墨多多品牌与书封。
+围绕小说、文字剧本与内容编辑的本地创作应用，包含可编辑的作品、工作流、拆书和投稿记录，以及可配置的 AI 服务接口。当前界面采用暖白纸感、深森林绿与原创绘画书封，首页、作品库、小说与剧本工作台、编辑器使用统一视觉规范。
 
 当前范围：按用户最新决定，视频相关功能暂缓。漫剧工坊、分镜入口与图片／视频生成已收起，后台媒体调用与查询停用；小说、文字剧本、拆书及编辑流程继续开放，已有分镜资料保留。
 
@@ -113,6 +113,8 @@ npm run build
 ## 文件说明
 
 - `src/main.jsx`：工作台、编辑器与各功能入口。
+- `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：一句话创作首页与文字剧本工作台。
+- `src/Art.jsx`、`public/art/`：书封、装饰插画与本地原创绘画素材；生成提示词见「视觉素材提示词.md」。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和 AI/备份设置。
 - `src/Workspace.jsx`、`src/workspace.js`、`server/store.mjs`：自动保存、浏览器迁移、修订合并和 SQLite。
 - `src/Account.jsx`：本机账号与登录界面。
@@ -125,6 +127,6 @@ npm run build
 - `src/StudioPages.jsx`：分镜与投稿业务。
 - `src/backup.js`：备份校验、合并和恢复。
 - `src/Billing.jsx`、`src/billing.js`：模拟会员与计费。
-- `src/studio.css`、`src/billing.css`：沿用的视觉规范。
+- `src/studio.css`、`src/workbench.css`、`src/billing.css`：全站视觉变量、工作台、响应式与会员页面样式。
 
 功能设计与定价依据见「功能与交互设计.md」「视觉设计规范.md」「变现模式与定价设计.md」。

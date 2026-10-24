@@ -23,6 +23,7 @@ try {
   const { DismantleDesk, NovelDesk } = await server.ssrLoadModule('/src/ProductDesk.jsx');
   const { ReferenceTools, ReferenceHome } = await server.ssrLoadModule('/src/Workbench.jsx');
   const { WorksPage } = await server.ssrLoadModule('/src/Library.jsx');
+  const { ScriptDesk } = await server.ssrLoadModule('/src/ScriptDesk.jsx');
   const { readStoredArray, writeStoredValue } = await server.ssrLoadModule('/src/storage.js');
   const notices=[];
   const notify=message=>notices.push(message);
@@ -135,6 +136,20 @@ try {
   assert.equal(modal.kind,'短篇故事');
   await act(async()=>renderer.unmount());
   console.log('PASS short-story creation entry');
+  let scriptRoute,favoriteTool;
+  const scriptProps={works:initialWorks,favorites:[],toggleFavorite:id=>favoriteTool=id,setModal:value=>modal=value,navigate:value=>scriptRoute=value};
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(ScriptDesk,scriptProps));});
+  await click(findButton(renderer,'新建剧本'));assert.equal(modal.kind,'剧本');
+  await click(findButton(renderer,'创作原创剧本'));assert.equal(modal.type,'create');assert.equal(modal.kind,'剧本');
+  await click(findButton(renderer,'从小说改编'));assert.equal(modal.flow.id,'script');
+  await click(renderer.root.findByProps({'aria-label':'剧本创作步骤'}).findAllByType('button')[2]);assert.equal(modal.tool.id,'dialogue');
+  await click(renderer.root.findByProps({'aria-label':'收藏立体人物设计'}));assert.equal(favoriteTool,'character');
+  await click(findButton(renderer,'创建第一部剧本'));assert.equal(modal.kind,'剧本');assert.ok(textOf(renderer.root).includes('第一场戏，就从这里开始。'));await act(async()=>renderer.unmount());
+  const existingScript={...initialWorks[0],id:'script-test',kind:'剧本',title:'雨夜来信 · 文字剧本'};
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(ScriptDesk,{...scriptProps,works:[...initialWorks,existingScript]}));});
+  assert.ok(!textOf(renderer.root).includes('第一场戏，就从这里开始。'));await click(renderer.root.findByProps({'aria-label':'继续写作：雨夜来信 · 文字剧本'}));assert.equal(scriptRoute,'editor/script-test');await click(renderer.root.findByProps({'aria-label':'管理雨夜来信 · 文字剧本'}));assert.equal(modal.work.id,'script-test');await act(async()=>renderer.unmount());
+  console.log('PASS refined script desk creation, adaptation, dialogue, favorites, empty state and existing-script editing');
+
 
   let destination;
   await act(async()=>{renderer=TestRenderer.create(React.createElement(WorksPage,{works:initialWorks,navigate:route=>{destination=route;},setModal:value=>{modal=value;},notify,onImport(){}}));});
