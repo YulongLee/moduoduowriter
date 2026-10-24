@@ -1,4 +1,4 @@
-/* Membership: quiet surfaces, explicit totals, one clear purchase action. */
+/* 墨绿与曜黑会员体系：清楚展示套餐、用量与操作。 */
 .billing-topbar-badge {
   display: inline-flex;
   align-items: center;
@@ -6,10 +6,10 @@
   font-size: 12px;
   white-space: nowrap;
   padding: 7px 9px;
-  border: 1px solid #E1E6DA;
+  border: 1px solid var(--dark-line);
   border-radius: 7px;
-  background: #F4F7EB;
-  color: #536A3D;
+  background: var(--ink-raised);
+  color: var(--dark-accent);
 }
 .billing-topbar-badge strong {
   font-weight: 600;
@@ -17,8 +17,8 @@
 .billing-topbar-badge>i {
   font-style: normal;
   font-size: 12px;
-  color: var(--muted);
-  border-left: 1px solid #DAE4CB;
+  color: var(--inverse-muted);
+  border-left: 1px solid var(--dark-line);
   padding-left: 5px;
   margin-left: 2px;
 }
@@ -31,8 +31,8 @@
   width: 100%;
   margin: 24px 0 18px;
   text-align: left;
-  background: #F6F8F0;
-  border: 1px solid #E4EADB;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
   border-radius: 9px;
   font-size: 12px;
 }
@@ -49,7 +49,7 @@
   color: var(--muted);
 }
 .account-billing>span:last-child {
-  color: #5D7545;
+  color: var(--accent);
 }
 .billing-page-heading h1 {
   font-size: 30px;
@@ -98,8 +98,8 @@
   height: 50px;
   width: 50px;
   border-radius: 13px;
-  background: #EDF2DF;
-  color: #6D7E46;
+  background: var(--accent-soft);
+  color: var(--accent);
   flex-shrink: 0;
 }
 .billing-account-plan>div>span,.billing-balance>span {
@@ -142,7 +142,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #5E7647;
+  color: var(--accent);
   padding: 2px 0;
 }
 .billing-month-progress {
@@ -164,7 +164,7 @@
 }
 .billing-progress-track {
   height: 5px;
-  background: #EEF2E7;
+  background: var(--accent-soft);
   margin-top: 12px;
   border-radius: 6px;
   overflow: hidden;
@@ -173,7 +173,7 @@
   height: 100%;
   max-width: 100%;
   display: block;
-  background: #97AC6A;
+  background: var(--accent);
   border-radius: 6px;
 }
 .billing-month-progress p {
@@ -210,8 +210,8 @@
 .billing-page-tabs small {
   font-size: 12px;
   margin-left: 7px;
-  background: #EBF1DF;
-  color: #5A7341;
+  background: var(--accent-soft);
+  color: var(--accent);
   padding: 3px 5px;
   border-radius: 4px;
 }
@@ -247,8 +247,8 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  background: #EBEFE8;
-  border: 1px solid #E1E7D9;
+  background: #E9EDEB;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 4px;
   flex-shrink: 0;
@@ -271,8 +271,8 @@
 }
 .billing-cycle small {
   font-size: 12px;
-  background: #EAF1DB;
-  color: #5C7541;
+  background: var(--accent-soft);
+  color: var(--accent);
   border-radius: 3px;
   padding: 2px 4px;
 }
@@ -306,8 +306,8 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: #F0F3EB;
-  color: #5B7350;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .billing-plan-card h3 {
   font-size: 24px;
@@ -362,7 +362,7 @@
   color: var(--muted);
 }
 .billing-plan-credit>svg {
-  color: #7D944F;
+  color: var(--accent);
 }
 .billing-plan-credit>strong {
   font-size: 22px;
@@ -391,7 +391,7 @@
 }
 .billing-plan-card li>svg {
   margin-top: 4px;
-  color: #7B9258;
+  color: var(--accent);
 }
 .billing-plan-ribbon {
   position: absolute;
@@ -401,8 +401,8 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #3E542A;
-  background: #D9E9AA;
+  color: var(--accent);
+  background: var(--highlight);
   border-radius: 0 0 0 7px;
   padding: 5px 9px;
 }
@@ -413,23 +413,23 @@
   box-shadow: 0 8px 20px #27382313;
 }
 .billing-plan-card.featured .billing-plan-label>span {
-  background: #405039;
-  color: #DAECAC;
+  background: #243D2F;
+  color: var(--dark-accent);
 }
 .billing-plan-card.featured :is(.billing-plan-label,.billing-plan-note,.billing-plan-total,.billing-plan-price>small,.billing-plan-credit,.billing-plan-card li) {
   color: var(--inverse-muted);
 }
 .billing-plan-card.featured .billing-plan-credit>strong {
-  color: #EFF8D9;
+  color: var(--inverse-text);
 }
 .billing-plan-card.featured .billing-plan-credit {
-  border-color: #49563F;
+  border-color: var(--dark-line);
 }
 .billing-plan-card.featured li {
   color: var(--inverse-muted);
 }
 .billing-plan-card.featured li>svg,.billing-plan-card.featured .billing-plan-credit>svg {
-  color: #B5D77D;
+  color: var(--dark-accent);
 }
 .billing-plan-card.featured>.button {
   color: var(--inverse);
@@ -438,8 +438,8 @@
   font-weight: 600;
 }
 .billing-plan-card.featured>.button:hover {
-  background: #E2FB92;
-  border-color: #E2FB92;
+  background: #E8F6EE;
+  border-color: #E8F6EE;
 }
 .billing-principle {
   display: flex;
@@ -452,7 +452,7 @@
   border-radius: 10px;
 }
 .billing-principle>svg {
-  color: #6B8550;
+  color: var(--accent);
 }
 .billing-principle strong {
   font-size: 13px;
