@@ -19,7 +19,7 @@
 .commercial .membership strong,.commercial .membership p { color:#3B6549; }
 .commercial .membership button { border-color:#D2E5D8;color:var(--accent); }
 .commercial .sidebar-user { padding:13px 6px;width:100%;margin-left:0;margin-right:0; }
-.commercial .workspace { margin-left:216px; }
+.commercial .workspace { margin-left:0; }
 .commercial .topbar { height:68px;padding:0 32px;background:#FFFFFFE8;backdrop-filter:blur(16px);border-color:#E5E9E1;gap:16px; }
 .commercial .topbar-right { gap:12px; }
 .commercial .global-search { width:250px;background:#F6F7F3;border-color:#E7EBE3;border-radius:9px;padding:9px 12px; }
@@ -36,7 +36,9 @@
 .commercial .green { background:#E7F5EB;color:#23804A; }
 .commercial .button { min-height:40px;padding:9px 16px;border-radius:9px;font-weight:500; }
 
-/* 桌面侧栏可完整收起；移动端保留独立抽屉。 */
+/* 桌面侧栏悬停展开，浮于内容上方；移动端保留独立抽屉。 */
+.sidebar-hover-zone { display:contents; }
+.sidebar-edge-trigger { display:none; }
 .sidebar-header { display:flex;align-items:center;justify-content:space-between;gap:6px;flex-shrink:0; }
 .sidebar-header .brand { min-width:0; }
 .commercial .desktop-sidebar-toggle { display:inline-flex;width:34px;height:34px;margin-right:5px;color:var(--muted);border:1px solid var(--line);border-radius:8px;flex-shrink:0; }
@@ -44,9 +46,15 @@
 .commercial .mobile-nav-close { display:none;flex-shrink:0; }
 .commercial .sidebar[aria-hidden="true"] { visibility:hidden;pointer-events:none; }
 @media(min-width:1025px) {
- .commercial .workspace { transition:margin-left .18s ease; }
- .commercial.sidebar-collapsed .sidebar { transform:translateX(-100%); }
- .commercial.sidebar-collapsed .workspace { margin-left:0; }
+ .commercial.sidebar-auto .workspace { margin-left:12px; }
+ .commercial .sidebar-hover-zone { display:block;position:fixed;inset:0 auto 0 0;width:12px;z-index:70; }
+ .commercial .sidebar-hover-zone[data-open="true"] { width:216px; }
+ .commercial .sidebar-edge-trigger { display:flex;align-items:center;justify-content:center;position:absolute;inset:0;width:12px;padding:0;background:#EFF3EB;border-right:1px solid #DFE5DC;color:var(--accent); }
+ .commercial .sidebar-edge-trigger>span { width:3px;height:36px;border-radius:3px;background:#A4B8A1;transition:background .15s; }
+ .commercial .sidebar-edge-trigger:hover>span { background:var(--accent); }
+ .commercial .sidebar-edge-trigger:focus-visible { outline-offset:-3px; }
+ .commercial.sidebar-auto .sidebar { transform:translateX(0);box-shadow:12px 0 32px #193E3117;transition:transform .18s ease,visibility 0s; }
+ .commercial.sidebar-auto .sidebar[aria-hidden="true"] { transform:translateX(-100%);visibility:hidden;transition:transform .18s ease,visibility 0s .18s; }
 }
 @media(max-width:1024px) {
  .commercial .desktop-sidebar-toggle { display:none; }
@@ -584,7 +592,7 @@
  .commercial-editor .editor-header { background:#FFFFFF; }
 }
 @media(prefers-reduced-motion:reduce) {
- .commercial .workspace,.commercial .sidebar { transition:none; }
+ .commercial .workspace,.commercial .sidebar,.commercial.sidebar-auto .sidebar,.commercial.sidebar-auto .sidebar[aria-hidden="true"] { transition:none; }
  .commercial .market-card,.commercial .work-card,.commercial .quick-creation-card,.commercial .button { transition:none;transform:none!important; }
 }
 
