@@ -53,7 +53,7 @@ function HomeSupport({works, navigate, setModal}) {
 export function ReferenceHome({works, navigate, setModal, notify, favorites, toggleFavorite, onImport}) {
   const [tab,setTab] = useState('推荐工具');
   const list = tab === '我的收藏' ? tools.filter(tool => favorites.includes(tool.id)) : tools;
-  const entries = [['小说写作','从总纲、人物到每一章节',BookOpen,'novels','mint'],['剧本创作','写好每一场戏与对白',Clapperboard,'scripts','peach'],['小说拆书','拆解结构，积累写作方法',BookMarked,'dismantle','blue'],['投稿中心','整理文稿，跟进投稿进度',Send,'submit','lavender']];
+  const entries = [['小说写作','从总纲、人物到每一章节',BookOpen,'novels','mint'],['剧本创作','写好每一场戏与对白',Clapperboard,'scripts','violet'],['小说拆书','拆解结构，积累写作方法',BookMarked,'dismantle','blue'],['投稿中心','整理文稿，跟进投稿进度',Send,'submit','amber']];
   return <div className="home-v2">
     <Generator setModal={setModal} notify={notify} onImport={onImport}/>
     <section className="home-entry-grid" aria-label="创作快捷入口">{entries.map(([title,description,Icon,route,color]) => <button className={`home-entry entry-${color}`} key={route} onClick={() => navigate(route)}><span className="home-entry-icon"><Icon size={24} strokeWidth={1.7}/></span><span><strong>{title}</strong><small>{description}</small></span><ArrowUpRight size={17}/></button>)}</section>

@@ -21,13 +21,29 @@ const pairs = [
   ['正文 / 面板', '--text', '--surface'],
   ['辅助文字 / 页面', '--muted', '--canvas'],
   ['辅助文字 / 面板', '--muted', '--surface'],
+  ['次级文字 / 页面', '--subtle', '--canvas'],
   ['主按钮', '--surface', '--accent'],
   ['主按钮悬停', '--surface', '--accent-hover'],
   ['品牌文字 / 选中背景', '--accent', '--accent-soft'],
   ['会员说明', '--gold', '--gold-soft'],
   ['深色套餐正文', '--inverse-text', '--inverse'],
   ['深色套餐辅助文字', '--inverse-muted', '--inverse'],
-  ['强调按钮', '--inverse', '--highlight']
+  ['强调按钮', '--inverse', '--highlight'],
+  ['蓝色功能文字', '--blue', '--blue-soft'],
+  ['紫色功能文字', '--violet', '--violet-soft'],
+  ['暖金功能文字', '--amber', '--amber-soft'],
+  ['玫瑰色功能文字', '--rose', '--rose-soft'],
+  ['蓝色实心图标', '--surface', '--blue'],
+  ['紫色实心图标', '--surface', '--violet'],
+  ['暖金实心图标', '--surface', '--amber'],
+  ['玫瑰色实心图标', '--surface', '--rose'],
+  ['辅助文字 / 蓝色面板', '--muted', '--blue-soft'],
+  ['辅助文字 / 紫色面板', '--muted', '--violet-soft'],
+  ['辅助文字 / 暖金面板', '--muted', '--amber-soft'],
+  ['辅助文字 / 表单底色', '--muted', '--surface-soft'],
+  ['剧本主视觉正文', '--inverse-text', '--violet-deep'],
+  ['剧本主视觉说明', '--violet-muted', '--violet-deep'],
+  ['剧本主操作', '--violet-deep', '--highlight']
 ];
 for (const [name, foreground, background] of pairs) {
   assert.ok(tokens[foreground] && tokens[background], `${name}: missing color token`);
