@@ -5,7 +5,7 @@ import {createServer} from 'vite';
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;globalThis.window={innerWidth:1440};
 const values=new Map([['mdd-ai-mode','ai']]);globalThis.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
 const originalFetch=globalThis.fetch;const requests=[];let responseData={text:'实际生成的文字',source:'ai'};let shouldFail=false;
-globalThis.fetch=async(url,options={})=>{if(url==='/api/settings')return Response.json({configured:true,hasKey:true,model:'test-model'});const payload=JSON.parse(options.body);requests.push(payload);if(shouldFail)return Response.json({error:'模型账户额度不足'},{status:502});return Response.json(responseData);};
+globalThis.fetch=async(url,options={})=>{if(url==='/api/service/status')return Response.json({configured:true,defaultMode:'ai'});const payload=JSON.parse(options.body);requests.push(payload);if(shouldFail)return Response.json({error:'模型账户额度不足'},{status:502});return Response.json(responseData);};
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});let renderer;
 const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
 const btn=name=>renderer.root.findAllByType('button').find(b=>text(b).trim()===name);
@@ -26,4 +26,28 @@ try {
  await mount(DismantleDesk,{works:initialWorks,notify(){},setModal(){}});await click(btn('粘贴文本'));await change(renderer.root.findByProps({'aria-label':'拆书作品片段'}),'她收到钥匙，信封上写着明天的日期。');await click(btn('开始拆解'));assert.equal(requests.at(-1).task,'reading');assert.ok(text(renderer.root).includes('AI 拆书报告'));await click(btn('保存笔记'));const report=JSON.parse(localStorage.getItem('mdd-reading-v1'))[0];assert.equal(report.source,'ai');assert.equal(report.overview,'她收到一枚属于未来的钥匙。');await unmount();
  responseData={source:'ai',text:'{}',structured:{boards:[{name:'未来钥匙',shot:'特写',text:'银色钥匙静静躺在信封中',duration:6,dialogue:'谁寄来的？',imagePrompt:'微距，银色钥匙，暖光'}]}};await mount(VideoStudio,{works:initialWorks,notify(){},setModal(){}});await change(renderer.root.findByProps({'aria-label':'分镜故事'}),'她打开信封，看见一把钥匙。');await click(btn('生成分镜脚本'));assert.equal(requests.at(-1).task,'storyboard');assert.equal(renderer.root.findByProps({'aria-label':'镜头1名称'}).props.value,'未来钥匙');await unmount();
  console.log('PASS real reading analysis provenance and actual storyboard results are editable and savable');
+ const {SettingsDialog}=await server.ssrLoadModule('/src/Settings.jsx');const {ServiceAdmin}=await server.ssrLoadModule('/src/ServiceSettings.jsx');const {GenerationStatus}=await server.ssrLoadModule('/src/Generation.jsx');
+ const visited=[];let savedConfig,adminUnavailable=false;
+ const operatorConfig={baseUrl:'https://private-provider.invalid/v1',model:'private-model-v99',protocol:'chat',hasKey:true,jsonMode:false,configured:true,defaultMode:'ai'};
+ globalThis.fetch=async(url,options={})=>{
+  visited.push(url);
+  if(url==='/api/service/status')return Response.json({configured:true,defaultMode:'ai'});
+  if(url==='/api/workspace')return Response.json({revision:0,data:null});
+  if(url==='/api/oss/settings')return Response.json({configured:false});
+  if(url==='/api/settings'){
+   if(adminUnavailable)return Response.json({error:'配置读取失败'},{status:500});
+   if(options.method==='PUT'){savedConfig=JSON.parse(options.body);return Response.json({...operatorConfig,model:savedConfig.model});}
+   return Response.json(operatorConfig);
+  }
+  throw new Error('Unexpected test request');
+ };
+ await mount(SettingsDialog,{works:initialWorks,onRestore(){},notify(){}});
+ assert.ok(visited.includes('/api/service/status'));assert.ok(!visited.includes('/api/settings'),'Ordinary settings must not fetch technical configuration');
+ assert.equal(renderer.root.findAllByProps({'aria-label':'模型名称'}).length,0);assert.equal(renderer.root.findAllByProps({'aria-label':'API 密钥'}).length,0);assert.ok(!text(renderer.root).includes(operatorConfig.model));assert.ok(text(renderer.root).includes('创作服务已就绪'));
+ await change(renderer.root.findByProps({'aria-label':'AI 工作模式'}),'demo');assert.equal(values.get('mdd-ai-mode'),'demo');await unmount();
+ await mount(GenerationStatus,{generation:{mode:'ai',settings:{model:operatorConfig.model}}});assert.ok(text(renderer.root).includes('智能创作'));assert.ok(!text(renderer.root).includes(operatorConfig.model));await unmount();
+ await mount(ServiceAdmin,{});assert.equal(renderer.root.findByProps({'aria-label':'模型名称'}).props.value,operatorConfig.model);assert.equal(renderer.root.findByProps({'aria-label':'API 密钥'}).props.value,'');
+ await change(renderer.root.findByProps({'aria-label':'模型名称'}),'private-model-next');await click(btn('保存配置'));assert.equal(savedConfig.model,'private-model-next');assert.equal(savedConfig.apiKey,'');assert.ok(text(renderer.root).includes('配置已保存'));await unmount();
+ adminUnavailable=true;await mount(ServiceAdmin,{});assert.equal(renderer.root.findByType('fieldset').props.disabled,true);assert.ok(text(renderer.root).includes('配置读取失败'));await unmount();
+ console.log('PASS product settings and status hide provider metadata; separate local service management preserves configuration and blocks saving after load failure');
 } finally{if(renderer)await act(async()=>renderer.unmount());await server.close();globalThis.fetch=originalFetch;}

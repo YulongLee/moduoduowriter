@@ -17,7 +17,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   const ignoreFocus = useRef(false);
   const focusAfterOpen = useRef(false);
   const hidden = !desktop && !mobileOpen;
-  const current = items.find(item => item.id === route) || items[0];
+  const current = route === 'service-admin' ? {label:'本机服务管理'} : items.find(item => item.id === route) || items[0];
 
   useEffect(() => {
     const resize = () => setDesktop(window.innerWidth > 1024);
@@ -130,7 +130,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
     </aside>
     </div>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label="显示导航" title="显示完整导航，也可将鼠标移到左侧图标栏" aria-controls="main-sidebar" aria-expanded={desktopOpen} onClick={focusSidebar}><PanelLeftOpen size={20}/></button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls="main-sidebar" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><span>我的工作台</span><ChevronRight size={13}/><strong>{current.label}</strong></div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>搜索作品、工具或灵感</span><kbd>⌘ K</kbd></button><BillingBadge onClick={() => go('membership')}/><div className="topbar-divider"/><button className="icon-button" aria-label="AI 与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button><button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button></div></header>
+      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label="显示导航" title="显示完整导航，也可将鼠标移到左侧图标栏" aria-controls="main-sidebar" aria-expanded={desktopOpen} onClick={focusSidebar}><PanelLeftOpen size={20}/></button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls="main-sidebar" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><span>我的工作台</span><ChevronRight size={13}/><strong>{current.label}</strong></div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>搜索作品、工具或灵感</span><kbd>⌘ K</kbd></button><BillingBadge onClick={() => go('membership')}/><div className="topbar-divider"/><button className="icon-button" aria-label="创作与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button><button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button></div></header>
       {children}
     </div>
   </div>;

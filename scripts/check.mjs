@@ -16,7 +16,7 @@ try {
     ['novels', '小说写作'], ['tools', 'AI 工具广场'], ['workflows', '从灵感到黄金三章'],
     ['dismantle', '点击上传 TXT 文稿'], ['scripts', '新建剧本'],
     ['video', '视频相关功能已暂缓'], ['submit', '保存投稿计划'],
-    ['history', '生成记录'], ['learn', '写作手记'], ['membership', '会员与墨点'], ['editor/fog', '章节正文'],
+    ['history', '生成记录'], ['learn', '写作手记'], ['membership', '会员与墨点'], ['service-admin','本机服务管理'], ['editor/fog', '章节正文'],
     ['editor/spring', '等风也等你'], ['editor/orbit', '第七次日落']
   ];
   for (const [route, expected] of pages) {
@@ -26,6 +26,7 @@ try {
     assert.ok(!html.includes('漫剧工坊'), `${route}: deferred video navigation must be hidden`);
     assert.ok(!html.includes('当前章节转分镜'), `${route}: deferred editor action must be hidden`);
     assert.ok(!html.includes('NaN'), `${route}: invalid numeric content`);
+    if(route !== 'service-admin')assert.ok(!html.includes('aria-label="模型名称"'),`${route}: technical configuration must stay out of product screens`);
     console.log(`PASS ${route}`);
   }
   const { initialWorks, tools, workflows, wordCount, workWords } = await server.ssrLoadModule('/src/data.js');

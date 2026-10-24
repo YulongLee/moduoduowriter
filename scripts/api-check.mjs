@@ -13,6 +13,7 @@ const call=async(path,body,options={})=>{const r=await fetch(base+path,{method:b
 const put=(path,body)=>call(path,body,{method:'PUT'});
 try {
  assert.equal((await call('/api/settings')).data.hasKey,false);
+ assert.deepEqual((await call('/api/service/status')).data,{configured:false,defaultMode:'demo'});
  assert.equal((await call('/api/generate',{task:'ideas'})).status,503);
  assert.equal(calls.length,0,'No provider call before configuration');
  assert.equal((await call('/api/settings',{}, {method:'PUT',headers:{Origin:'https://attacker.invalid','X-Mdd-Client':'workspace-v1'}})).status,403);
@@ -20,13 +21,15 @@ try {
  for(const url of ['http://provider.invalid','https://127.0.0.1/v1','https://user:pass@provider.invalid/v1','https://provider.invalid/v1?key=hidden'])assert.equal((await put('/api/settings',{baseUrl:url})).status,400);
  const config={baseUrl:'https://provider.invalid/v1',model:'writing-test',apiKey:'only-test-secret',protocol:'chat',jsonMode:true};
  const saved=await put('/api/settings',config);assert.equal(saved.status,200);assert.equal(saved.data.configured,true);assert.ok(!JSON.stringify(saved.data).includes(config.apiKey));
+ assert.deepEqual((await call('/api/service/status')).data,{configured:true,defaultMode:'demo'},'Product status must exclude model, endpoint, protocol and key metadata');
  assert.equal((await stat(join(directory,'ai.json'))).mode&0o777,0o600);
  await put('/api/settings',{...config,apiKey:''});assert.equal((await call('/api/settings')).data.hasKey,true);
  let result=await call('/api/generate',{task:'continue',prompt:'在暴雨中发现旧钥匙',context:{outline:'寻找失踪的修复师',characters:'沈听澜',text:'他推开钟楼的门。'},target:1000});
  assert.equal(result.status,200);assert.equal(result.data.text,answer);assert.equal(result.data.source,'ai');assert.equal(calls[0].url,'https://provider.invalid/v1/chat/completions');assert.ok(calls[0].body.messages[1].content.includes('沈听澜'));assert.ok(calls[0].body.messages[1].content.includes('旧钥匙'));assert.equal(calls[0].headers.Authorization,'Bearer only-test-secret');
  assert.equal((await call('/api/generate',{task:'unknown'})).status,400);
  assert.equal((await call('/api/generate',{task:'ideas',prompt:'长'.repeat(65001)})).status,400);
- status=401;assert.match((await call('/api/generate',{task:'ideas'})).data.error,/密钥/);status=429;assert.match((await call('/api/generate',{task:'ideas'})).data.error,/额度/);status=200;
+ assert.ok(!Object.hasOwn(result.data,'model'),'Generation must not return the underlying model');
+ status=401;assert.match((await call('/api/generate',{task:'ideas'})).data.error,/创作服务暂时不可用/);assert.match((await call('/api/test',{})).data.error,/密钥/);status=429;assert.match((await call('/api/generate',{task:'ideas'})).data.error,/额度/);status=200;
  answer='不是 JSON';assert.equal((await call('/api/generate',{task:'plan'})).status,502);
  answer=JSON.stringify({title:'新故事',outline:'基于输入的大纲',characters:'基于输入的人物',text:'原创开篇'});result=await call('/api/generate',{task:'plan'});assert.equal(result.data.structured.title,'新故事');
  protocol='responses';await put('/api/settings',{...config,protocol:'responses',apiKey:''});answer='从 output 数组提取到的正文';result=await call('/api/generate',{task:'ideas'});assert.equal(result.data.text,answer);assert.equal(calls.at(-1).body.store,false);assert.ok(calls.at(-1).url.endsWith('/responses'));

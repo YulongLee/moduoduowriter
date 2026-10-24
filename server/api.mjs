@@ -28,7 +28,13 @@ async function atomicJSON(file,value) {
  try{await fs.writeFile(temp,JSON.stringify(value),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true}).catch(()=>{});}
 }
 async function readJSON(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw fail('本地数据文件无法读取，请先保留备份并检查文件',500);}}
-const publicConfig=config=>({baseUrl:config.baseUrl,model:config.model,protocol:config.protocol,jsonMode:config.jsonMode,enableThinking:config.enableThinking,defaultMode:config.defaultMode||'demo',hasKey:!!config.apiKey,configured:!!(config.baseUrl&&config.model&&config.apiKey)});
+const configured=config=>!!(config.baseUrl&&config.model&&config.apiKey);
+// Technical configuration is fetched only by the local operator page.
+const adminConfig=config=>({baseUrl:config.baseUrl,model:config.model,protocol:config.protocol,jsonMode:config.jsonMode,enableThinking:config.enableThinking,defaultMode:config.defaultMode||'demo',hasKey:!!config.apiKey,configured:configured(config)});
+const serviceStatus=config=>({configured:configured(config),defaultMode:config.defaultMode||'demo'});
+// Keep provider metadata in local records, out of ordinary generation responses.
+const clientResult=value=>{if(!value)return value;const {model,...result}=value;return result;};
+const clientTask=value=>({...value,result:clientResult(value.result)});
 function send(res,status,value){if(res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));}
 async function readBody(req,limit=200000) {
  let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>limit)throw fail('提交内容过大',413);chunks.push(chunk);}
@@ -90,13 +96,14 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
     const id=url.pathname.slice(18),task=database().task(id);if(!['image','video'].includes(task.task)||task.status!=='succeeded'||!task.result?.key)throw fail('媒体文件尚未就绪',404);
     const range=req.headers.range;if(range&&!/^bytes=\d+-\d*$/.test(range))throw fail('不支持的文件读取范围',416);const asset=await cloudStore.readMedia(await ossConfig(),task.result.key,range);const type=task.task==='image'?'image/png':'video/mp4';res.writeHead(asset.res?.status===206?206:200,{'Content-Type':type,'Content-Length':asset.content.length,'Cache-Control':'private, no-store','Accept-Ranges':'bytes',...(asset.res?.headers?.['content-range']?{'Content-Range':asset.res.headers['content-range']}:{}),...(url.searchParams.has('download')?{'Content-Disposition':`attachment; filename="moduoduo-${id}.${task.task==='image'?'png':'mp4'}"`}:{})});return res.end(asset.content);
    }
-   if(url.pathname==='/api/tasks'&&req.method==='GET')return send(res,200,{items:database().tasks()});
-   if(url.pathname.startsWith('/api/tasks/')&&req.method==='GET')return send(res,200,database().task(decodeURIComponent(url.pathname.slice(11))));
-   if(url.pathname==='/api/settings'&&req.method==='GET')return send(res,200,publicConfig(await config()));
+   if(url.pathname==='/api/tasks'&&req.method==='GET')return send(res,200,{items:database().tasks().map(clientTask)});
+   if(url.pathname.startsWith('/api/tasks/')&&req.method==='GET')return send(res,200,clientTask(database().task(decodeURIComponent(url.pathname.slice(11)))));
+   if(url.pathname==='/api/service/status'&&req.method==='GET')return send(res,200,serviceStatus(await config()));
+   if(url.pathname==='/api/settings'&&req.method==='GET')return send(res,200,adminConfig(await config()));
    if(url.pathname==='/api/settings'&&req.method==='PUT') {
     const body=await readBody(req,10000);
     const updated=await serial(async()=>{const updated=validateConfig(body,await config());await atomicJSON(configFile,updated);return updated;});
-    return send(res,200,publicConfig(updated));
+    return send(res,200,adminConfig(updated));
    }
    if(url.pathname==='/api/oss/settings'&&req.method==='GET')return send(res,200,publicOSS(await ossConfig()));
    if(url.pathname==='/api/oss/settings'&&req.method==='PUT') {
@@ -126,12 +133,12 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    }
    if((url.pathname==='/api/generate'||url.pathname==='/api/test')&&req.method==='POST') {
     if(active>=2)throw fail('已有两个生成任务正在进行，请稍后重试',429);
-    const settings=await config();if(!publicConfig(settings).configured)throw fail('请先在「AI 与数据设置」填写接口地址、模型名称和密钥',503);
-    const body=await readBody(req);const test=url.pathname==='/api/test';
+    const test=url.pathname==='/api/test',settings=await config();if(!configured(settings))throw fail(test?'请先填写并保存接口地址、模型名称和密钥':'智能创作暂不可用，请稍后重试或选择示例体验',503);
+    const body=await readBody(req);
     if(!test&&!videoEnabled&&body.task==='storyboard')throw fail('视频相关功能已暂缓，当前版本专注文字创作',503);
     const prompt=test?{system:'你是连接测试助手。',user:'只回复：连接成功',structured:false,target:30}:(()=>{try{return buildPrompt(body);}catch(e){throw fail(e.message);}})();
     const taskKey=test?null:(typeof body.requestId==='string'&&/^[a-zA-Z0-9_-]{8,80}$/.test(body.requestId)?body.requestId:randomUUID());
-    if(taskKey){const existing=database().beginTask(taskKey,body);if(existing){if(existing.status==='succeeded')return send(res,200,JSON.parse(existing.result));throw fail('此生成请求已提交，请在生成记录查看状态或重新发起任务',409);}}
+    if(taskKey){const existing=database().beginTask(taskKey,body);if(existing){if(existing.status==='succeeded')return send(res,200,clientResult(JSON.parse(existing.result)));throw fail('此生成请求已提交，请在生成记录查看状态或重新发起任务',409);}}
     active++;const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),90000);
     const disconnected=()=>controller.abort();res.on('close',disconnected);
     try {
@@ -141,16 +148,16 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
      // JSON mode is opt-in because not all compatible providers support it.
      if(prompt.structured&&settings.jsonMode){if(responses)payload.text={format:{type:'json_object'}};else payload.response_format={type:'json_object'};}
      const upstream=await fetchImpl(`${settings.baseUrl}/${responses?'responses':'chat/completions'}`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${settings.apiKey}`},body:JSON.stringify(payload),signal:controller.signal,redirect:'error'});
-     if(!upstream.ok)throw fail(upstream.status===401||upstream.status===403?'模型服务拒绝访问，请检查密钥与模型权限':upstream.status===429?'模型服务额度不足或请求频繁，请检查余额后重试':`模型服务返回 ${upstream.status}，请检查地址、模型名称与服务状态`,502);
+     if(!upstream.ok)throw fail(test?(upstream.status===401||upstream.status===403?'模型服务拒绝访问，请检查密钥与模型权限':upstream.status===429?'模型服务额度不足或请求频繁，请检查余额后重试':`模型服务返回 ${upstream.status}，请检查地址、模型名称与服务状态`):(upstream.status===429?'创作服务当前繁忙或可用额度不足，请稍后重试':'创作服务暂时不可用，请稍后重试'),502);
      const data=await limitedJSON(upstream);
      if(data.status&&data.status!=='completed')throw fail('模型生成未完整结束，请调整篇幅后重试',502);
      if(data.choices?.[0]?.finish_reason==='length')throw fail('生成达到服务长度上限，请减少篇幅后重试',502);
      const text=responses?(data.output||[]).flatMap(item=>item.type==='message'?item.content||[]:[]).filter(item=>item.type==='output_text').map(item=>item.text).join('\n'):data.choices?.[0]?.message?.content;
-     if(typeof text!=='string'||!text.trim())throw fail('模型没有返回可用文字，请检查模型是否支持文本生成',502);
+     if(typeof text!=='string'||!text.trim())throw fail('创作服务未返回可用文字，请稍后重试',502);
      const structured=test?null:(()=>{try{return parseStructured(body.task,text,body.dimensions);}catch(e){throw fail(e.message,502);}})();
      const usage=data.usage?{inputTokens:data.usage.prompt_tokens??data.usage.input_tokens??0,outputTokens:data.usage.completion_tokens??data.usage.output_tokens??0,totalTokens:data.usage.total_tokens??0}:null;
      const result={text,structured,model:data.model||settings.model,source:'ai',usage,requestId:taskKey};if(taskKey)database().finishTask(taskKey,result,null);
-     return send(res,200,result);
+     return send(res,200,clientResult(result));
     }catch(e){const cancelled=e.name==='AbortError'||controller.signal.aborted;if(taskKey)database().finishTask(taskKey,null,cancelled?'生成已取消或超时':e.status?e.message:'模型服务请求失败',cancelled?'cancelled':'failed');if(cancelled)throw fail('生成已取消或等待超过 90 秒，请重试',504);throw e;}
     finally{active--;clearTimeout(timeout);res.off('close',disconnected);}
    }

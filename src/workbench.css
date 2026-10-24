@@ -375,7 +375,7 @@
  .commercial-editor .editor-header { padding:10px 12px;flex-wrap:wrap; }
  .commercial-editor .editor-header>div:last-child { width:100%;justify-content:flex-end;gap:6px; }
  .commercial-editor .editor-header .save-indicator { margin-right:auto;font-size:12px; }
- .commercial-editor .editor-header .icon-button[aria-label="生成章节规划"],.commercial-editor .editor-header .icon-button[aria-label="章节版本记录"],.commercial-editor .editor-header .icon-button[aria-label="AI 与数据设置"] { display:inline-flex; }
+ .commercial-editor .editor-header .icon-button[aria-label="生成章节规划"],.commercial-editor .editor-header .icon-button[aria-label="章节版本记录"],.commercial-editor .editor-header .icon-button[aria-label="创作与数据设置"] { display:inline-flex; }
  .commercial-editor .editor-header .button.primary { font-size:12px;padding:6px 9px; }
 }
 

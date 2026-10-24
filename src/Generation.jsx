@@ -9,7 +9,7 @@ export async function requestApi(url,body,{method='POST',signal}={}) {
 export function GenerationProvider({children}) {
  const [mode,setModeValue]=useState(()=>{try{return localStorage.getItem('mdd-ai-mode')==='ai'?'ai':'demo';}catch{return 'demo';}});
  const [settings,setSettings]=useState(null);
- const refresh=async()=>{try{const data=await requestApi('/api/settings',undefined,{method:'GET'});setSettings(data);try{if(localStorage.getItem('mdd-ai-mode')===null&&data.configured&&data.defaultMode==='ai')setModeValue('ai');}catch{}return data;}catch{return null;}};
+ const refresh=async()=>{try{const data=await requestApi('/api/service/status',undefined,{method:'GET'});setSettings(data);try{if(localStorage.getItem('mdd-ai-mode')===null&&data.configured&&data.defaultMode==='ai')setModeValue('ai');}catch{}return data;}catch{return null;}};
  useEffect(()=>{refresh();},[]);
  const setMode=value=>{setModeValue(value);try{localStorage.setItem('mdd-ai-mode',value);}catch{}};
  return <GenerationContext.Provider value={{mode,setMode,settings,refresh}}>{children}</GenerationContext.Provider>;
@@ -34,5 +34,5 @@ export function useGeneration() {
  return {...service,mode,source,error,generate,cancel};
 }
 export function GenerationStatus({generation,busy=false,onSettings}) {
- return <div className="generation-status"><span className="soft-label">{generation.mode==='ai'?'真实 AI 模式':'示例模式'}</span>{generation.mode==='ai'&&generation.settings?.model&&<small className="generation-model">{generation.settings.model}</small>}{onSettings&&<button className="text-button" onClick={onSettings}><Settings2 size={13}/>配置</button>}{busy&&<button className="text-button" onClick={generation.cancel}><X size={13}/>取消生成</button>}{generation.error&&<p role="alert">{generation.error}</p>}</div>;
+ return <div className="generation-status"><span className="soft-label">{generation.mode==='ai'?'智能创作':'示例体验'}</span>{onSettings&&<button className="text-button" onClick={onSettings}><Settings2 size={13}/>设置</button>}{busy&&<button className="text-button" onClick={generation.cancel}><X size={13}/>取消生成</button>}{generation.error&&<p role="alert">{generation.error}</p>}</div>;
 }
