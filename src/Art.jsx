@@ -35,8 +35,3 @@ export function BookCover({ work, large = false }) {
    <strong>{work.title}</strong><span className="cover-subtitle">{work.subtitle || 'A STORY TO BE TOLD'}</span>
  </div>;
 }
-
-export function StudioArt({variant='books'}) {
- const books=[{cover:'fog',title:'长夜来信',subtitle:'LETTERS IN THE MIST'},{cover:'spring',title:'等风也等你',subtitle:'WHEN THE WIND COMES'},{cover:'orbit',title:'第七次日落',subtitle:'THE SEVENTH SUNSET'}];
- return <div className={`studio-art studio-art-${variant}`} aria-hidden="true"><span className="studio-art-glow"/><div className="studio-art-books">{books.map((work,i)=><div className={`studio-art-book art-book-${i+1}`} key={work.cover}><BookCover work={work}/></div>)}</div><span className="studio-art-spark spark-one">✦</span><span className="studio-art-spark spark-two">✧</span><span className="studio-art-caption">好故事，未完待续。</span></div>;
-}
