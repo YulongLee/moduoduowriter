@@ -23,9 +23,14 @@ const controls = ['brand', 'close', 'account'].map(name => ({
   classList:{contains:className => name === 'close' && className === 'mobile-nav-close'},
   focus() { focused = name; document.activeElement = this; }
 }));
+const menuControls = ['personal-space', 'settings', 'help'].map(name => ({
+  focus() { focused = name; document.activeElement = this; }
+}));
 const desktopToggle = {focus(){focused = 'desktop-toggle'; document.activeElement = this;}, contains:target => target === desktopToggle};
 const mobileToggle = {focus(){focused = 'mobile-toggle'; document.activeElement = this;}};
-const zoneNode = {contains:target => controls.includes(target)};
+const accountMenuNode = {querySelectorAll:() => menuControls, contains:target => menuControls.includes(target)};
+const accountWrapNode = {contains:target => target === controls[2] || target === accountMenuNode || menuControls.includes(target)};
+const zoneNode = {contains:target => controls.includes(target) || target === accountWrapNode || accountWrapNode.contains(target)};
 const server = await createServer({server:{middlewareMode:true, hmr:false}, appType:'custom'});
 let renderer;
 try {
@@ -33,13 +38,31 @@ try {
   const Icon = props => React.createElement('svg', props);
   const items = [{id:'home', label:'首页', icon:Icon}, {id:'novels', label:'小说写作', icon:Icon}];
   let destination;
-  const props = {items, route:'home', navigate:value => destination = value, setModal(){}, onSearch(){}};
+  const modalRequests = [];
+  const props = {items, route:'home', navigate:value => destination = value, setModal:value => modalRequests.push(value), onSearch(){}};
   function Draft() { const [text, setText] = useState(''); return React.createElement('textarea', {'aria-label':'未提交灵感', value:text, onChange:event => setText(event.target.value)}); }
   const tree = overrides => React.createElement(WorkbenchFrame, {...props, ...overrides}, React.createElement(Draft));
   const button = label => renderer.root.findByProps({'aria-label':label});
   const click = async label => { await act(async () => button(label).props.onClick()); };
   const sidebar = () => renderer.root.findByProps({id:'main-sidebar'});
   const zone = () => renderer.root.findByProps({className:'sidebar-hover-zone'});
+  const accountMenus = () => renderer.root.findAllByProps({role:'menu', 'aria-label':'账号菜单'});
+  const accountMenu = () => renderer.root.findByProps({role:'menu', 'aria-label':'账号菜单'});
+  const accountItems = () => accountMenu().findAllByProps({role:'menuitem'});
+  const accountWrap = () => renderer.root.findByProps({className:'sidebar-user-wrap'});
+  const assertAccountClosed = () => {
+    assert.equal(button('我的创作空间').props['aria-expanded'], false);
+    assert.equal(accountMenus().length, 0);
+  };
+  const menuKey = async (key, shiftKey = false) => {
+    let prevented = false;
+    const event = {key, shiftKey, preventDefault(){prevented = true;}};
+    await act(async () => {
+      accountMenu().props.onKeyDown(event);
+      emit('keydown', event);
+    });
+    return prevented;
+  };
   const isCollapsed = () => sidebar().props['data-collapsed'] || sidebar().props['aria-hidden'];
   const enter = async (pointerType = 'mouse') => { await act(async () => zone().props.onPointerEnter({pointerType})); };
   const leave = async () => { await act(async () => zone().props.onPointerLeave({pointerType:'mouse'})); };
@@ -49,6 +72,9 @@ try {
     await act(async () => { renderer = TestRenderer.create(tree(overrides), {createNodeMock:element => {
       if (element.props.id === 'main-sidebar') return {querySelectorAll:() => controls, querySelector:() => controls[0]};
       if (element.props.className === 'sidebar-hover-zone') return zoneNode;
+      if (element.props.className === 'sidebar-user-wrap') return accountWrapNode;
+      if (element.props.role === 'menu' && element.props['aria-label'] === '账号菜单') return accountMenuNode;
+      if (element.props['aria-label'] === '我的创作空间') return controls[2];
       if (element.props['aria-label'] === '显示导航') return desktopToggle;
       if (element.props['aria-label'] === '打开菜单') return mobileToggle;
       return null;
@@ -118,6 +144,83 @@ try {
   assert.ok([...listeners.values()].every(set => set.size === 0), 'Unmount removes listeners and pending work');
   console.log('PASS keyboard access, focus exit, Escape, touch fallback, outside click, window blur and modal isolation');
 
+  await mount();
+  assertAccountClosed();
+  assert.equal(button('我的创作空间').props['aria-haspopup'], 'menu');
+  await click('会员与墨点');
+  assert.equal(destination, 'membership');
+  assert.equal(isCollapsed(), true, 'Membership is available directly from the icon rail');
+  await click('我的创作空间');
+  assert.equal(isCollapsed(), false, 'The account button expands the icon rail before opening its menu');
+  assert.equal(button('我的创作空间').props['aria-expanded'], true);
+  assert.deepEqual(accountItems().map(item => item.children.filter(child => typeof child === 'string').join('')), ['个人空间', '创作与数据设置', '帮助与反馈']);
+  assert.equal(focused, 'personal-space', 'Opening the menu focuses its first action');
+  await act(async () => emit('pointerdown', {target:menuControls[1]}));
+  assert.equal(accountMenus().length, 1, 'Clicks within the account menu are not outside clicks');
+  await act(async () => accountWrap().props.onBlurCapture({currentTarget:accountWrapNode, relatedTarget:menuControls[1]}));
+  assert.equal(accountMenus().length, 1, 'Focus can move between account actions without closing the menu');
+  await act(async () => emit('pointerdown', {target:controls[0]}));
+  assertAccountClosed();
+  assert.equal(isCollapsed(), false, 'A click elsewhere inside the sidebar closes only the account menu');
+  await click('我的创作空间');
+  let escapePrevented = false;
+  await act(async () => emit('keydown', {key:'Escape', preventDefault(){escapePrevented = true;}}));
+  assert.equal(escapePrevented, true);
+  assertAccountClosed();
+  assert.equal(isCollapsed(), false, 'The first Escape closes the account menu while leaving navigation available');
+  assert.equal(focused, 'account');
+  await act(async () => emit('keydown', {key:'Escape'}));
+  assert.equal(isCollapsed(), true, 'The second Escape closes navigation');
+  assert.equal(focused, 'desktop-toggle');
+
+  let arrowPrevented = false;
+  await act(async () => button('我的创作空间').props.onKeyDown({key:'ArrowUp', preventDefault(){arrowPrevented = true;}}));
+  assert.equal(arrowPrevented, true);
+  assert.equal(isCollapsed(), false);
+  assert.equal(focused, 'help', 'ArrowUp on the account button opens at the last action');
+  assert.equal(await menuKey('ArrowDown'), true); assert.equal(focused, 'personal-space', 'ArrowDown wraps from the last action to the first');
+  assert.equal(await menuKey('ArrowUp'), true); assert.equal(focused, 'help', 'ArrowUp wraps from the first action to the last');
+  assert.equal(await menuKey('Home'), true); assert.equal(focused, 'personal-space');
+  assert.equal(await menuKey('ArrowDown'), true); assert.equal(focused, 'settings');
+  assert.equal(await menuKey('End'), true); assert.equal(focused, 'help');
+  await act(async () => emit('keydown', {key:'Escape', preventDefault(){}}));
+  await act(async () => button('我的创作空间').props.onKeyDown({key:'ArrowDown', preventDefault(){}}));
+  assert.equal(focused, 'personal-space', 'ArrowDown on the account button opens at the first action');
+  // The renderer can verify default Tab is allowed; the browser determines its final focus target.
+  assert.equal(await menuKey('Tab'), false, 'Tab keeps the browser default focus movement');
+  assertAccountClosed();
+  await click('我的创作空间');
+  assert.equal(await menuKey('Tab', true), false, 'Shift+Tab also keeps the browser default focus movement');
+  assertAccountClosed();
+
+  for (const [index, type] of ['account', 'settings', 'help'].entries()) {
+    await click('我的创作空间');
+    const previousRequests = modalRequests.length;
+    await act(async () => accountItems()[index].props.onClick());
+    assert.deepEqual(modalRequests.at(-1), {type});
+    assert.equal(modalRequests.length, previousRequests + 1, 'Each menu action opens its own panel once');
+    assertAccountClosed();
+  }
+  await click('我的创作空间');
+  await act(async () => accountWrap().props.onBlurCapture({currentTarget:accountWrapNode, relatedTarget:{}}));
+  assertAccountClosed();
+  await click('我的创作空间'); await click('小说写作');
+  assert.equal(destination, 'novels'); assertAccountClosed();
+  await click('我的创作空间');
+  await act(async () => renderer.update(tree({route:'novels'})));
+  assertAccountClosed();
+  await click('我的创作空间');
+  await act(async () => emit('pointerdown', {target:{}}));
+  assertAccountClosed(); assert.equal(isCollapsed(), true);
+  await click('我的创作空间');
+  await act(async () => emit('blur'));
+  assertAccountClosed(); assert.equal(isCollapsed(), true);
+  await click('我的创作空间');
+  await act(async () => renderer.update(tree({dialogOpen:true})));
+  assertAccountClosed();
+  await unmount();
+  console.log('PASS membership entry, account menu actions, inside/outside clicks, focus exit, navigation dismissal and menu keyboard controls');
+
   window.innerWidth = 375;
   await mount();
   await enter(); assert.equal(isCollapsed(), true, 'Mobile hover does not open its drawer');
@@ -146,6 +249,48 @@ try {
   await enter(); assert.equal(isCollapsed(), false);
   await leave(); await settle(); assert.equal(isCollapsed(), true);
   console.log('PASS independent mobile drawer, focus containment, close controls and desktop/mobile resize');
+
+  await unmount();
+  window.innerWidth = 375;
+  await mount();
+  await click('打开菜单'); await click('我的创作空间');
+  await act(async () => emit('keydown', {key:'Escape', preventDefault(){}}));
+  assertAccountClosed();
+  assert.equal(isCollapsed(), false, 'Escape closes the account menu before the mobile drawer');
+  assert.equal(focused, 'account');
+  assert.equal(document.body.style.overflow, 'hidden');
+  await act(async () => emit('keydown', {key:'Escape', preventDefault(){}}));
+  assert.equal(isCollapsed(), true);
+  assert.equal(document.body.style.overflow, 'auto');
+  await click('打开菜单'); await click('我的创作空间');
+  await act(async () => emit('pointerdown', {target:menuControls[0]}));
+  assert.equal(accountMenus().length, 1);
+  await act(async () => emit('pointerdown', {target:{}}));
+  assertAccountClosed();
+  assert.equal(isCollapsed(), false, 'An outside account-menu click leaves the mobile drawer open');
+  await click('我的创作空间');
+  assert.equal(await menuKey('Tab'), true, 'Tab from the closing account menu stays within the mobile drawer');
+  assertAccountClosed();
+  assert.equal(focused, 'brand', 'The drawer wraps forward Tab from its final account button to its first control');
+  await click('我的创作空间');
+  assert.equal(await menuKey('Tab', true), false, 'The mobile drawer allows Shift+Tab from the closing account menu');
+  assertAccountClosed();
+  for (const [index, type] of ['account', 'settings', 'help'].entries()) {
+    if (isCollapsed()) await click('打开菜单');
+    await click('我的创作空间');
+    await act(async () => accountItems()[index].props.onClick());
+    assert.deepEqual(modalRequests.at(-1), {type});
+    assertAccountClosed();
+    assert.equal(isCollapsed(), true, 'Account actions close the mobile drawer');
+    assert.equal(document.body.style.overflow, 'auto');
+  }
+  await click('打开菜单'); await click('会员与墨点');
+  assert.equal(destination, 'membership');
+  assert.equal(isCollapsed(), true, 'Membership navigation closes the mobile drawer');
+  assert.equal(document.body.style.overflow, 'auto');
+  await unmount();
+  assert.ok([...listeners.values()].every(set => set.size === 0), 'Account-menu listeners are removed on unmount');
+  console.log('PASS mobile account menu dismissal, Escape priority, drawer focus containment and drawer-closing actions');
 } finally {
   if (renderer) await act(async () => renderer.unmount());
   await server.close();

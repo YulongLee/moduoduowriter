@@ -119,7 +119,7 @@ npm run build
 - `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：工具广场与文字剧本工作台。
 - `src/ToolArtwork.jsx`、`src/tool-artwork.css`：首页、工具广场和文字剧本共用的原创工具封面。
 - `src/Library.jsx`、`src/library.css`：作品书架、最近编辑、真实统计、筛选与列表视图。
-- `src/Navigation.jsx`：常驻简化图标、鼠标悬停展开文字菜单的桌面侧栏，顶部操作与独立移动导航抽屉。
+- `src/Navigation.jsx`：常驻简化图标、鼠标悬停展开文字菜单的桌面侧栏，紧凑会员入口、包含空间／设置／帮助的账号菜单，顶部操作与独立移动导航抽屉。
 - `src/Art.jsx`、`public/art/`：书封、装饰插画与本地原创绘画素材；生成提示词见「视觉素材提示词.md」。
 - `public/brand-mark.svg`、`public/brand-lockup.svg`：书页与笔尖品牌图标、组合字标；`public/favicon.svg` 为同款页签图标。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和创作/备份设置。
