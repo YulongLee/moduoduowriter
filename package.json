@@ -15,10 +15,20 @@
     "test:api": "node scripts/api-check.mjs",
     "test:functions": "node scripts/functionality-check.mjs",
     "test:generation": "node scripts/generation-check.mjs",
-    "test": "npm run check && npm run test:interactions && npm run test:navigation && npm run test:billing && npm run test:api && npm run test:functions && npm run test:generation && npm run test:cloud && npm run test:workspace && npm run test:pipeline && npm run check:design",
+    "test": "npm run check && npm run test:interactions && npm run test:navigation && npm run test:billing && npm run test:api && npm run test:functions && npm run test:generation && npm run test:cloud && npm run test:workspace && npm run test:pipeline && npm run check:design && npm run test:upgrades",
     "test:cloud": "node scripts/cloud-check.mjs",
     "test:workspace": "node scripts/workspace-check.mjs",
-    "test:pipeline": "node scripts/pipeline-check.mjs"
+    "test:pipeline": "node scripts/pipeline-check.mjs",
+    "test:home-redesign": "node scripts/home-redesign-check.mjs",
+    "test:revisions": "node scripts/revision-check.mjs",
+    "test:memory-queue": "node scripts/memory-queue-check.mjs",
+    "test:submission-versions": "node scripts/submission-versions-check.mjs",
+    "test:account-ui": "node scripts/account-ui-check.mjs",
+    "test:extended-workspace": "node scripts/extended-workspace-check.mjs",
+    "test:service-upgrade": "node scripts/service-upgrade-check.mjs",
+    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency",
+    "test:evaluation": "node scripts/writing-evaluation-check.mjs",
+    "test:billing-concurrency": "node scripts/billing-concurrency-check.mjs"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",

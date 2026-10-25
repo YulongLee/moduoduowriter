@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Settings2, LoaderCircle, X } from 'lucide-react';
+import {getRequestSpace} from './sessionScope.js';
 const GenerationContext=createContext(null);
-export async function requestApi(url,body,{method='POST',signal}={}) {
- let response;try{response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1'},...(body===undefined?{}:{body:JSON.stringify(body)}),signal});}catch(e){if(e.name==='AbortError')throw new Error('生成已取消');throw new Error('本地服务未连接，请确认网站服务正在运行');}
+export async function requestApi(url,body,{method='POST',signal,spaceId=getRequestSpace()}={}) {
+ let response;try{response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1',...(spaceId?{'X-Mdd-Space':spaceId}:{})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal});}catch(e){if(e.name==='AbortError')throw new Error('生成已取消');throw new Error('本地服务未连接，请确认网站服务正在运行');}
  let data;try{data=await response.json();}catch{throw new Error('本地服务尚未就绪，请重启网站服务');}
- if(!response.ok)throw Object.assign(new Error(data.error||'服务暂时不可用，请重试'),{status:response.status});return data;
+ if(!response.ok)throw Object.assign(new Error(data.error||'服务暂时不可用，请重试'),{status:response.status,code:data.code});return data;
 }
 export function GenerationProvider({children}) {
  const [mode,setModeValue]=useState(()=>{try{return localStorage.getItem('mdd-ai-mode')==='ai'?'ai':'demo';}catch{return 'demo';}});
@@ -25,7 +26,7 @@ export function useGeneration() {
   const controller=new AbortController();active.current=controller;setError('');
   try {
    let result;
-   if(mode==='ai')result=await requestApi('/api/generate',{...payload,requestId:globalThis.crypto?.randomUUID?.()||`task-${Date.now()}-${Math.random().toString(36).slice(2)}`},{signal:controller.signal});
+   if(mode==='ai')result=await requestApi('/api/generate',{...payload,requestId:payload.requestId||globalThis.crypto?.randomUUID?.()||`task-${Date.now()}-${Math.random().toString(36).slice(2)}`},{signal:controller.signal});
    else {await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,100);controller.signal.addEventListener('abort',()=>{clearTimeout(timer);reject(new Error('生成已取消'));},{once:true});});result=typeof demo==='function'?demo():{text:demo,source:'demo'};}
    if(controller.signal.aborted||!alive.current)throw new Error('生成已取消');
    setSource(result.source||mode);return result;

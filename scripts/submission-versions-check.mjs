@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import React,{useState} from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+import {createServer} from 'vite';
+// Controlled React state and file-download stubs; no browser and no submission network.
+globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+const downloads=[];let lastBlob;
+const originalDocument=globalThis.document,originalCreate=URL.createObjectURL,originalRevoke=URL.revokeObjectURL;
+globalThis.document={createElement:()=>({click(){downloads.push({name:this.download,blob:lastBlob});}})};
+URL.createObjectURL=blob=>{lastBlob=blob;return 'blob:submission-test';};URL.revokeObjectURL=()=>{};
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+let renderer;
+const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
+const button=name=>renderer.root.findAllByType('button').find(item=>text(item).trim()===name);
+const click=async item=>{assert.ok(item,'Expected control');await act(async()=>item.props.onClick());};
+const change=async(item,value)=>act(async()=>item.props.onChange({target:{value}}));
+const toggle=async(item,checked)=>act(async()=>item.props.onChange({target:{checked}}));
+const sample={id:'work',title:'原作名称',genre:'悬疑',description:'原作简介',chapters:[{id:'first',title:'第一章 原章标题',text:'首稿正文第一章。'},{id:'second',title:'第二章 原章标题',text:'首稿正文第二章。'}]};
+try{
+ const {submissionPreparation,checkSubmission,captureSubmissionVersion,withSubmissionVersion,defaultSubmissionVersion,submissionPackage}=await server.ssrLoadModule('/src/submissions.js');
+ const {SubmissionDesk}=await server.ssrLoadModule('/src/StudioPages.jsx');
+ const work=structuredClone(sample),settings=submissionPreparation(work,{chapterIds:['first'],description:'作者投稿简介',requirements:{minWords:1,confirmed:true}});
+ const captured=captureSubmissionVersion(work,settings,{id:'snapshot-one',capturedAt:'2026-10-26T10:00:00.000Z',versionLabel:'初次留存'}),unchanged=JSON.stringify(captured);
+ assert.deepEqual(captured.chapters,[sample.chapters[0]]);assert.equal(captured.wordCount,8);
+ work.title='后来改名';work.description='后来简介';work.genre='科幻';work.chapters[0].title='后来章节名';work.chapters[0].text='后来正文';
+ assert.equal(JSON.stringify(captured),unchanged,'Snapshots must copy the manuscript rather than reference mutable chapters');
+ const first=withSubmissionVersion({id:'record',status:'待投递',platform:'作者指定平台'},captured,{delivered:true});
+ const revised=captureSubmissionVersion(work,settings,{id:'snapshot-two',versionLabel:'显式修订版'}),second=withSubmissionVersion(first,revised);
+ assert.equal(JSON.stringify(first.snapshot),unchanged);assert.equal(second.versions.length,2);assert.equal(second.snapshot.id,'snapshot-one');assert.equal(defaultSubmissionVersion(second).id,'snapshot-two');assert.equal(defaultSubmissionVersion(second,'snapshot-one').id,'snapshot-one');
+ const oldPackage=submissionPackage(second,defaultSubmissionVersion(second,'snapshot-one'));assert.ok(oldPackage.includes('原章标题'));assert.ok(oldPackage.includes('首稿正文第一章'));assert.ok(!oldPackage.includes('后来正文'));
+ const incomplete=checkSubmission({...sample,description:'',chapters:[{...sample.chapters[0],text:''}]},{chapterIds:['first','removed'],description:'',requirements:{minWords:100,descriptionMinChars:20}});
+ assert.ok(incomplete.missing.some(item=>item.id==='description'));assert.ok(incomplete.missing.some(item=>item.id==='range'));assert.ok(incomplete.missing.some(item=>item.id==='text'));assert.ok(incomplete.missing.some(item=>item.id==='words'));assert.ok(incomplete.missing.some(item=>item.id==='requirements'));assert.equal(incomplete.capturable,false);
+ assert.throws(()=>captureSubmissionVersion(null),/关联作品/);assert.throws(()=>submissionPackage({},null),/无法还原/);
+ console.log('PASS snapshot deep copy, original-version retention, explicit revised default, exact chapter scope and readiness failures');
+ let records,replaceWorks,replaceRecords;const notices=[];
+ function Harness({initialRecords=[]}){const [works,setWorks]=useState([structuredClone(sample)]),[submissions,setSubmissions]=useState(initialRecords);records=submissions;replaceWorks=setWorks;replaceRecords=setSubmissions;return React.createElement(SubmissionDesk,{works,submissions,setSubmissions,notify:message=>notices.push(message)});}
+ const mount=async props=>act(async()=>{renderer=TestRenderer.create(React.createElement(Harness,props));});
+ await mount({});await change(renderer.root.findByProps({'aria-label':'投稿作品'}),'work');
+ await change(renderer.root.findByProps({'aria-label':'投稿简介'}),'这次准备的投稿简介');await change(renderer.root.findByProps({'aria-label':'投稿最低字数'}),'100');assert.ok(text(renderer.root.findByProps({'aria-label':'投稿准备清单'})).includes('要求 100'));
+ await toggle(renderer.root.findByProps({'aria-label':'投稿章节第二章 原章标题'}),false);await change(renderer.root.findByProps({'aria-label':'投稿最低字数'}),'5');await toggle(renderer.root.findByProps({'aria-label':'确认已核对平台要求'}),true);
+ await click(button('导出准备包'));let exported=await downloads.at(-1).blob.text();assert.ok(exported.includes('当前工作稿'));assert.ok(exported.includes('首稿正文第一章'));assert.ok(!exported.includes('首稿正文第二章'));assert.equal(records.length,0,'Preparing a download cannot claim delivery or create an immutable version');
+ await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.equal(records.length,1);assert.equal(records[0].snapshot,undefined);assert.deepEqual(records[0].chapterIds,['first']);
+ await click(button('编辑记录'));await change(renderer.root.findByProps({'aria-label':'投递版本名称'}),'初投留存');await click(button('保存投递版本'));assert.equal(records[0].status,'待投递');assert.equal(records[0].snapshot.versionLabel,'初投留存');const saved=JSON.stringify(records[0].snapshot),firstId=records[0].snapshot.id;
+ const changed={...sample,title:'改名后的原作品',genre:'科幻',description:'改稿后的简介',chapters:sample.chapters.map(chapter=>({...chapter,title:'新'+chapter.title,text:'这份后续改稿不属于初投正文。'}))};await act(async()=>replaceWorks([changed]));
+ await click(button('导出投稿包'));exported=await downloads.at(-1).blob.text();assert.ok(exported.includes('原作名称'));assert.ok(exported.includes('首稿正文第一章'));assert.ok(!exported.includes('后续改稿'));assert.equal(JSON.stringify(records[0].snapshot),saved);
+ await act(async()=>replaceWorks([]));await click(button('导出投稿包'));exported=await downloads.at(-1).blob.text();assert.ok(exported.includes('首稿正文第一章'),'Removing the source work must not prevent exporting a saved submission version');
+ await act(async()=>replaceWorks([changed]));await click(button('新建修订版'));await change(renderer.root.findByProps({'aria-label':'投稿简介'}),'这次修订版的新简介');await change(renderer.root.findByProps({'aria-label':'投稿题材'}),'科幻');await change(renderer.root.findByProps({'aria-label':'投递版本名称'}),'作者确认的修订版');await click(button('保存投递版本'));
+ assert.equal(records[0].versions.length,2);assert.equal(JSON.stringify(records[0].snapshot),saved);assert.equal(records[0].versions[1].description,'这次修订版的新简介');await click(button('导出投稿包'));exported=await downloads.at(-1).blob.text();assert.ok(exported.includes('后续改稿'));assert.ok(exported.includes('作者确认的修订版'));
+ await change(renderer.root.findByProps({'aria-label':'改名后的原作品投递版本'}),firstId);await click(button('导出投稿包'));exported=await downloads.at(-1).blob.text();assert.ok(exported.includes('首稿正文第一章'));assert.ok(!exported.includes('后续改稿'));
+ await change(renderer.root.findByProps({'aria-label':'改名后的原作品投稿状态'}),'已投递');assert.equal(records[0].status,'已投递');assert.equal(records[0].versions.length,3);assert.equal(JSON.stringify(records[0].snapshot),saved);
+ await click(button('编辑记录'));await click(button('确认已投递'));assert.equal(records[0].versions.length,4,'Every explicit delivery confirmation must retain a fresh version');
+ console.log('PASS plan-only save, selected-range preparation download, original-edit/deletion-safe export, appended revisions and explicit delivery snapshot');
+ const legacy={id:'legacy',workId:'work',title:sample.title,platform:'旧记录平台',date:'2025-01-01',status:'已投递',note:'历史记录'};await act(async()=>replaceRecords([legacy]));assert.ok(text(renderer.root).includes('未留投递版本'));const downloadCount=downloads.length;await click(button('导出投稿包'));assert.equal(downloads.length,downloadCount);assert.ok(notices.at(-1).includes('无法还原当时内容'));assert.ok(text(renderer.root).includes('补记只能留存现在的稿件'));
+ await click(button('保存投递版本'));assert.ok(records[0].snapshot.versionLabel.includes('补记当前稿'));assert.equal(records[0].status,'已投递');assert.notEqual(records[0].snapshot.capturedAt.slice(0,10),'2025-01-01');
+ console.log('PASS old records disclose missing historical content and supplemental snapshots capture the current manuscript and current time');
+}finally{if(renderer)await act(async()=>renderer.unmount());await server.close();globalThis.document=originalDocument;URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;}

@@ -1,0 +1,15 @@
+.account-mode-links { display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:17px; }
+.account-mode-links>button { padding:0;color:var(--accent);font-size:12px; }
+.account-recovery-code { min-width:0; }
+.account-recovery-code h2 { margin-top:0; }
+.account-recovery-code>code { display:block;user-select:all;overflow-wrap:anywhere;margin:15px 0;padding:15px;border:1px solid #C9DDCF;border-radius:8px;background:#F4F9F6;color:#183F2D;font-size:18px;letter-spacing:1px;line-height:1.7; }
+.account-recovery-code>p[role=status] { color:var(--muted);font-size:12px;line-height:1.8; }
+.account-recovery-consent { display:flex;align-items:flex-start;gap:9px;margin:17px 0;color:var(--muted);font-size:13px;line-height:1.8; }
+.account-recovery-consent input { flex-shrink:0;margin-top:5px; }
+.account-recovery-form { flex-basis:100%;width:100%;padding-top:14px;border-top:1px solid var(--line); }
+.account-recovery-form>p { color:var(--muted);font-size:13px;line-height:1.8; }
+.account-access .account-recovery-form>.field { display:block; }
+.billing-error-banner>button { margin-left:auto;flex-shrink:0;color:var(--accent);font-size:13px; }
+.billing-checkout button:disabled { cursor:wait; }
+.billing-checkout button:disabled:not([aria-busy=true]) { cursor:default; }
+.account-form .account-recovery-code .modal-symbol { margin-top:0; }

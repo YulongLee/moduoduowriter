@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {LoaderCircle, RefreshCw, Save, Settings2, ShieldCheck, Sparkles} from 'lucide-react';
+import {useAccount} from './Account.jsx';
 import {requestApi, useGeneration} from './Generation';
 
 export function CreationSettings() {
@@ -14,9 +15,9 @@ export function CreationSettings() {
   </div>;
 }
 
-// Operator-only entry for the current local, single-owner workspace.
-// It is deliberately absent from product navigation; production needs role-based access.
+// Operator page: role checks also run on every management API request.
 export function ServiceAdmin() {
+  const account=useAccount(),allowed=!account?.configured||account?.user?.role==='admin';
   const generation = useGeneration();
   const [form,setForm] = useState({baseUrl:'',model:'',protocol:'chat',apiKey:'',jsonMode:false,defaultMode:'demo'});
   const [busy,setBusy] = useState(false), [ready,setReady] = useState(false), [message,setMessage] = useState('');
@@ -26,7 +27,7 @@ export function ServiceAdmin() {
     catch (error) {setMessage(error.message);}
     finally {setBusy(false);}
   };
-  useEffect(() => {load();}, []);
+  useEffect(() => {if(allowed)load();}, [allowed]);
   const save = async () => {
     setBusy(true);setMessage('');
     try {const data = await requestApi('/api/settings',form,{method:'PUT'});setForm({...data,apiKey:''});await generation.refresh?.();setMessage('配置已保存，密钥仅保存在本机服务端。');}
@@ -39,6 +40,7 @@ export function ServiceAdmin() {
     catch (error) {setMessage(error.message);}
     finally {setBusy(false);}
   };
+  if(!allowed)return <section className="surface service-admin"><h1>服务管理</h1><p role="status">此页面仅供管理员维护服务连接。你可以继续使用创作和备份功能。</p></section>;
   return <section className="surface service-admin">
     <span className="modal-symbol"><Settings2/></span><h1>本机服务管理</h1>
     <p className="modal-desc">在本机维护创作服务连接。普通创作页面只展示服务状态。</p>
