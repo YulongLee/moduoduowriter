@@ -46,6 +46,7 @@ export function validateWork(work) {
  if(work.memory!==undefined)validateMemory(work.memory);
  if(work.chapterQueue!==undefined&&work.chapterQueue!==null)validateQueue(work.chapterQueue);
  if(work.summary!==undefined&&!string(work.summary,30000))throw new Error('作品摘要格式不正确');
+ if(work.lastEditedChapterId!==undefined&&!id(work.lastEditedChapterId))throw new Error('最近编辑章节格式不正确');
  if(work.versions!==undefined&&(!Array.isArray(work.versions)||work.versions.some(v=>!v||typeof v.id!=='string'||typeof v.chapterId!=='string'||typeof v.title!=='string'||typeof v.text!=='string'||typeof v.savedAt!=='string')))throw new Error('作品版本记录格式不正确');
  for(const key of ['outline','characters','notes','description','deletedAt','genre','kind'])if(work[key]!==undefined&&typeof work[key]!=='string')throw new Error('作品资料格式不正确');
  return {...work,kind:work.kind||'长篇小说',genre:work.genre||'其他',outline:work.outline||'',characters:work.characters||''};

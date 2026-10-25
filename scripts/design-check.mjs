@@ -51,4 +51,22 @@ for (const [name, foreground, background] of pairs) {
   assert.ok(ratio >= 4.5, `${name}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
   console.log(`PASS ${name} ${ratio.toFixed(2)}:1`);
 }
-console.log('Core colors meet a 4.5:1 text contrast threshold. This does not replace browser visual QA.');
+// Homepage has scoped colors; check their actual values as well as the shared theme.
+const homeCss=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
+const homeRoot=homeCss.match(/\.home-v2\s*\{([^}]+)\}/)?.[1];
+assert.ok(homeRoot,'Homepage scoped design tokens must be available');
+const homeTokens={...tokens,...Object.fromEntries([...homeRoot.matchAll(/(--[\w-]+)\s*:\s*(#[\da-f]{6})\s*;/gi)].map(match=>[match[1],match[2]]))};
+const resolve=value=>{const variable=value?.trim().match(/^var\((--[\w-]+)\)$/)?.[1];const color=variable?homeTokens[variable]:value?.trim();assert.match(color||'',/^#[\da-f]{6}$/i,'Contrast source must resolve to an actual color');return color;};
+const placeholder=homeCss.match(/\.home-prompt-field textarea::placeholder\s*\{[^}]*color\s*:\s*([^;]+);/)?.[1];
+for(const [name,foreground,background] of [
+  ['首页正文',homeTokens['--home-text'],homeTokens['--home-surface']],
+  ['首页辅助文字',homeTokens['--home-muted'],homeTokens['--home-surface']],
+  ['首页辅助文字 / 页面',homeTokens['--home-muted'],tokens['--canvas']],
+  ['首页输入提示',resolve(placeholder),homeTokens['--home-surface']],
+  ['首页主操作',homeTokens['--home-surface'],homeTokens['--home-accent']]
+]){
+  const ratio=contrast(resolve(foreground),resolve(background));
+  assert.ok(ratio>=4.5,`${name}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
+  console.log(`PASS ${name} ${ratio.toFixed(2)}:1`);
+}
+console.log('Shared and homepage colors meet a 4.5:1 text contrast threshold. This does not replace browser visual QA.');

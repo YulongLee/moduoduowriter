@@ -1,8 +1,16 @@
 export function placeRecentlyEdited(works, edited) {
   const existing = works.find(work => work.id === edited.id);
   if (!existing) return works;
+  const chapters = edited.chapters || existing.chapters || [];
+  const previousChapters = new Map((existing.chapters || []).map(chapter => [chapter.id, chapter]));
+  const changedChapters = chapters.filter(chapter => {
+    const previous = previousChapters.get(chapter.id);
+    return !previous || previous.title !== chapter.title || previous.text !== chapter.text;
+  });
+  const remembered = edited.lastEditedChapterId || existing.lastEditedChapterId;
+  const lastEditedChapterId = changedChapters.length === 1 ? changedChapters[0].id : chapters.some(chapter => chapter.id === remembered) ? remembered : undefined;
   return [
-    { ...existing, ...edited, updated:'刚刚', updatedAt:new Date().toISOString() },
+    { ...existing, ...edited, lastEditedChapterId, updated:'刚刚', updatedAt:new Date().toISOString() },
     ...works.filter(work => work.id !== edited.id)
   ];
 }

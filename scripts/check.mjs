@@ -13,7 +13,7 @@ try {
   const startup=renderToString(React.createElement(App));assert.ok(startup.includes('正在打开创作空间'));assert.ok(!startup.includes('搜索作品名称'));
   const pages = [
     ['home', '一句话生成'], ['works', '搜索作品名称'],
-    ['novels', '小说写作'], ['tools', 'AI 工具广场'], ['workflows', '从灵感到黄金三章'],
+    ['novels', '小说写作'], ['tools', '写作工具'], ['workflows', '从灵感到黄金三章'],
     ['dismantle', '点击上传 TXT 文稿'], ['scripts', '新建剧本'],
     ['video', '视频相关功能已暂缓'], ['submit', '保存投稿计划'],
     ['history', '生成记录'], ['learn', '写作手记'], ['membership', '会员与墨点'], ['service-admin','本机服务管理'], ['editor/fog', '章节正文'],

@@ -1,7 +1,7 @@
 /* Commercial workspace system: predictable structure, quiet surfaces, real content. */
 .commercial { color:var(--text);background:var(--canvas); }
 .commercial .main-content { max-width:none;padding:28px 32px 0; }
-.commercial .sidebar { background:#FAFBFC;border-color:var(--line);padding-top:22px; }
+.commercial .sidebar { background:#FCFCFA;border-color:var(--line);padding-top:22px; }
 .commercial .sidebar-header { min-height:44px; }
 .brand-mark { display:block;flex-shrink:0;user-select:none; }
 .commercial .brand { gap:10px;padding:0 2px;color:#172522; }
@@ -50,10 +50,16 @@
 .commercial .topbar { height:64px;padding:0 32px;background:#FFFFFF;border-color:var(--line);backdrop-filter:none; }
 .commercial .breadcrumb { gap:9px;font-size:13px; }
 .commercial .breadcrumb strong { color:#3D4A43;font-weight:500; }
+.commercial .topbar-brand { display:inline-flex;align-items:center;gap:10px;padding:0;flex-shrink:0;min-height:36px;color:var(--text);white-space:nowrap; }
+.commercial .topbar-brand>.brand-mark { width:28px;height:28px; }
+.commercial .topbar-brand>span { font-size:18px;font-weight:650;letter-spacing:0; }
+.commercial .topbar-brand:focus-visible { outline:2px solid var(--accent);outline-offset:4px;border-radius:4px; }
+.commercial .topbar-location-separator { width:1px;height:20px;margin:0 5px;background:var(--line); }
+.commercial .topbar-location { font-size:14px;white-space:nowrap; }
 .commercial .desktop-sidebar-toggle { border:0;width:30px;height:30px; }
 .commercial .desktop-sidebar-toggle:hover { background:#F1F4F2; }
-.commercial .global-search { width:248px;border-radius:7px;border-color:#E9ECEF;background:#F7F8FA;padding:7px 10px; }
-.commercial .global-search kbd { background:#FFFFFF;border-color:#E3E7EA;font-size:11px; }
+.commercial .global-search { width:248px;border-radius:7px;border-color:var(--line);background:#F7F8F6;padding:7px 10px; }
+.commercial .global-search kbd { background:#FFFFFF;border-color:var(--line);font-size:11px; }
 .commercial .topbar-right { gap:12px; }
 .commercial .topbar .icon-button { width:31px;height:31px;border-radius:6px; }
 .commercial .avatar { width:32px;height:32px;background:#EAF1E7;border-color:#DCE6D8;color:#4D674A;font-size:14px; }
@@ -185,6 +191,8 @@
 }
 @media(min-width:1750px) { .commercial .full-market-grid { grid-template-columns:repeat(5,minmax(0,1fr)); } }
 @media(max-width:1200px) { .commercial .full-market-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:1180px) { .commercial .topbar-right { gap:8px; }.commercial .global-search { width:190px; }.commercial .topbar-location,.commercial .topbar-location-separator { display:none; } }
+@media(max-width:600px) { .commercial .topbar-brand { gap:7px; }.commercial .topbar-brand>span { font-size:16px; }.commercial .topbar-brand>.brand-mark { display:none; } }
 @media(max-width:1024px) { .commercial .topbar { height:58px;padding:0 24px; } .commercial .main-content { padding:24px 24px 0; } }
 @media(max-width:900px) { .script-feature { display:block;min-height:230px; } .script-feature-copy { max-width:65%; } .script-illustration { transform:scale(.7);right:18px;top:10px; } .commercial .full-market-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:800px) { .commercial .global-search { width:33px;padding:8px; } }

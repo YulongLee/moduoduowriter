@@ -1,16 +1,16 @@
 /* 墨多多：墨绿品牌、清晰的中性色与有语义的功能辅助色。 */
 :root {
-  --canvas: #F7F8FA;
+  --canvas: #F5F6F3;
   --surface: #FFFFFF;
-  --surface-soft: #F3F5F6;
-  --text: #192125;
-  --muted: #626C75;
-  --subtle: #626D78;
-  --line: #E2E6E9;
-  --accent: #20624F;
-  --accent-hover: #174B3D;
-  --accent-soft: #EDF5F1;
-  --accent-line: #C3D9CC;
+  --surface-soft: #F1F3EF;
+  --text: #222A26;
+  --muted: #66716A;
+  --subtle: #66716A;
+  --line: #E0E5E0;
+  --accent: #285B49;
+  --accent-hover: #204C3D;
+  --accent-soft: #EDF3EE;
+  --accent-line: #C6D8CE;
   --highlight: #EFE2C4;
   --positive: #22724C;
   --gold: #84632E;
