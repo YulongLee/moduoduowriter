@@ -235,6 +235,7 @@
   .commercial-editor .editor-header>div:last-child { margin-left:auto; }
 }
 @media(max-width:1000px) {
+  .commercial-editor .editor-header>div:first-child>.brand-mark { display:none; }
   .commercial-editor .chapter-sidebar.chapter-open { position:absolute;inset:0 auto 0 0;top:0;width:268px;max-width:88%;height:100%;box-shadow:12px 0 32px #19212514; }
   .commercial-editor .chapter-scrim { position:absolute;inset:0;background:#19212538; }
   .commercial-editor .manuscript { padding:24px 22px 0; }

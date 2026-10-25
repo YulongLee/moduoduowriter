@@ -3,9 +3,14 @@
 .commercial .main-content { max-width:none;padding:28px 32px 0; }
 .commercial .sidebar { background:#FAFBFC;border-color:var(--line);padding-top:22px; }
 .commercial .sidebar-header { min-height:44px; }
-.commercial .brand>span { font-size:20px;letter-spacing:0; }
-.commercial .brand small { letter-spacing:.2px;color:var(--muted); }
-.commercial .brand>svg { width:33px;height:33px;filter:none; }
+.brand-mark { display:block;flex-shrink:0;user-select:none; }
+.commercial .brand { gap:10px;padding:0 2px;color:#174B3D; }
+.commercial .brand>.brand-mark { width:36px;height:36px; }
+.commercial .brand>.brand-lockup { display:block;min-width:0;line-height:1;letter-spacing:0; }
+.commercial .brand-wordmark { display:flex;align-items:center;gap:7px;white-space:nowrap; }
+.commercial .brand-wordmark>strong { font-family:var(--sans);font-size:21px;line-height:1.3;font-weight:700;letter-spacing:.4px; }
+.commercial .brand .brand-writing { display:inline-flex;align-items:center;margin:0;padding:3px 5px;border:1px solid #D5E4DB;border-radius:4px;background:#EAF2EC;color:#245D49;font-size:12px;line-height:1.2;font-weight:600;letter-spacing:0; }
+.commercial .brand small { margin-top:5px;color:#53645B;font-size:11.5px;line-height:1.5;font-weight:400;letter-spacing:.6px; }
 .commercial .sidebar nav { margin-top:22px; }
 .commercial .nav-item { --nav-color:#236B52;--nav-soft:#EAF4EE;--nav-border:#CBDDD2;--nav-icon-bg:#E3EFE8;height:40px;padding:0 10px;gap:9px;font-size:15px;font-weight:500;color:#27342F;border-radius:7px;margin-bottom:4px; }
 .commercial .nav-item[data-nav="works"],.commercial .nav-item[data-nav="dismantle"],.commercial .nav-item[data-nav="history"] { --nav-color:#3267AE;--nav-soft:#ECF2FC;--nav-border:#CEDCF0;--nav-icon-bg:#E6EEFB; }
