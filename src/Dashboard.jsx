@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {ArrowRight, FileText, Search, Sparkles, Star, Workflow} from 'lucide-react';
+import {ArrowRight, ArrowUpRight, FileText, Search, Sparkles, Star, Workflow} from 'lucide-react';
 import { tools } from './data';
 import {ToolArtwork} from './ToolArtwork';
 

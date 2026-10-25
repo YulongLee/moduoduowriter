@@ -7,13 +7,17 @@
 .commercial .brand small { letter-spacing:.2px;color:var(--muted); }
 .commercial .brand>svg { width:33px;height:33px;filter:none; }
 .commercial .sidebar nav { margin-top:22px; }
-.commercial .nav-item { height:40px;font-size:14px;border-radius:7px;margin-bottom:4px; }
-.commercial .nav-item>svg { width:18px;height:18px; }
-.commercial .nav-item.active { border-color:#D6E3DC;background:#EAF1ED;box-shadow:none; }
+.commercial .nav-item { height:40px;font-size:15px;font-weight:500;color:#27342F;border-radius:7px;margin-bottom:4px; }
+.commercial .nav-item>svg { width:18px;height:18px;stroke-width:1.9; }
+.commercial .nav-item.active { color:#174B3D;font-weight:600;border-color:#D6E3DC;background:#EAF1ED;box-shadow:none; }
+.commercial .nav-item.active>svg { color:currentColor; }
 .commercial .nav-item>i { width:3px;height:13px; }
 .commercial .nav-item>small { font-size:12px;font-weight:400;color:#6A735A;background:#F0F2E9; }
-.commercial .nav-section { font-size:12px;letter-spacing:0; }
+.commercial .nav-section { color:#4D5953;font-size:12px;font-weight:500;letter-spacing:0; }
+.commercial .help-link { color:#3D4A43;font-size:13px;font-weight:500; }
 .commercial .sidebar-user { padding:13px 3px; }
+.commercial .sidebar-user strong { font-size:14px;font-weight:500; }
+.commercial .sidebar-user small { color:#4D5953; }
 .commercial .membership { background:#F3F5EF;border-color:#E1E6D9;border-radius:9px;padding:13px; }
 .commercial .membership>div,.commercial .membership strong { color:#536645; }
 .commercial .membership p { font-size:12px; }
