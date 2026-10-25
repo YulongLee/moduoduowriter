@@ -1,7 +1,7 @@
 import React from 'react';
 
 export function Brand({ small = false }) {
- return <img className="brand-mark" src="/brand-mark.svg" width={small?26:36} height={small?26:36} alt="" aria-hidden="true" draggable={false}/>;
+ return <img className="brand-mark" src="/brand-mark.svg?v=3" width={small?26:36} height={small?26:36} alt="" aria-hidden="true" draggable={false}/>;
 }
 
 export function HeroArt() {
