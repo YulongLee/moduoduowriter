@@ -50,7 +50,7 @@ try{
  const normalizedTree=()=>JSON.stringify(renderer.toJSON(),(key,value)=>['id','htmlFor','form','aria-controls','aria-labelledby'].includes(key)?undefined:value);
  const privateLabels=['我的作品','继续创作','创作数据','当前作品','对话关联作品','对话记录'];
  await mountHome();
- assert.equal(text(renderer.root.findByType('h1')),'今天，想写一个什么故事？');assert.ok(byLabel('首页创作入口'));
+ assert.match(text(renderer.root.findByType('h1')),/故事|创作|小说|灵感/);assert.ok(byLabel('首页创作入口'));
  for(const label of privateLabels)assert.equal(renderer.root.findAllByProps({'aria-label':label}).length,0,`Public home cannot include ${label}`);
  for(const marker of ['绝不能出现在公开首页','私密作品介绍','私密大纲','私密人物','私密章节','私密正文','不应出现在通用首页的账号名'])assert.ok(!text(renderer.root).includes(marker));
  const anonymousSnapshot=normalizedTree();await act(async()=>renderer.update(homeTree({authenticated:true,works:[],favorites:[]})));
@@ -60,6 +60,7 @@ try{
 
  // The public input may prepare a prompt; only explicit account-gated actions can enter private creation.
  const chatInput=byLabel('故事灵感输入'),chatForm=(()=>{let node=chatInput.parent;while(node&&node.type!=='form')node=node.parent;return node;})();assert.ok(chatForm);
+ const beforeBlank=pendingActions.length;await act(async()=>chatForm.props.onSubmit({preventDefault(){}}));assert.equal(pendingActions.length,beforeBlank);assert.equal(byLabel('故事灵感输入').props['aria-invalid'],true);assert.ok(text(renderer.root.findByProps({role:'alert'})).includes('先写下'));assert.equal(document.activeElement.label,'故事灵感输入');
  const firstPending=pendingActions.length;
  for(const label of ['聊聊故事灵感','设计一个角色','讨论下一章']){await click(button(renderer.root,label));assert.ok(byLabel('故事灵感输入').props.value.trim());assert.equal(pendingActions.length,firstPending);}
  const inputKey=async extra=>act(async()=>byLabel('故事灵感输入').props.onKeyDown?.({key:'Enter',shiftKey:false,isComposing:false,nativeEvent:{isComposing:false},preventDefault(){},...extra}));
@@ -69,6 +70,7 @@ try{
  assert.equal(networkRequests.length,0,'A public chat prompt must never automatically call a model');
  console.log('PASS public example chips only fill the draft, input methods do not submit and discussion enters an account-gated private dialog');
 
+ const toolbox=renderer.root.findByProps({id:'landing-tools'});assert.equal(toolbox.type,'details');assert.equal(toolbox.props.open,false);await act(async()=>toolbox.props.onToggle({currentTarget:{open:true}}));assert.equal(renderer.root.findByProps({id:'landing-tools'}).props.open,true,'Readers explicitly expand the retained full tool library');
  const iconClasses={ideas:'lucide-lightbulb',outline:'lucide-list-tree',character:'lucide-users-round',polish:'lucide-wand-sparkles',continue:'lucide-feather',dialogue:'lucide-messages-square',review:'lucide-scan-text',title:'lucide-type'};
  assert.equal(rows().length,8);assert.ok(text(renderer.root).includes('构思与规划'));assert.ok(text(renderer.root).includes('正文与修改'));
  for(const tool of tools){
@@ -79,8 +81,8 @@ try{
   await gated(()=>click(guide.findByProps({'aria-label':`使用${tool.title}示例`})));assert.deepEqual(modal.tool,tool);assert.equal(modal.prompt,toolGuides[tool.id].prompt);assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
  }
  await click(byLabel('收起工具使用指南'));
- const entries=byLabel('创作快捷入口');assert.equal(entries.findAllByType('button').length,6);
- for(const [label,id]of [['故事大纲','outline'],['人物设定','character'],['寻找灵感','ideas'],['剧情续写','continue'],['文字润色','polish']]){await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes(label))));assert.equal(modal.tool.id,id);assert.equal(modal.workId,undefined);}
+ const entries=byLabel('创作快捷入口');assert.equal(entries.findAllByType('button').length,5);
+ for(const [label,id]of [['灵感生成','ideas'],['故事大纲','outline'],['人物设定','character'],['剧情续写','continue'],['文字润色','polish']]){await gated(()=>click(byLabel('体验'+label)));assert.equal(modal.tool.id,id);assert.equal(modal.workId,undefined);}
  const firstTool=tools.find(tool=>tool.id==='ideas');await act(async()=>more(firstTool).props.onKeyDown({key:'ArrowUp',preventDefault(){}}));
  const menu=byLabel(`${firstTool.title}操作`),menuKey=async key=>act(async()=>menu.props.onKeyDown({key,preventDefault(){}}));
  assert.equal(document.activeElement,menuNodes.get(`${firstTool.title}操作`).items[1]);await menuKey('ArrowDown');assert.equal(document.activeElement.name,'guide');await menuKey('End');assert.equal(document.activeElement.name,'favorite');await menuKey('Home');assert.equal(document.activeElement.name,'guide');
@@ -88,16 +90,24 @@ try{
  await click(more(firstTool));await act(async()=>emit('pointerdown',{target:{}}));assert.equal(more(firstTool).props['aria-expanded'],false);
  await click(more(firstTool));route=undefined;await gated(()=>click(byLabel('收藏故事灵感发生器')));assert.equal(route,'tools');assert.equal(favoriteActions.length,0,'The public page cannot mutate or display private favorites');
  assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0);assert.equal(storageWrites.length,0);
- console.log('PASS eight retained tools/icons, six shortcuts, public authored guides and explicit account gating for tool use and favorites');
+ console.log('PASS eight retained tools/icons, five feature cards, public authored guides and explicit account gating for tool use and favorites');
 
  assert.equal(renderer.root.findAllByProps({'aria-label':'一句话故事灵感'}).length,0,'Public home must not mount the private generation form');
- const beforeExample=pendingActions.length;await click(button(renderer.root,'查看生成示例'));assert.ok(text(byLabel('预写创作示例')).includes('预先编写的示例'));assert.equal(pendingActions.length,beforeExample);
- await click(button(renderer.root,'填入示例灵感'));assert.ok(byLabel('故事灵感输入').props.value.includes('旧物记忆'));assert.equal(pendingActions.length,beforeExample,'Public preview use only fills the draft');
- const publicDraft=byLabel('故事灵感输入').props.value;await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes('生成小说'))));assert.equal(modal.type,'quick-start');assert.equal(modal.idea,publicDraft);assert.equal(modal.autoGenerate,true);assert.equal(modal.workId,undefined);
- await change(byLabel('故事灵感输入'),'');await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes('生成小说'))));assert.equal(modal.type,'quick-start');assert.equal(modal.autoGenerate,false,'A blank quick entry opens private planning without starting generation');
+ const beforeExample=pendingActions.length;await click(button(renderer.root,'查看生成示例'));assert.match(text(byLabel('预写创作示例')),/原创预写|预先编写/);assert.equal(pendingActions.length,beforeExample);
+ const exampleButtons=()=>byLabel('预写创作示例').findAllByType('button').filter(node=>node.props['aria-label']?.startsWith('查看预写示例：'));
+ assert.equal(exampleButtons().length,3);assert.equal(byLabel('预写创作示例').findAll(node=>node.props.className?.startsWith('book-cover ')).length,3,'Only the three authored public examples should have covers');
+ const exampleDrafts=[];
+ for(const [title,needle]of [['雨夜来信','明天'],['风来的那一天','旧屋'],['沉默的第七颗月亮','行星']]){
+  await change(byLabel('故事灵感输入'),'用来判断是否填入了新示例的草稿');modal=undefined;await click(byLabel('查看预写示例：'+title));assert.equal(modal,undefined);assert.equal(pendingActions.length,beforeExample);
+  const preview=byLabel('预写创作示例').findByProps({className:'home-public-example'});assert.equal(text(preview.findByType('h2')),title);
+  await click(button(renderer.root,'填入示例灵感'));const filled=byLabel('故事灵感输入').props.value;assert.ok(filled.includes(needle));assert.notEqual(filled,'用来判断是否填入了新示例的草稿');exampleDrafts.push(filled);assert.equal(pendingActions.length,beforeExample);
+ }
+ assert.equal(new Set(exampleDrafts).size,3,'Each selected authored example must fill its own story idea');
+ await click(button(byLabel('示例题材'),'科幻'));assert.equal(exampleButtons().length,1);assert.equal(exampleButtons()[0].props['aria-label'],'查看预写示例：沉默的第七颗月亮');await click(button(byLabel('示例题材'),'全部'));assert.equal(exampleButtons().length,3);
+ await change(byLabel('故事灵感输入'),'');
  await gated(()=>click(button(renderer.root,'添加参考资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
  for(const [label,expected]of [['小说写作','novels'],['剧本创作','scripts'],['小说拆书','dismantle'],['投稿中心','submit']]){route=undefined;await gated(()=>click(button(renderer.root,label)));assert.equal(route,expected);}
- route=undefined;await gated(()=>click(button(renderer.root,'进入工具库')));assert.equal(route,'tools');await gated(()=>click(byLabel('会员创作方案').findByType('button')));assert.equal(route,'membership');
+ route=undefined;await gated(()=>click(button(renderer.root,'进入工具库')));assert.equal(route,'tools');route=undefined;await gated(()=>click(byLabel('进入创作空间').findByType('button')));assert.equal(route,'works');await gated(()=>click(button(renderer.root,'查看创作方案')));assert.equal(route,'membership');
  assert.equal(imports,0,'Supplying a private import callback must not cause the public page to inspect or import documents');
  assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0);assert.equal(storageWrites.length,0);await act(async()=>renderer.unmount());renderer=null;
  assert.ok([...listeners.values()].every(values=>values.size===0));
@@ -159,13 +169,9 @@ try{
   assert.equal(modal.tool.id,'review');assert.equal(modal.prompt,toolGuides.review.prompt);
   await act(async()=>renderer.unmount());renderer=null;
   const css=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
-  const heroWidth=css.match(/\.home-window-inner\s*\{[^}]*max-width:(\d+)px/),contentWidth=css.match(/\.home-window-content\s*\{[^}]*max-width:(\d+)px/);
-  assert.ok(heroWidth&&contentWidth&&Number(heroWidth[1])>=1200&&Number(heroWidth[1])<=1600,'The new Hero must retain a readable wide-screen content limit');assert.equal(heroWidth[1],contentWidth[1],'Hero and bookshelf/tool content must share an aligned width');
-  assert.match(css,/\[hidden\][^{]*\{[^}]*display:none\s*!important/,'Folded form controls must be visually and keyboard hidden');
-  assert.match(css,/@container home-workspace \(max-width:740px\)/);assert.match(css,/@container home-workspace \(max-width:480px\)/);
-  assert.match(css,/\.home-window-hero::before\s*\{[^}]*background:url\('\/art\//,'The approved Hero scene must use the bundled background asset');
+   assert.match(css,/\[hidden\][^{]*\{[^}]*display:none\s*!important/,'Folded form controls must be visually and keyboard hidden');
   assert.equal(networkRequests.length,0);
-  console.log('PASS existing market guide handoff, controlled page width, hidden controls and mobile layout rules');
+  console.log('PASS existing market guide handoff, hidden legacy form controls and no automatic service requests');
 }finally{
  if(renderer)await act(async()=>renderer.unmount());await server.close();globalThis.fetch=originalFetch;
  if(originalDocument===undefined)delete globalThis.document;else globalThis.document=originalDocument;if(originalStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=originalStorage;

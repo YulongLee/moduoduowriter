@@ -31,7 +31,7 @@ import { validateWork } from './backup';
 import { initialWorks, tools, workflows, wordCount, workWords } from './data';
 import './studio.css';
 import { ScriptDesk } from './ScriptDesk';
-import { WorkbenchFrame } from './Navigation';
+import { WorkbenchFrame,SidebarPreferenceProvider } from './Navigation';
 import { WorkCard, WorksPage } from './Library';
 import { AccountBilling, BillingProvider, MembershipPage, TaskMeter, useBilling, useTaskMeter } from './Billing.jsx';
 import './workbench.css';
@@ -44,6 +44,7 @@ const navItems = [
  { id:'home', label:'首页', icon:LayoutDashboard },
  { id:'works', label:'我的作品', icon:FolderOpen },
   { id:'novels', label:'小说写作', icon:BookOpen, section:'创作功能', nested:true },
+ { id:'conversation',label:'创作对话',icon:MessageCircle,nested:true },
  { id:'scripts', label:'剧本创作', icon:Clapperboard, nested:true },
  ...(videoEnabled?[{ id:'video', label:'漫剧工坊', icon:Play, nested:true }]:[]),
  { id:'dismantle', label:'小说拆书', icon:BookMarked, nested:true },
@@ -60,21 +61,25 @@ const cn = (...classes) => classes.filter(Boolean).join(' ');
 function Icon({ name, ...props }) { const Component = iconMap[name] || Sparkles; return <Component {...props}/>; }
 function Empty({ title, text, action }) { return <div className="empty-state"><Feather size={36}/><h3>{title}</h3><p>{text}</p>{action}</div>; }
 
-export function App() { return <AccountProvider allowPublic><ApplicationRouter/></AccountProvider>; }
+export function App() { return <AccountProvider allowPublic><SidebarPreferenceProvider><ApplicationRouter/></SidebarPreferenceProvider></AccountProvider>; }
 
 export function ApplicationRouter() {
  const account=useAccount();
  const [route,setRoute]=useState(()=>location.hash.slice(1)||'home'),[launch,setLaunch]=useState(null);
  useEffect(()=>{if(route==='home'&&launch&&account?.ready&&!canAccessPrivate(account))setLaunch(null);},[route,launch,account?.ready,account?.error,account?.user,account?.configured,account?.spaceId]);
  useEffect(()=>{const change=()=>{const next=location.hash.slice(1)||'home';setRoute(next);if(next==='home')setLaunch(null);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
- const navigate=id=>{location.hash=id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};
+ const navigate=id=>{location.hash='#'+id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};
+ const openCreation=modal=>{const destination=modal.type==='home-conversation'?'conversation':modal.type==='tool'?'tools':modal.type==='quick-start'?'novels':'works';setLaunch({id:uid(),modal});navigate(destination);};
  const publicVisible=route==='home'&&!launch;
- return <><PublicHomeShell items={navItems} visible={publicVisible} onNavigate={navigate} onLaunch={modal=>setLaunch({id:uid(),modal})}/>{!publicVisible&&<PrivateAccountGate onHome={()=>navigate('home')}><WorkspaceProvider key={`${account?.spaceId||'unconfirmed'}:${launch?.id||'route'}`}><GenerationProvider><BillingProvider><WritingApp initialModal={launch?.modal||null} onReturnPublicHome={()=>setLaunch(null)}/></BillingProvider></GenerationProvider></WorkspaceProvider></PrivateAccountGate>}</>;
+ return <><PublicHomeShell visible={publicVisible} onNavigate={navigate} onLaunch={openCreation}/>{!publicVisible&&<PrivateAccountGate requireLogin onHome={()=>navigate('home')}><WorkspaceProvider key={`${account?.spaceId||'unconfirmed'}:${launch?.id||'route'}`}><GenerationProvider><BillingProvider><WritingApp initialModal={launch?.modal?.type==='home-conversation'?null:launch?.modal||null} initialConversation={launch?.modal?.type==='home-conversation'?launch.modal:null} onReturnPublicHome={()=>setLaunch(null)}/></BillingProvider></GenerationProvider></WorkspaceProvider></PrivateAccountGate>}</>;
 }
 
-export function WritingApp({initialModal=null,onReturnPublicHome}) {
+export function WritingApp({initialModal=null,initialConversation=null,onReturnPublicHome}) {
  const billing=useBilling(),workspace=useWorkspace();
  const [route, setRoute] = useState(location.hash.slice(1) || 'home');
+ const routeRef=useRef(route);routeRef.current=route;
+ const conversationIntent=useRef(initialConversation);
+ useEffect(()=>{if(route==='conversation')conversationIntent.current=null;},[route]);
  const [allWorks, setWorks, workSaveError] = useStored('mdd-works-v1', initialWorks);
  const worksRef=useRef(allWorks);worksRef.current=allWorks;
  const works=allWorks.filter(work=>!work.deletedAt);
@@ -91,8 +96,8 @@ export function WritingApp({initialModal=null,onReturnPublicHome}) {
  const importRef = useRef();
  const modalElement = useRef();
  const notify = message => { setToast(message); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 3200); };
- const navigate = id => {if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId(''); location.hash = id; setRoute(id); window.scrollTo(0,0); };
- useEffect(() => { const change = () => { setRoute(location.hash.slice(1) || 'home'); setModal(null); window.scrollTo(0,0); }; window.addEventListener('hashchange',change); return () => window.removeEventListener('hashchange',change); }, []);
+ const navigate = id => {if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId('');setModal(null);location.hash='#'+id;setRoute(id);window.scrollTo(0,0);};
+ useEffect(() => { const change = () => {const next=location.hash.slice(1)||'home';if(next!==routeRef.current){setRoute(next);setModal(null);}window.scrollTo(0,0);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  useEffect(() => { const onKey = event => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setModal({ type:'search' }); } if (event.key === 'Escape') { setModal(null); } }; window.addEventListener('keydown',onKey); return () => window.removeEventListener('keydown',onKey); }, []);
  useEffect(() => {
   if(!modal) return;
@@ -127,6 +132,7 @@ export function WritingApp({initialModal=null,onReturnPublicHome}) {
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
      {route === 'novels' && <NovelDesk {...common}/>}
+     {route === 'conversation' && <div className="private-conversation-page" aria-label="创作对话工作区"><HomeConversation works={works} work={null} initialPrompt={conversationIntent.current?.initialPrompt||''} setModal={setModal} notify={notify}/></div>}
      {route === 'tools' && <ReferenceTools {...common}/>}
      {route === 'workflows' && <WorkflowsPage {...common}/>}
      {route === 'dismantle' && <DismantleDesk {...common}/>}

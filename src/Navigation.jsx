@@ -1,12 +1,20 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Bell, ChevronRight, ChevronsUpDown, CircleHelp, Crown, Menu, PanelLeftOpen, Search, Settings2, UserRound, X} from 'lucide-react';
+import React, {createContext,useContext,useEffect,useRef,useState} from 'react';
+import {Bell, ChevronRight, ChevronsUpDown, CircleHelp, Crown, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings2, UserRound, X} from 'lucide-react';
 import {Brand} from './Art';
 import {BillingBadge} from './Billing.jsx';
 import {useAccount} from './Account.jsx';
 import {WorkspaceStatus} from './Workspace.jsx';
 
+const SidebarPreferenceContext=createContext(null);
+export function SidebarPreferenceProvider({children}) {
+  const [open,setOpen]=useState(true);
+  return <SidebarPreferenceContext.Provider value={{open,setOpen}}>{children}</SidebarPreferenceContext.Provider>;
+}
+
 export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dialogOpen = false, publicView=false, navigationId='main-sidebar', children}) {
-  const [desktopOpen, setDesktopOpen] = useState(false);
+  const preference=useContext(SidebarPreferenceContext);
+  const [localOpen,setLocalOpen]=useState(true);
+  const desktopOpen=preference?preference.open:localOpen,setDesktopOpen=preference?preference.setOpen:setLocalOpen;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const account = useAccount();
@@ -15,12 +23,6 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   const sidebarRef = useRef(null);
   const mobileToggleRef = useRef(null);
   const desktopToggleRef = useRef(null);
-  const hoverZoneRef = useRef(null);
-  const hideTimer = useRef(null);
-  const pointerInside = useRef(false);
-  const keyboardMode = useRef(false);
-  const ignoreFocus = useRef(false);
-  const focusAfterOpen = useRef(false);
   const accountButtonRef = useRef(null);
   const accountWrapRef = useRef(null);
   const accountMenuRef = useRef(null);
@@ -39,71 +41,12 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   useEffect(() => {
     if (dialogOpen || (desktop ? !desktopOpen : !mobileOpen)) setAccountOpen(false);
   }, [desktop, desktopOpen, mobileOpen, dialogOpen]);
-  const cancelHide = () => clearTimeout(hideTimer.current);
-  const reveal = () => {
-    if (!desktop || dialogOpen || ignoreFocus.current) return;
-    cancelHide();
-    setDesktopOpen(true);
-  };
-  const scheduleHide = () => {
-    cancelHide();
-    hideTimer.current = setTimeout(() => {
-      const keyboardInside = keyboardMode.current && hoverZoneRef.current?.contains(document.activeElement);
-      if (!pointerInside.current && !keyboardInside) setDesktopOpen(false);
-    }, 150);
-  };
-  const focusSidebar = () => {
-    if (!desktop || dialogOpen) return;
-    keyboardMode.current = true;
-    if (desktopOpen) sidebarRef.current?.querySelector('button')?.focus();
-    else { focusAfterOpen.current = true; reveal(); }
-  };
-  useEffect(() => {
-    if (desktopOpen && focusAfterOpen.current) {
-      focusAfterOpen.current = false;
-      sidebarRef.current?.querySelector('button')?.focus();
-    }
-  }, [desktopOpen]);
-  useEffect(() => {
-    cancelHide();
-    pointerInside.current = false;
-    focusAfterOpen.current = false;
-    setDesktopOpen(false);
-  }, [desktop, dialogOpen]);
-  useEffect(() => {
-    if (!desktop) return;
-    const onKey = event => {
-      if (event.key !== 'Escape') return;
-      if (accountOpenRef.current) {
-        event.preventDefault?.();
-        setAccountOpen(false);
-        accountButtonRef.current?.focus();
-        return;
-      }
-      cancelHide();
-      pointerInside.current = false;
-      focusAfterOpen.current = false;
-      setDesktopOpen(false);
-      if (hoverZoneRef.current?.contains(document.activeElement)) {
-        ignoreFocus.current = true;
-        desktopToggleRef.current?.focus();
-        ignoreFocus.current = false;
-      }
-    };
-    const onBlur = () => { cancelHide(); pointerInside.current = false; setDesktopOpen(false); setAccountOpen(false); };
-    const onOutside = event => {
-      if (!hoverZoneRef.current?.contains(event.target) && !desktopToggleRef.current?.contains(event.target)) onBlur();
-    };
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('blur', onBlur);
-    window.addEventListener('pointerdown', onOutside);
-    return () => {
-      cancelHide();
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('blur', onBlur);
-      window.removeEventListener('pointerdown', onOutside);
-    };
-  }, [desktop]);
+  const toggleSidebar=()=>{if(!desktop||dialogOpen)return;setDesktopOpen(previous=>!previous);setAccountOpen(false);};
+  useEffect(()=>{
+    if(!desktop)return;
+    const key=event=>{if(event.key==='Escape'&&accountOpenRef.current){event.preventDefault?.();setAccountOpen(false);accountButtonRef.current?.focus();}};
+    window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);
+  },[desktop]);
   useEffect(() => {
     if (!mobileOpen || desktop) return;
     const sidebar = sidebarRef.current;
@@ -149,9 +92,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
 
   const go = destination => { setAccountOpen(false); setMobileOpen(false); navigate(destination); };
   const openAccountMenu = (position = 'first') => {
-    cancelHide();
     accountInitialFocus.current = position;
-    if (desktop) setDesktopOpen(true);
     setAccountOpen(true);
   };
   const openAccountPanel = type => { setAccountOpen(false); setMobileOpen(false); setModal({type}); };
@@ -167,17 +108,9 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   const accountName = account?.user?.username || '个人空间';
 
 
-  return <div className={`app-shell commercial sidebar-auto${publicView?' public-home-shell':''}`}>
+  return <div className={`app-shell commercial sidebar-auto${publicView?' public-home-shell':''}`} data-sidebar-expanded={desktop&&desktopOpen}>
     {mobileOpen && !desktop && <button className="mobile-scrim" aria-label="关闭菜单" onClick={() => setMobileOpen(false)}/>}
-    <div className="sidebar-hover-zone" ref={hoverZoneRef} data-open={desktop && desktopOpen} onPointerEnter={event => {
-      if (!desktop || event.pointerType === 'touch') return;
-      pointerInside.current = true; keyboardMode.current = false; reveal();
-    }} onPointerLeave={event => {
-      if (!desktop || event.pointerType === 'touch') return;
-      pointerInside.current = false; keyboardMode.current = false; scheduleHide();
-    }} onPointerDownCapture={() => {keyboardMode.current = false;}} onKeyDownCapture={() => {keyboardMode.current = true;}} onFocusCapture={reveal} onBlurCapture={event => {
-      if (desktop && !event.currentTarget.contains(event.relatedTarget)) scheduleHide();
-    }}>
+    <div className="sidebar-hover-zone" data-open={desktop && desktopOpen}>
 
     <aside id={navigationId} ref={sidebarRef} className={`sidebar${mobileOpen ? ' mobile-open' : ''}`} aria-label="工作台导航" data-collapsed={desktop && !desktopOpen} aria-hidden={hidden} inert={hidden}>
       <div className="sidebar-header"><button className="brand" aria-label="墨多多写作首页" onClick={() => go('home')}><Brand/><span className="brand-lockup"><span className="brand-wordmark"><strong>墨多多</strong><span className="brand-writing">写作</span></span><small>让好故事发生</small></span></button><button className="icon-button mobile-nav-close" aria-label="关闭导航" onClick={() => setMobileOpen(false)}><X size={19}/></button></div>
@@ -197,7 +130,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
     </aside>
     </div>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label="显示导航" title="显示完整导航，也可将鼠标移到左侧图标栏" aria-controls={navigationId} aria-expanded={desktopOpen} onClick={focusSidebar}><PanelLeftOpen size={20}/></button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls={navigationId} aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><button className="topbar-brand" aria-label="墨多多写作首页" onClick={()=>go('home')}><Brand small/><span>墨多多写作</span></button><span className="topbar-location-separator" aria-hidden="true"/><strong className="topbar-location">{route==='home'?(publicView?'首页':'创作工作台'):current.label}</strong>{!publicView&&<WorkspaceStatus compact/>}</div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>{publicView?'搜索工具与创作方法':'搜索作品、工具或灵感'}</span><kbd>⌘ K</kbd></button>{!publicView&&<BillingBadge onClick={() => go('membership')}/>}<div className="topbar-divider"/><button className="icon-button" aria-label="创作与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button>{publicView?<button type="button" className="public-account-action" aria-label={account?.user?'个人中心':'登录或注册'} onClick={()=>setModal({type:'account'})}>{account?.user?'个人中心':'登录 / 注册'}</button>:<button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button>}</div></header>
+      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label={desktopOpen?'收起导航':'展开导航'} title={desktopOpen?'收起导航':'展开导航'} aria-controls={navigationId} aria-expanded={desktopOpen} onClick={toggleSidebar}>{desktopOpen?<PanelLeftClose size={20}/>:<PanelLeftOpen size={20}/>}</button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls={navigationId} aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><button className="topbar-brand" aria-label="墨多多写作首页" onClick={()=>go('home')}><Brand small/><span>墨多多写作</span></button><span className="topbar-location-separator" aria-hidden="true"/><strong className="topbar-location">{route==='home'?(publicView?'首页':'创作工作台'):current.label}</strong>{!publicView&&<WorkspaceStatus compact/>}</div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>{publicView?'搜索工具与创作方法':'搜索作品、工具或灵感'}</span><kbd>⌘ K</kbd></button>{!publicView&&<BillingBadge onClick={() => go('membership')}/>}<div className="topbar-divider"/><button className="icon-button" aria-label="创作与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button>{publicView?<button type="button" className="public-account-action" aria-label={account?.user?'个人中心':'登录或注册'} onClick={()=>setModal({type:'account'})}>{account?.user?'个人中心':'登录 / 注册'}</button>:<button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button>}</div></header>
       {children}
     </div>
   </div>;

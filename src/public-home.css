@@ -1,5 +1,24 @@
-.public-home-shell .public-account-action { display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:7px 13px;border:1px solid #245f4b;border-radius:7px;color:#fff;background:#245f4b;font-size:13px;white-space:nowrap; }
-.public-home-shell .public-account-action:hover { background:#194c3a; }
+.public-landing { position:relative;min-height:100vh;background:#fff;color:#172b25;font-family:var(--sans); }
+.public-landing[hidden] { display:none!important; }
+.public-landing-header { position:absolute;z-index:20;top:0;left:0;right:0;display:flex;align-items:center;gap:34px;width:100%;max-width:1496px;height:76px;margin:auto;padding:0 36px; }
+.public-landing-brand { display:flex;align-items:center;gap:12px;flex-shrink:0;padding:0;background:none;color:#172522;font-size:21px;font-weight:700;white-space:nowrap; }
+.public-landing-brand .brand-mark { width:36px;height:36px; }
+.public-landing-header>nav { display:flex;align-items:center;gap:26px;min-width:0; }
+.public-landing-header>nav>button { position:relative;min-height:38px;padding:7px 0;color:#34483f;font-size:14px;white-space:nowrap; }
+.public-landing-header>nav>button[aria-current=page] { color:#142e25;font-weight:600; }
+.public-landing-header>nav>button[aria-current=page]::after { position:absolute;bottom:0;left:0;right:0;height:2px;background:#245f4b;content:""; }
+.public-landing-header-actions { display:flex;align-items:center;gap:14px;margin-left:auto; }
+.public-landing-header-actions>button { display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:7px 18px;border-radius:20px;font-size:14px;white-space:nowrap; }
+.public-landing-search { color:#66736c;border:1px solid #e3e9e5;background:#ffffffde; }
+.public-landing-search>span { max-width:170px;overflow:hidden;text-overflow:ellipsis;font-size:12px; }
+.public-landing-login { color:#244f3d;border:1px solid #ceddd3;background:#ffffffc9; }
+.public-landing-start { color:#fff;border:1px solid #174b3b;background:#174b3b; }
+.public-landing-start:hover { background:#103e2f; }
+.public-landing-header button:focus-visible,.public-landing-footer button:focus-visible { outline:2px solid #245f4b;outline-offset:4px; }
+.public-landing-main { width:100%;min-width:0; }
+.public-landing-footer { display:flex;align-items:center;gap:24px;width:100%;max-width:1496px;margin:0 auto;padding:22px 36px;color:#66736c;font-size:12px; }
+.public-landing-footer button { margin-left:auto;color:#3c6652; }
+.private-conversation-page { width:100%;max-width:1100px;margin:0 auto; }
 .public-home-dialog { max-width:560px; }
 .public-home-dialog .account-form { width:100%;max-width:none;padding:0;background:transparent;box-shadow:none; }
 .public-home-dialog h2 { display:flex;align-items:center;gap:9px; }
@@ -9,4 +28,6 @@
 .public-help-copy { margin:18px 0 24px;color:#52685d;font-size:15px;line-height:1.9; }
 .modal.home-conversation-modal { width:min(1050px,calc(100vw - 48px));max-width:1050px;padding:38px 30px 24px; }
 .home-conversation-modal .home-chat { border:0;padding:0;box-shadow:none; }
-@media(max-width:640px) { .public-home-shell .topbar-right .notification,.public-home-shell .topbar-right>.icon-button { display:none; }.public-home-shell .public-account-action { min-height:34px;padding:6px 10px;font-size:12px; }.modal.home-conversation-modal { width:calc(100vw - 24px);padding:38px 18px 20px; } }
+@media(max-width:1250px) { .public-landing-header { gap:25px;padding:0 24px; }.public-landing-header>nav { gap:18px; }.public-landing-search>span { display:none; }.public-landing-header-actions { gap:9px; }.public-landing-header-actions>.public-landing-search { padding:7px 10px; } }
+@media(max-width:900px) { .public-landing-header { position:relative;flex-wrap:wrap;gap:9px 20px;height:auto;min-height:76px;padding:16px 24px 0;background:#fff; }.public-landing-header>nav { order:3;width:100%;gap:26px;overflow-x:auto;padding:4px 0 10px; }.public-landing-brand { font-size:20px; }.public-landing-header-actions { gap:8px; }.public-landing-header-actions>button { min-height:35px;padding:6px 14px; }.public-landing-footer { padding:20px 24px;flex-wrap:wrap;gap:10px 20px; } }
+@media(max-width:640px) { .public-landing-header { padding:14px 18px 0;gap:10px; }.public-landing-brand { font-size:18px;gap:9px; }.public-landing-brand .brand-mark { width:31px;height:31px; }.public-landing-header-actions>.public-landing-search { display:none; }.public-landing-header-actions>button { padding:6px 11px;font-size:12px; }.public-landing-header-actions>.public-landing-start svg { display:none; }.public-landing-header>nav { gap:24px; }.public-landing-header>nav>button { font-size:13px; }.public-landing-footer { padding:18px; }.modal.home-conversation-modal { width:calc(100vw - 24px);padding:38px 18px 20px; } }

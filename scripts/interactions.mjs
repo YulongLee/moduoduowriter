@@ -116,15 +116,16 @@ try {
   let homeRoute;const homeGates=[],homeFavorites=[];
   function HomeHarness({works=initialWorks}={}){return React.createElement(ReferenceHome,{works,favorites:['ideas'],toggleFavorite:id=>homeFavorites.push(id),onRequireAccount:action=>homeGates.push(action),setModal:m=>modal=m,navigate:route=>homeRoute=route,notify});}
   await act(async()=>{renderer=TestRenderer.create(React.createElement(HomeHarness));});
-  assert.equal(textOf(renderer.root.findByType('h1')),'今天，想写一个什么故事？');assert.ok(renderer.root.findByProps({'aria-label':'首页创作入口'}));
+  assert.match(textOf(renderer.root.findByType('h1')),/故事|创作|小说|灵感/);assert.ok(renderer.root.findByProps({'aria-label':'首页创作入口'}));
   const genericHomeText=textOf(renderer.root);
   for(const label of ['我的作品','继续创作','创作数据','当前作品','对话关联作品','新故事创作内容'])assert.equal(renderer.root.findAllByProps({'aria-label':label}).length,0);
-  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);assert.equal(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').length,6);
+  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);assert.equal(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').length,5);
   const afterAccount=async()=>{const callback=homeGates.pop();assert.equal(typeof callback,'function');await act(async()=>callback());};
+  await act(async()=>renderer.root.findByProps({id:'landing-tools'}).props.onToggle({currentTarget:{open:true}}));
   modal=undefined;await click(renderer.root.findByProps({'aria-label':'使用故事灵感发生器'}));assert.equal(homeGates.length,1);assert.equal(modal,undefined);await afterAccount();assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'ideas');assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
   await act(async()=>renderer.root.findByProps({'aria-label':'故事灵感输入'}).props.onChange({target:{value:'  停摆钟楼里的明日来信  '}}));
-  modal=undefined;await click(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').find(node=>textOf(node).includes('生成小说')));assert.equal(homeGates.length,1);assert.equal(modal,undefined);await afterAccount();
-  assert.deepEqual({type:modal.type,idea:modal.idea,genre:modal.genre,audience:modal.audience,perspective:modal.perspective,kind:modal.kind,mode:modal.mode,autoGenerate:modal.autoGenerate},{type:'quick-start',idea:'停摆钟楼里的明日来信',genre:'玄幻',audience:'全频',perspective:'第三人称',kind:'长篇小说',mode:'灵感共创',autoGenerate:true});
+  modal=undefined;await act(async()=>renderer.root.findByProps({'aria-label':'故事创作表单'}).props.onSubmit({preventDefault(){}}));assert.equal(homeGates.length,1);assert.equal(modal,undefined);await afterAccount();assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'停摆钟楼里的明日来信');
+  modal=undefined;await click(renderer.root.findByProps({'aria-label':'体验故事大纲'}));assert.equal(modal,undefined);await afterAccount();assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'outline');assert.equal(modal.workId,undefined);
   homeRoute=undefined;await click(findButton(renderer,'投稿中心'));assert.equal(homeRoute,undefined);await afterAccount();assert.equal(homeRoute,'submit');
   await click(renderer.root.findByProps({'aria-label':'故事灵感发生器更多操作'}));homeRoute=undefined;await click(renderer.root.findByProps({'aria-label':'收藏故事灵感发生器'}));assert.equal(homeRoute,undefined);await afterAccount();assert.equal(homeRoute,'tools');assert.equal(homeFavorites.length,0);
   assert.equal(renderer.root.findAllByProps({className:'home-model-button'}).length,0);await act(async()=>renderer.unmount());

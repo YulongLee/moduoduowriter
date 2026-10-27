@@ -8,8 +8,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const listeners = new Map();
 let focused = '', preferenceReads = 0;
 globalThis.localStorage = {
-  getItem() { preferenceReads++; throw Error('Old preferences must not control hover navigation'); },
-  setItem() { throw Error('Hover state must not be persisted'); }
+  getItem() { preferenceReads++; throw Error('Old preferences must not control manual navigation'); },
+  setItem() { throw Error('Navigation state must not be persisted'); }
 };
 globalThis.window = {
   innerWidth:1440,
@@ -34,7 +34,7 @@ const zoneNode = {contains:target => controls.includes(target) || target === acc
 const server = await createServer({server:{middlewareMode:true, hmr:false}, appType:'custom'});
 let renderer;
 try {
-  const {WorkbenchFrame} = await server.ssrLoadModule('/src/Navigation.jsx');
+  const {WorkbenchFrame, SidebarPreferenceProvider} = await server.ssrLoadModule('/src/Navigation.jsx');
   const Icon = props => React.createElement('svg', props);
   const items = [{id:'home', label:'首页', icon:Icon}, {id:'novels', label:'小说写作', icon:Icon}];
   let destination;
@@ -45,7 +45,9 @@ try {
   const button = label => renderer.root.findByProps({'aria-label':label});
   const click = async label => { await act(async () => button(label).props.onClick()); };
   const sidebar = () => renderer.root.findByProps({id:'main-sidebar'});
-  const zone = () => renderer.root.findByProps({className:'sidebar-hover-zone'});
+  const zone = () => sidebar().parent;
+  const desktopButton = (scope = renderer.root) => scope.findAllByType('button').find(node => node.props.className?.split(' ').includes('desktop-sidebar-toggle'));
+  const toggleDesktop = async () => { await act(async () => desktopButton().props.onClick()); };
   const accountMenus = () => renderer.root.findAllByProps({role:'menu', 'aria-label':'账号菜单'});
   const accountMenu = () => renderer.root.findByProps({role:'menu', 'aria-label':'账号菜单'});
   const accountItems = () => accountMenu().findAllByProps({role:'menuitem'});
@@ -64,8 +66,9 @@ try {
     return prevented;
   };
   const isCollapsed = () => sidebar().props['data-collapsed'] || sidebar().props['aria-hidden'];
-  const enter = async (pointerType = 'mouse') => { await act(async () => zone().props.onPointerEnter({pointerType})); };
-  const leave = async () => { await act(async () => zone().props.onPointerLeave({pointerType:'mouse'})); };
+  const navigationEvent = async (handler, event = {}) => { await act(async () => zone().props[handler]?.(event)); };
+  const enter = async (pointerType = 'mouse') => navigationEvent('onPointerEnter', {pointerType});
+  const leave = async () => navigationEvent('onPointerLeave', {pointerType:'mouse'});
   const settle = async () => { await act(async () => delay(190)); };
   const mount = async overrides => {
     document.activeElement = null;
@@ -75,83 +78,118 @@ try {
       if (element.props.className === 'sidebar-user-wrap') return accountWrapNode;
       if (element.props.role === 'menu' && element.props['aria-label'] === '账号菜单') return accountMenuNode;
       if (element.props['aria-label'] === '我的创作空间') return controls[2];
-      if (element.props['aria-label'] === '显示导航') return desktopToggle;
+      if (element.props.className?.split(' ').includes('desktop-sidebar-toggle')) return desktopToggle;
       if (element.props['aria-label'] === '打开菜单') return mobileToggle;
       return null;
     }}); });
   };
   const unmount = async () => { await act(async () => renderer.unmount()); renderer = undefined; };
   await mount();
-  assert.equal(isCollapsed(), true);
+  assert.equal(isCollapsed(), false, 'Desktop navigation is expanded on the first visit');
+  assert.equal(desktopButton().props['aria-expanded'], true);
+  assert.equal(desktopButton().props['aria-label'], '收起导航');
   assert.equal(sidebar().props.inert, false);
-  assert.equal(sidebar().props['aria-hidden'], false, 'Desktop icon navigation remains accessible');
+  assert.equal(sidebar().props['aria-hidden'], false, 'Desktop navigation remains accessible');
   for (const item of items) {
     const iconButton = sidebar().findByProps({'aria-label':item.label});
     assert.equal(iconButton.props.title, item.label);
   }
   assert.equal(sidebar().findByProps({'aria-label':'首页'}).props['aria-current'], 'page');
-  await click('小说写作'); assert.equal(destination, 'novels'); assert.equal(isCollapsed(), true, 'Collapsed icons can navigate directly');
-  assert.equal(button('显示导航').props['aria-expanded'], false);
   await act(async () => button('未提交灵感').props.onChange({target:{value:'尚未保存的故事构思'}}));
-  await enter();
-  assert.equal(isCollapsed(), false);
-  assert.equal(zone().props['data-open'], true);
-  await leave();
-  assert.equal(isCollapsed(), false, 'A short exit delay prevents flicker');
-  await settle();
-  assert.equal(isCollapsed(), true);
-  assert.equal(button('未提交灵感').props.value, '尚未保存的故事构思');
-  await enter(); await leave();
-  await act(async () => delay(60));
-  await enter(); await settle();
-  assert.equal(isCollapsed(), false, 'Re-entering cancels an outstanding hide');
-  const novel = renderer.root.findAllByType('button').find(node => node.props.className?.includes('nav-item') && node.findAllByType('span').some(span => span.children.includes('小说写作')));
-  await act(async () => novel.props.onClick());
-  await act(async () => renderer.update(tree({route:'novels'})));
+  await toggleDesktop();
+  assert.equal(isCollapsed(), true, 'The topbar button collapses desktop navigation');
+  assert.equal(desktopButton().props['aria-expanded'], false);
+  assert.equal(desktopButton().props['aria-label'], '展开导航');
+  assert.equal(sidebar().props.inert, false, 'Collapsed navigation keeps its icon controls available');
+  assert.equal(sidebar().props['aria-hidden'], false);
+  await click('小说写作');
   assert.equal(destination, 'novels');
-  assert.equal(isCollapsed(), false, 'Navigation stays visible while the pointer is inside');
-  await leave(); await settle(); assert.equal(isCollapsed(), true);
-  await unmount(); await mount();
-  assert.equal(isCollapsed(), true, 'New visits start with the compact icon rail');
-  assert.equal(preferenceReads, 0, 'Legacy pin/collapse preferences are ignored');
-  console.log('PASS persistent accessible icon rail, direct navigation, hover expansion, delayed collapse and preserved draft');
-
-  await enter('touch'); assert.equal(isCollapsed(), true);
-  await click('显示导航'); await leave(); await settle();
-  assert.equal(isCollapsed(), true, 'Pointer exit hides even a menu opened from the toolbar');
-  await click('显示导航');
-  assert.equal(isCollapsed(), false); assert.equal(focused, 'brand');
-  await act(async () => zone().props.onBlurCapture({currentTarget:zoneNode, relatedTarget:controls[2]}));
-  await settle(); assert.equal(isCollapsed(), false, 'Keyboard movement inside navigation stays open');
-  await act(async () => emit('keydown', {key:'Escape'}));
-  assert.equal(isCollapsed(), true); assert.equal(focused, 'desktop-toggle');
-  await act(async () => {controls[0].focus(); zone().props.onKeyDownCapture(); zone().props.onFocusCapture();});
-  assert.equal(isCollapsed(), false); assert.equal(focused, 'brand');
-  document.activeElement = {};
-  await act(async () => zone().props.onBlurCapture({currentTarget:zoneNode, relatedTarget:document.activeElement}));
-  await settle(); assert.equal(isCollapsed(), true);
-  await click('显示导航'); assert.equal(isCollapsed(), false);
-  await act(async () => emit('pointerdown', {target:{}})); assert.equal(isCollapsed(), true);
-  await enter(); await act(async () => emit('blur')); assert.equal(isCollapsed(), true);
+  assert.equal(isCollapsed(), true, 'Collapsed icons navigate without expanding the sidebar');
+  assert.equal(button('未提交灵感').props.value, '尚未保存的故事构思');
   await enter();
+  assert.equal(isCollapsed(), true, 'Hover does not expand a manually collapsed sidebar');
+  await leave(); await enter('touch');
+  assert.equal(isCollapsed(), true, 'Touch pointer movement does not expand desktop navigation');
+  await act(async () => {controls[0].focus(); zone().props.onKeyDownCapture?.(); zone().props.onFocusCapture?.();});
+  assert.equal(isCollapsed(), true, 'Focusing an icon does not expand the sidebar');
+  await navigationEvent('onBlurCapture', {currentTarget:zoneNode, relatedTarget:{}});
+  await act(async () => {emit('pointerdown', {target:{}}); emit('blur'); emit('keydown', {key:'Escape'});});
+  await settle();
+  assert.equal(isCollapsed(), true, 'Pointer and focus movement do not expand a manually collapsed sidebar');
+  await act(async () => renderer.update(tree({route:'novels'})));
+  assert.equal(isCollapsed(), true, 'Route changes preserve the manual collapsed state');
+  await act(async () => renderer.update(tree({route:'novels', dialogOpen:true})));
+  assert.equal(isCollapsed(), true, 'Opening a dialog preserves the manual collapsed state');
+  await act(async () => renderer.update(tree({route:'novels'})));
+  await toggleDesktop();
+  assert.equal(isCollapsed(), false, 'The same topbar button reopens desktop navigation');
+  assert.equal(desktopButton().props['aria-expanded'], true);
+  assert.equal(desktopButton().props['aria-label'], '收起导航');
+  assert.equal(button('未提交灵感').props.value, '尚未保存的故事构思', 'Toggling navigation preserves the active draft');
+  await enter(); await leave();
+  await settle();
+  assert.equal(isCollapsed(), false, 'Leaving the sidebar does not schedule an automatic collapse');
+  await navigationEvent('onBlurCapture', {currentTarget:zoneNode, relatedTarget:controls[2]});
+  await navigationEvent('onBlurCapture', {currentTarget:zoneNode, relatedTarget:{}});
+  await settle();
+  assert.equal(isCollapsed(), false, 'Moving focus outside navigation does not collapse it');
+  await act(async () => {document.activeElement = {}; emit('pointerdown', {target:{}});});
+  assert.equal(isCollapsed(), false, 'Clicking outside navigation does not collapse it');
+  await act(async () => emit('blur'));
+  assert.equal(isCollapsed(), false, 'Window blur does not collapse navigation');
+  await act(async () => emit('keydown', {key:'Escape'}));
+  assert.equal(isCollapsed(), false, 'Escape does not change the manual desktop navigation state');
   await act(async () => renderer.update(tree({dialogOpen:true})));
-  assert.equal(isCollapsed(), true);
-  await enter(); assert.equal(isCollapsed(), true, 'Open dialogs suppress hover navigation');
+  assert.equal(isCollapsed(), false, 'Opening a dialog preserves the manual sidebar state');
   await act(async () => renderer.update(tree()));
-  await enter(); assert.equal(isCollapsed(), false);
-  await leave(); await unmount();
-  await act(async () => delay(190));
-  assert.ok([...listeners.values()].every(set => set.size === 0), 'Unmount removes listeners and pending work');
-  console.log('PASS keyboard access, focus exit, Escape, touch fallback, outside click, window blur and modal isolation');
+  assert.equal(isCollapsed(), false);
+  await unmount(); await mount();
+  assert.equal(isCollapsed(), false, 'New visits start with expanded navigation');
+  assert.equal(preferenceReads, 0, 'Legacy pin/collapse preferences are ignored');
+  await unmount();
+  assert.ok([...listeners.values()].every(set => set.size === 0), 'Unmount removes navigation listeners');
+  console.log('PASS expanded desktop default, manual toggle, accessible icon rail, preserved draft and no automatic navigation changes');
+
+  const sharedTree = visible => React.createElement(SidebarPreferenceProvider, null,
+    visible !== 'private' && React.createElement(WorkbenchFrame, {...props, key:'public', publicView:true, navigationId:'public-sidebar'}),
+    visible !== 'public' && React.createElement(WorkbenchFrame, {...props, key:'private', navigationId:'main-sidebar'})
+  );
+  const sharedFrame = navigationId => renderer.root.findAllByType(WorkbenchFrame).find(node => node.props.navigationId === navigationId);
+  const assertSharedState = expanded => {
+    for (const frame of renderer.root.findAllByType(WorkbenchFrame)) {
+      assert.equal(frame.findByProps({id:frame.props.navigationId}).props['data-collapsed'], !expanded);
+      assert.equal(desktopButton(frame).props['aria-expanded'], expanded);
+      assert.equal(desktopButton(frame).props['aria-label'], expanded ? '收起导航' : '展开导航');
+    }
+  };
+  await act(async () => {renderer = TestRenderer.create(sharedTree('both'));});
+  assert.equal(renderer.root.findAllByType(WorkbenchFrame).length, 2);
+  assertSharedState(true);
+  await act(async () => desktopButton(sharedFrame('public-sidebar')).props.onClick());
+  assertSharedState(false);
+  await act(async () => renderer.update(sharedTree('private')));
+  assertSharedState(false);
+  await act(async () => renderer.update(sharedTree('public')));
+  assertSharedState(false);
+  await act(async () => desktopButton(sharedFrame('public-sidebar')).props.onClick());
+  assertSharedState(true);
+  await act(async () => renderer.update(sharedTree('both')));
+  assertSharedState(true);
+  await act(async () => desktopButton(sharedFrame('main-sidebar')).props.onClick());
+  assertSharedState(false);
+  await unmount();
+  assert.ok([...listeners.values()].every(set => set.size === 0), 'Shared frame navigation listeners are removed on unmount');
+  console.log('PASS public and private frames share manual sidebar state across simultaneous rendering and page replacement');
 
   await mount();
   assertAccountClosed();
   assert.equal(button('我的创作空间').props['aria-haspopup'], 'menu');
+  await toggleDesktop();
   await click('会员与墨点');
   assert.equal(destination, 'membership');
   assert.equal(isCollapsed(), true, 'Membership is available directly from the icon rail');
   await click('我的创作空间');
-  assert.equal(isCollapsed(), false, 'The account button expands the icon rail before opening its menu');
+  assert.equal(isCollapsed(), true, 'Opening the account menu preserves the manually collapsed icon rail');
   assert.equal(button('我的创作空间').props['aria-expanded'], true);
   assert.deepEqual(accountItems().map(item => item.children.filter(child => typeof child === 'string').join('')), ['个人空间', '创作与数据设置', '帮助与反馈']);
   assert.equal(focused, 'personal-space', 'Opening the menu focuses its first action');
@@ -161,17 +199,18 @@ try {
   assert.equal(accountMenus().length, 1, 'Focus can move between account actions without closing the menu');
   await act(async () => emit('pointerdown', {target:controls[0]}));
   assertAccountClosed();
-  assert.equal(isCollapsed(), false, 'A click elsewhere inside the sidebar closes only the account menu');
+  assert.equal(isCollapsed(), true, 'A click elsewhere inside the sidebar closes only the account menu');
   await click('我的创作空间');
   let escapePrevented = false;
   await act(async () => emit('keydown', {key:'Escape', preventDefault(){escapePrevented = true;}}));
   assert.equal(escapePrevented, true);
   assertAccountClosed();
-  assert.equal(isCollapsed(), false, 'The first Escape closes the account menu while leaving navigation available');
+  assert.equal(isCollapsed(), true, 'Escape closes the account menu without changing the collapsed sidebar');
   assert.equal(focused, 'account');
   await act(async () => emit('keydown', {key:'Escape'}));
-  assert.equal(isCollapsed(), true, 'The second Escape closes navigation');
-  assert.equal(focused, 'desktop-toggle');
+  assert.equal(isCollapsed(), true, 'Further Escape presses do not change the manual navigation state');
+  await toggleDesktop();
+  assert.equal(isCollapsed(), false);
 
   let arrowPrevented = false;
   await act(async () => button('我的创作空间').props.onKeyDown({key:'ArrowUp', preventDefault(){arrowPrevented = true;}}));
@@ -211,13 +250,18 @@ try {
   assertAccountClosed();
   await click('我的创作空间');
   await act(async () => emit('pointerdown', {target:{}}));
-  assertAccountClosed(); assert.equal(isCollapsed(), true);
+  assertAccountClosed(); assert.equal(isCollapsed(), false, 'Outside clicks dismiss the account menu while keeping navigation expanded');
   await click('我的创作空间');
   await act(async () => emit('blur'));
-  assertAccountClosed(); assert.equal(isCollapsed(), true);
+  assertAccountClosed(); assert.equal(isCollapsed(), false, 'Window blur dismisses the account menu without collapsing navigation');
+  await click('我的创作空间');
+  await toggleDesktop();
+  assertAccountClosed(); assert.equal(isCollapsed(), true, 'Manual collapse also dismisses the account menu');
+  await toggleDesktop();
   await click('我的创作空间');
   await act(async () => renderer.update(tree({dialogOpen:true})));
   assertAccountClosed();
+  assert.equal(isCollapsed(), false, 'Account dialogs preserve the manual navigation state');
   await unmount();
   console.log('PASS membership entry, account menu actions, inside/outside clicks, focus exit, navigation dismissal and menu keyboard controls');
 
@@ -244,11 +288,19 @@ try {
   assert.equal(isCollapsed(), true);
   await click('打开菜单');
   await act(async () => {window.innerWidth = 1440; emit('resize');});
-  assert.equal(isCollapsed(), true, 'Desktop resumes its compact icon rail');
+  assert.equal(isCollapsed(), false, 'Desktop resumes its expanded default after a mobile visit');
   assert.equal(document.body.style.overflow, 'auto');
-  await enter(); assert.equal(isCollapsed(), false);
-  await leave(); await settle(); assert.equal(isCollapsed(), true);
-  console.log('PASS independent mobile drawer, focus containment, close controls and desktop/mobile resize');
+  await leave(); await settle(); assert.equal(isCollapsed(), false);
+  await toggleDesktop(); assert.equal(isCollapsed(), true);
+  await act(async () => {window.innerWidth = 375; emit('resize');});
+  await click('打开菜单');
+  await act(async () => {window.innerWidth = 1440; emit('resize');});
+  assert.equal(isCollapsed(), true, 'Desktop restores the manual collapsed choice after a mobile visit');
+  assert.equal(document.body.style.overflow, 'auto');
+  await enter(); await leave(); await settle();
+  assert.equal(isCollapsed(), true, 'Pointer movement after resize does not change the restored manual choice');
+  await toggleDesktop(); assert.equal(isCollapsed(), false);
+  console.log('PASS independent mobile drawer, focus containment, close controls and manual desktop state across resize');
 
   await unmount();
   window.innerWidth = 375;

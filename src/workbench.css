@@ -38,7 +38,7 @@
 .commercial .green { background:var(--accent-soft);color:var(--accent); }
 .commercial .button { min-height:40px;padding:9px 16px;border-radius:9px;font-weight:500; }
 
-/* 桌面保留图标栏，悬停时展开文字菜单；移动端保留独立抽屉。 */
+/* 桌面按组件的手动开关显示完整菜单或图标栏；移动端保留独立抽屉。 */
 .sidebar-hover-zone { display:contents; }
 .sidebar-header { display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:46px;flex-shrink:0; }
 .sidebar-header .brand { min-width:0; }

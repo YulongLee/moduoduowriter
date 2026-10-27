@@ -11,7 +11,7 @@ export function AccountProvider({children,allowPublic=false}) {
   const sequence=++requestSequence.current;
   try{
    const result=await requestApi('/api/auth/status',undefined,{method:'GET'});
-   if(typeof result?.configured!=='boolean'||(result.user&&(typeof result.user.id!=='string'||!result.user.id||result.spaceId!==result.user.id))||(!result.configured&&result.spaceId!=='local'))throw new Error('账号状态尚未确认，请重新连接。');
+   if(typeof result?.configured!=='boolean'||(result.user&&(!result.configured||typeof result.user.id!=='string'||!result.user.id||result.spaceId!==result.user.id))||(!result.configured&&result.spaceId!=='local'))throw new Error('账号状态尚未确认，请重新连接。');
    if(!alive.current||sequence!==requestSequence.current)return null;
    setRequestSpace(result.configured&&!result.user?null:result.spaceId||null);setSession({...result,spaceId:result.spaceId||result.user?.id||'local',ready:true,error:''});return result;
   }catch(e){if(alive.current&&sequence===requestSequence.current){setRequestSpace(null);setSession(previous=>({...previous,user:null,ready:true,error:e.message}));}return null;}
@@ -23,9 +23,9 @@ export function AccountProvider({children,allowPublic=false}) {
 export function useAccount(){return useContext(AccountContext);}
 
 export function canAccessPrivate(account) {return Boolean(account?.ready&&!account.error&&((account.configured===false&&account.spaceId==='local')||(account.configured===true&&typeof account.user?.id==='string'&&account.user.id.length>0&&account.user.id===account.spaceId)));}
-export function PrivateAccountGate({children,onHome}) {
+export function PrivateAccountGate({children,onHome,requireLogin=false}) {
  const account=useAccount();
- if(!canAccessPrivate(account))return <div className="account-gate"><div>{!account?.ready||account.error?<div className="account-form"><span className="modal-symbol"><LockKeyhole/></span><h2>{account?.error?'创作空间暂未连接':'正在打开创作空间'}</h2><p className="modal-desc" role="status">{account?.error||'正在检查账号与保存状态…'}</p>{account?.error&&<button type="button" className="button primary full" onClick={()=>account.refresh()}>重新连接</button>}</div>:<AccountForm loginOnly/>}{onHome&&<button type="button" className="button secondary full" onClick={onHome}>返回首页</button>}</div></div>;
+ if(!canAccessPrivate(account)||(requireLogin&&(account?.configured!==true||!account?.user)))return <div className="account-gate"><div>{!account?.ready||account.error?<div className="account-form"><span className="modal-symbol"><LockKeyhole/></span><h2>{account?.error?'创作空间暂未连接':'正在打开创作空间'}</h2><p className="modal-desc" role="status">{account?.error||'正在检查账号与保存状态…'}</p>{account?.error&&<button type="button" className="button primary full" onClick={()=>account.refresh()}>重新连接</button>}</div>:<AccountForm loginOnly={Boolean(account?.configured)}/>}{onHome&&<button type="button" className="button secondary full" onClick={onHome}>返回首页</button>}</div></div>;
  return children;
 }
 
