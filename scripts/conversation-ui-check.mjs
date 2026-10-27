@@ -57,7 +57,8 @@ try{
  const prefixButton=prefix=>renderer.root.findAllByType('button').find(node=>node.props['aria-label']?.startsWith(prefix));
  const input=()=>byLabel('创作对话输入');
  const change=async(node,value)=>act(async()=>node.props.onChange({target:{value,checked:value}}));
- const click=async node=>{assert.ok(node,'Expected a reachable conversation control');await act(async()=>{if(node.props.onClick)await node.props.onClick();else if(node.props.type==='submit'){let form=node.parent;while(form&&form.type!=='form')form=form.parent;assert.ok(form);await form.props.onSubmit({preventDefault(){}});}else throw Error('Control has no action');});};
+ const owningForm=node=>{if(node.props.form)return renderer.root.findByProps({id:node.props.form});let form=node.parent;while(form&&form.type!=='form')form=form.parent;return form;};
+ const click=async node=>{assert.ok(node,'Expected a reachable conversation control');await act(async()=>{if(node.props.onClick)await node.props.onClick();else if(node.props.type==='submit'){const form=owningForm(node);assert.equal(form?.type,'form');await form.props.onSubmit({preventDefault(){}});}else throw Error('Control has no action');});};
  const key=async(key,extra={})=>{let prevented=false;await act(async()=>{await input().props.onKeyDown({key,shiftKey:false,isComposing:false,nativeEvent:{isComposing:false},preventDefault(){prevented=true;},...extra});});return prevented;};
  const recordList=()=>JSON.parse(values.get('mdd-conversations-v1')||'[]');
  const currentTurn=()=>recordList().find(record=>record.id===byLabel('对话记录').props.value)?.turns.at(-1);
@@ -73,7 +74,7 @@ try{
  };
  const send=async value=>{await change(input(),value);await click(byLabel('发送创作消息'));};
  const waitFor=async predicate=>{for(let i=0;i<100;i++){if(predicate())return;await act(async()=>sleep(5));}assert.ok(predicate(),'Expected conversation state did not settle');};
- const launch=async value=>{await change(input(),value);await act(async()=>{const node=byLabel('发送创作消息');if(node.props.onClick)void node.props.onClick();else{let form=node.parent;while(form&&form.type!=='form')form=form.parent;void form.props.onSubmit({preventDefault(){}});}await sleep(0);});};
+ const launch=async value=>{await change(input(),value);await act(async()=>{const node=byLabel('发送创作消息');if(node.props.onClick)void node.props.onClick();else{const form=owningForm(node);assert.equal(form?.type,'form');void form.props.onSubmit({preventDefault(){}});}await sleep(0);});};
  const completed=()=>currentTurn()?.status==='completed';
  const makeRequest=(question,workId='',requestId=crypto.randomUUID())=>({task:'chat',requestId,prompt:question,context:{history:[],...(workId?{workId}:{})},mode:'standard',target:1000});
  const canonicalQuote=request=>quoteTask({taskId:'chat',model:request.mode,inputChars:JSON.stringify({prompt:request.prompt||'',context:request.context||{},previous:{}}).length,outputChars:Math.max(300,Math.min(4000,Number(request.target)||1000))});
@@ -292,6 +293,24 @@ try{
  const aiCount=generated.length;await mount({mode:'demo',props:{work:null,works:[]}});await send('这个问题没有调用真实模型');await waitFor(completed);
  assert.equal(generated.length,aiCount);assert.equal(currentTurn().source,'demo');assert.match(text(renderer.root),/预写|预置|预先编写/);
  console.log('PASS demo replies are clearly authored samples and never make a paid generation request');
+
+ const beforeHero=generated.length;await mount({props:{appearance:'hero'}});modal=undefined;
+ const hero=byLabel('创作对话'),historySummary=byLabel('对话记录与关联作品');
+ assert.ok(hero.props.className.split(' ').includes('home-chat-hero'));
+ assert.equal(historySummary.type,'summary');assert.notEqual(historySummary.parent.props.open,true,'History and work management stay folded until requested');
+ assert.equal(input().props.maxLength,4000);assert.equal(byLabel('对话关联作品').props.value,workA.id);assert.equal(text(byLabel('发送创作消息')),'开始创作');
+ assert.equal(owningForm(byLabel('发送创作消息')),owningForm(input()),'The visible Hero action submits the actual chat input form');
+ assert.equal(owningForm(renderer.root.findByType(TaskMeter)),null);assert.equal(owningForm(byLabel('生成引用资料')),null,'Reference/settings controls must not accidentally submit the story');
+ for(const label of ['填入构思示例','填入推进示例','填入人物示例']){await click(byLabel(label));assert.ok(input().props.value.trim());assert.equal(generated.length,beforeHero);}
+ await key('Enter',{shiftKey:true});await key('Enter',{nativeEvent:{isComposing:true}});assert.equal(generated.length,beforeHero);
+ reply='Hero第一轮回复，先明确灯塔的秘密。';await send('在首页输入卡里讨论灯塔的秘密');await waitFor(completed);
+ assert.equal(generated.length,beforeHero+1);assert.equal(generated.at(-1).task,'chat');assert.equal(generated.at(-1).context.workId,workA.id);assert.equal(modal,undefined,'The Hero submit starts a discussion and never silently creates a manuscript');
+ assert.equal(text(byLabel('发送创作消息')),'继续讨论');
+ const heroFirstReply=reply;reply='Hero第二轮回复，延续已完成的讨论。';await send('继续这个故事');await waitFor(completed);
+ assert.deepEqual(generated.at(-1).context.history,[{role:'user',content:'在首页输入卡里讨论灯塔的秘密'},{role:'assistant',content:heroFirstReply}]);
+ await click(byLabel(`用于故事规划 ${currentTurn().id}`));assert.equal(modal.type,'quick-start');assert.equal(modal.autoGenerate,false);
+ assert.equal(JSON.stringify([workA,workB]),beforeWorks);
+ console.log('PASS Hero input card, folded session manager, safe detached controls, fill-only inspiration chips and explicit multi-turn creation handoff');
 
  assert.equal(JSON.stringify([workA,workB]),beforeWorks);
  console.log('PASS conversation mount has no automatic generation and preserves source works');

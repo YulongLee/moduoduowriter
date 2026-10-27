@@ -93,23 +93,20 @@ export function Generator({setModal, notify, onImport, expanded, onToggle, focus
   </section>;
 }
 
-function ProjectPanel({work,workState,works,navigate,setModal,onSelect,onNext}) {
-  return <section className="home-project-section" aria-label="继续创作">
-    <div className="home-section-heading"><div><h2>继续创作</h2><p>从上一次停下的地方接着写。</p></div><div className="home-heading-actions"><label className="home-project-picker"><span>当前作品</span><select aria-label="当前作品" value={work.id} onChange={event=>onSelect(event.target.value)}>{works.map(item=><option value={item.id} key={item.id}>{item.title}</option>)}</select></label><button type="button" className="home-text-link" onClick={()=>navigate('works')}>全部作品<ArrowRight size={15}/></button></div></div>
-    <div className="home-project-panel">
-      <div className="home-project-main">
-        <div className="home-project-cover" aria-hidden="true"><BookCover work={work}/></div>
-        <div className="home-project-copy">
-          <p className="home-project-kind">{work.kind} · {work.genre}</p>
-          <h3><button type="button" aria-label={'打开作品：'+work.title} onClick={()=>navigate('editor/'+work.id)}>{work.title}</button></h3>
-          <div className="home-project-stats"><span>{workState.words.toLocaleString()} 字</span><i/><span>{workState.chapterCount} {workState.unit}</span></div>
-          <p className="home-project-chapter">{workState.rememberedChapter?'上次编辑：'+workState.rememberedChapter.title:workState.chapter?'继续章节：'+workState.chapter.title:'先创建'+workState.firstPart+'，给故事一个开始。'}</p>
-          <div className="home-project-actions"><button type="button" className="button primary home-project-continue" aria-label={'继续最近作品：'+work.title} onClick={()=>navigate('editor/'+work.id)}>{workState.actionLabel}<ArrowRight size={17}/></button><button type="button" className="home-text-link" onClick={()=>setModal({type:'work-details',work})}>作品资料<ChevronRight size={14}/></button></div>
-        </div>
-      </div>
-      <aside className="home-next-action"><span className="home-next-kicker">下一步</span><h3>{workState.nextAction.label}</h3><p>{workState.nextAction.description}</p><button type="button" className="home-next-action-link" aria-label="当前作品下一步" onClick={onNext}>{workState.nextAction.label}<ArrowRight size={16}/></button></aside>
-    </div>
-    <div className="home-project-readiness" aria-label="作品准备状态">{workState.readiness.map(item=><div className={item.ready?'ready':''} key={item.id}><i aria-hidden="true">{item.ready?<Check size={14}/>:<span/>}</i><span className="home-readiness-label">{item.label}</span><strong>{item.value}</strong></div>)}</div>
+function Bookshelf({work,workState,works,navigate,setModal,onSelect,onNext,onNewStory}) {
+  const [filter,setFilter]=useState('all');
+  const filters=[['all','全部作品'],['long','长篇小说'],['short','短篇故事'],['script','剧本']];
+  const matches=(item,type)=>type==='all'||item.kind===({long:'长篇小说',short:'短篇故事',script:'剧本'})[type];
+  const filtered=works.filter(item=>matches(item,filter));
+  const visible=[...filtered.filter(item=>item.id===work?.id),...filtered.filter(item=>item.id!==work?.id)].slice(0,4);
+  return <section className="home-shelf-section" aria-label="我的作品">
+    <div className="home-section-heading"><div><h2>我的作品</h2><div className="home-shelf-tabs" role="group" aria-label="作品筛选">{filters.map(([id,label])=><button type="button" key={id} aria-pressed={filter===id} onClick={()=>setFilter(id)}>{label}<span>{works.filter(item=>matches(item,id)).length}</span></button>)}</div></div><div className="home-heading-actions"><button type="button" className="home-text-link" onClick={onNewStory}>开始新故事<Plus size={15}/></button><button type="button" className="home-text-link" onClick={()=>navigate('works')}>管理作品<ArrowRight size={15}/></button></div></div>
+    <div className="home-shelf-grid">{visible.map(item=>{const state=getHomeWorkState(item),selected=item.id===work?.id;return <article className={'home-shelf-card'+(selected?' is-current':'')} aria-label={'作品卡片：'+item.title} key={item.id}>
+      <button type="button" className="home-shelf-book" aria-label={'选择作品：'+item.title} aria-pressed={selected} onClick={()=>onSelect(item.id)}><span className="home-shelf-cover" aria-hidden="true"><BookCover work={item}/></span><span className="home-shelf-copy"><strong>{item.title}</strong><span className="home-shelf-genre">{item.genre} · {item.kind}</span><span className="home-shelf-description">{item.description||'每个故事，都从第一句话开始。'}</span><span className="home-shelf-count">{state.words.toLocaleString()} 字 · {state.chapterCount} {state.unit}</span></span></button>
+      <div className="home-shelf-card-actions"><button type="button" className="home-shelf-continue" aria-label={(selected?'继续最近作品：':'继续作品：')+item.title} onClick={()=>navigate('editor/'+item.id)}>{state.actionLabel}<ArrowRight size={14}/></button><button type="button" className="home-shelf-details" aria-label={'作品资料：'+item.title} onClick={()=>setModal({type:'work-details',work:item})}><Ellipsis size={17}/></button></div>
+    </article>;})}<button type="button" className="home-shelf-create" aria-label={works.length?'新建作品':'创建第一部作品'} onClick={()=>setModal({type:'create'})}><span><Plus size={24}/></span><strong>新建作品</strong><small>开始你的下一个故事</small></button></div>
+    {!filtered.length&&works.length>0&&<p className="home-shelf-empty">还没有这类作品，选择其他分类或开始一个新故事。</p>}
+    {work&&workState&&<div className="home-shelf-context" aria-label="继续创作"><label className="home-project-picker"><span>当前作品</span><select aria-label="当前作品" value={work.id} onChange={event=>{onSelect(event.target.value);setFilter('all');}}>{works.map(item=><option value={item.id} key={item.id}>{item.title}</option>)}</select></label><p>{workState.rememberedChapter?'上次编辑：'+workState.rememberedChapter.title:workState.chapter?'继续章节：'+workState.chapter.title:'先写下'+workState.firstPart+'，给故事一个开始。'}</p><div className="home-project-readiness" aria-label="作品准备状态">{workState.readiness.map(item=><span className={item.ready?'ready':''} key={item.id}>{item.ready&&<Check size={12}/>}<span>{item.label}</span><strong>{item.value}</strong></span>)}</div><button type="button" className="home-text-link" aria-label="当前作品下一步" onClick={onNext}>{workState.nextAction.label}<ArrowRight size={14}/></button></div>}
   </section>;
 }
 
@@ -153,7 +150,7 @@ function HomeToolRow({tool, favorite, onFavorite, onOpen, onGuide, guideOpen, me
 function HomeSupport({works, navigate, setModal}) {
   const [index,setIndex] = useState(0), idea = inspirations[index];
   const steps = [['确定题材',()=>setModal({type:'create'})],['搭建大纲',()=>setModal({type:'tool',tool:tools.find(tool=>tool.id==='outline'),workId:works[0]?.id})],['写好章节',()=>works[0]?navigate(`editor/${works[0].id}`):setModal({type:'create'})],['准备投稿',()=>navigate('submit')]];
-  return <div className="home-support" aria-label="创作指南与灵感"><aside className="home-guide-strip" aria-label="创作指南"><h2>从灵感到成稿</h2><div className="home-guide-steps">{steps.map(([title,action],i)=><React.Fragment key={title}><button type="button" onClick={action}>{title}</button>{i<steps.length-1&&<ArrowRight size={13} aria-hidden="true"/>}</React.Fragment>)}</div><button type="button" className="home-text-link" onClick={()=>navigate('workflows')}>查看工作流<ArrowRight size={14}/></button></aside>
+  return <div className="home-support" aria-label="创作指南与灵感"><nav className="home-publishing-links" aria-label="写作与出版"><span>写作与出版</span><button type="button" onClick={()=>navigate('novels')}><BookOpen size={15}/>小说写作</button><button type="button" onClick={()=>navigate('scripts')}><Clapperboard size={15}/>剧本创作</button><button type="button" onClick={()=>navigate('dismantle')}><BookMarked size={15}/>小说拆书</button><button type="button" onClick={()=>navigate('submit')}><Send size={15}/>投稿中心</button></nav><aside className="home-guide-strip" aria-label="创作指南"><h2>从灵感到成稿</h2><div className="home-guide-steps">{steps.map(([title,action],i)=><React.Fragment key={title}><button type="button" onClick={action}>{title}</button>{i<steps.length-1&&<ArrowRight size={13} aria-hidden="true"/>}</React.Fragment>)}</div><button type="button" className="home-text-link" onClick={()=>navigate('workflows')}>查看工作流<ArrowRight size={14}/></button></aside>
     <div className="home-service-links"><details className="home-daily-inspiration"><summary><Lightbulb size={13}/>今日灵感</summary><div><blockquote>{idea.quote.replace('\n','')}</blockquote><span>{idea.tags.join(' · ')}</span><button type="button" className="home-icon-button" aria-label="切换今日灵感" onClick={()=>setIndex((index+1)%inspirations.length)}><RefreshCw size={14}/></button><button type="button" className="home-text-link" onClick={()=>setModal({type:'create',idea:idea.prompt})}>用这个灵感<ArrowRight size={13}/></button></div></details><button type="button" onClick={()=>setModal({type:'settings'})}><Settings2 size={13}/>创作设置</button><button type="button" onClick={()=>setModal({type:'settings'})}><Cloud size={13}/>备份恢复</button><button type="button" aria-label="使用帮助" onClick={()=>setModal({type:'help'})}><CircleHelp size={13}/>帮助</button><button type="button" onClick={()=>navigate('membership')}><Crown size={13}/>查看创作方案</button></div>
   </div>;
 }
@@ -164,47 +161,45 @@ export function ReferenceHome({works, navigate, setModal, notify, favorites, tog
   const activeWork=availableWorks.find(work=>work.id===selectedWorkId)||availableWorks[0]||null;
   const workState=useMemo(()=>getHomeWorkState(activeWork),[activeWork]);
   const hasWorks=Boolean(activeWork);
-  const [composerOpen,setComposerOpen]=useState(()=>!hasWorks),[focusRequest,setFocusRequest]=useState(0);
+  const [composerOpen,setComposerOpen]=useState(false),[focusRequest,setFocusRequest]=useState(0);
   const [filter,setFilter]=useState('all'),[guideId,setGuideId]=useState(null),[menuId,setMenuId]=useState(null),[linkTools,setLinkTools]=useState(true);
   const closeMenu=useCallback(()=>setMenuId(null),[]);
   const filterRef=useRef(null);
   useEffect(()=>{if(selectedWorkId!==(activeWork?.id||''))setSelectedWorkId(activeWork?.id||'');setGuideId(null);setMenuId(null);},[activeWork?.id]);
   const groups=homeToolGroups.map(group=>({...group,tools:group.ids.map(id=>tools.find(tool=>tool.id===id)).filter(tool=>tool&&(filter!=='favorites'||favorites.includes(tool.id)))})).filter(group=>group.tools.length);
-  const list=groups.flatMap(group=>group.tools);
-  const guideTool=list.find(tool=>tool.id===guideId);
+  const list=groups.flatMap(group=>group.tools),guideTool=list.find(tool=>tool.id===guideId);
   const context=linkTools&&workState?workState.context:{};
   const openTool=(tool,extra={})=>setModal({type:'tool',tool,...context,...extra});
   const openComposer=()=>{setComposerOpen(true);setFocusRequest(value=>value+1);};
   const toggleComposer=next=>{setComposerOpen(next);if(next)setFocusRequest(value=>value+1);};
-  const openNext=()=>{
-    if(!activeWork||!workState)return;
-    const next=workState.nextAction;
-    if(next.type==='tool'){
-      const tool=tools.find(item=>item.id===next.toolId);
-      if(tool)setModal({type:'tool',tool,...workState.context,...(next.chapterId?{chapterId:next.chapterId}:{})});
-    }else setModal({type:next.type,workId:activeWork.id});
-  };
-  const entries=[
-    ['小说写作','从大纲、人物到正文，完成你的故事',BookOpen,'novels','mint'],
-    ['剧本创作','组织场景、动作与对白',Clapperboard,'scripts','violet'],
-    ['小说拆书','拆解结构，学习故事的写法',BookMarked,'dismantle','blue'],
-    ['投稿中心','整理文稿，跟进投稿与反馈',Send,'submit','amber']
+  const openNext=()=>{if(!activeWork||!workState)return;const next=workState.nextAction;if(next.type==='tool'){const tool=tools.find(item=>item.id===next.toolId);if(tool)setModal({type:'tool',tool,...workState.context,...(next.chapterId?{chapterId:next.chapterId}:{})});}else setModal({type:next.type,workId:activeWork.id});};
+  const quickEntries=[
+    ['生成小说','从灵感出发，完成故事',Sparkles,'generate','amber'],
+    ['故事大纲','理清主线与故事框架',ListTree,'outline','blue'],
+    ['人物设定','写出鲜明生动的角色',UsersRound,'character','mint'],
+    ['寻找灵感','让一个念头长成故事',Lightbulb,'ideas','amber'],
+    ['剧情续写','承接上文，推进情节',Feather,'continue','violet'],
+    ['文字润色','保留风格，打磨表达',WandSparkles,'polish','blue']
   ];
-  return <div className="home-v2 home-business">
-    <header className="home-page-heading"><div><h1>创作工作台</h1><p>继续写作，或从一个新灵感开始。</p></div><div className="home-page-actions">{onImport&&<button type="button" className="button secondary" onClick={onImport}><Upload size={16}/>导入文稿</button>}<button type="button" className="button primary" onClick={openComposer}><Plus size={17}/>开始新故事</button></div></header>
-    <HomeConversation works={availableWorks} work={activeWork} setModal={setModal} notify={notify}/>
-    {hasWorks&&<ProjectPanel work={activeWork} workState={workState} works={availableWorks} navigate={navigate} setModal={setModal} onSelect={setSelectedWorkId} onNext={openNext}/>}
-    <Generator setModal={setModal} notify={notify} onImport={onImport} expanded={!hasWorks||composerOpen} onToggle={toggleComposer} focusRequest={focusRequest} collapsible={hasWorks}/>
-    <div className="home-assist-layout">
-      <section className="home-tools-section" aria-label="写作工具">
-        <div className="home-section-heading"><div><h2>写作工具</h2><p>按当前遇到的问题，找到合适的帮手。</p></div><div className="home-heading-actions"><label className="home-tool-filter-label"><span>显示</span><select className="home-tool-filter" ref={filterRef} aria-label="工具筛选" value={filter} onChange={event=>{setFilter(event.target.value);setGuideId(null);setMenuId(null);}}><option value="all">全部</option><option value="favorites">已收藏</option></select></label><button type="button" className="home-text-link" onClick={()=>navigate('tools')}>进入工具库<ArrowRight size={15}/></button></div></div>
-        {hasWorks&&<label className="home-tool-context"><input type="checkbox" aria-label="关联当前作品" checked={linkTools} onChange={event=>setLinkTools(event.target.checked)}/><span>关联当前作品</span><small>{linkTools?activeWork.title:'独立使用，打开工具后也可选择作品'}</small></label>}
-        <div className="home-tool-groups">{groups.map(group=><section className="home-tool-group" aria-label={group.title} key={group.id}><h3>{group.title}</h3><p>{group.description}</p><div className="home-tools-grid">{group.tools.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>{toggleFavorite(tool.id);if(filter==='favorites')filterRef.current?.focus();}} onOpen={()=>openTool(tool)} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div></section>)}</div>
-        {guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={prompt=>openTool(guideTool,{prompt})}/></div>}
-        {!list.length&&<div className="home-empty-tools home-tool-grid-empty"><Star size={24}/><h3>还没有收藏工具</h3><p>在工具的更多操作中收藏，下次可以直接找到。</p><button type="button" className="button secondary" onClick={()=>setFilter('all')}>看看全部工具<ArrowRight size={15}/></button></div>}
-      </section>
-      <section className="home-entry-grid home-publishing-section" aria-label="创作快捷入口"><h2 className="home-entry-title">写作与出版</h2><p className="home-publishing-description">在不同的创作阶段，继续下一步。</p>{entries.map(([title,description,Icon,route,color])=><button type="button" className={'home-entry entry-'+color} key={route} onClick={()=>navigate(route)}><span className="home-entry-icon"><Icon size={23} strokeWidth={1.8}/></span><span className="home-entry-copy"><strong>{title}</strong><small>{description}</small></span><ChevronRight size={14}/></button>)}</section>
+  const totals=availableWorks.reduce((result,item)=>{const state=getHomeWorkState(item);result.words+=state.words;result.chapters+=state.chapterCount;return result;},{words:0,chapters:0});
+  const distribution=availableWorks.map(item=>({id:item.id,title:item.title,words:getHomeWorkState(item).words})).sort((a,b)=>b.words-a.words).slice(0,4),maxWords=distribution[0]?.words||0;
+  return <div className="home-v2 home-business home-window">
+    <section className="home-window-hero" aria-label="首页创作入口"><div className="home-window-inner"><header className="home-hero-heading"><span>让灵感落笔，让故事发生</span><h1>今天，想写一个什么故事？</h1><p>从一个灵感开始，让墨多多陪你完成整部作品。</p></header><blockquote className="home-hero-quote">每一个好故事，<br/>都值得被认真书写。<cite>—— 墨多多写作</cite></blockquote><div className="home-hero-conversation"><HomeConversation appearance="hero" works={availableWorks} work={activeWork} setModal={setModal} notify={notify}/></div></div></section>
+    <div className="home-window-content">
+      <section className="home-quick-grid" aria-label="创作快捷入口">{quickEntries.map(([title,description,Icon,id,color])=><button type="button" className={'home-quick-entry quick-'+color} key={id} onClick={()=>id==='generate'?openComposer():openTool(tools.find(tool=>tool.id===id))}><span className="home-quick-icon"><Icon size={24} strokeWidth={1.75}/></span><span><strong>{title}</strong><small>{description}</small></span></button>)}</section>
+      <div className="home-generator-drawer" hidden={!composerOpen}><Generator setModal={setModal} notify={notify} onImport={onImport} expanded={composerOpen} onToggle={toggleComposer} focusRequest={focusRequest}/></div>
+      <Bookshelf work={activeWork} workState={workState} works={availableWorks} navigate={navigate} setModal={setModal} onSelect={setSelectedWorkId} onNext={openNext} onNewStory={openComposer}/>
+      <div className="home-assist-layout">
+        <section className="home-tools-section" aria-label="写作工具"><div className="home-section-heading"><div><h2>常用写作工具</h2><p>从灵感到成稿，陪你打磨每一个故事。</p></div><div className="home-heading-actions"><label className="home-tool-filter-label"><span>显示</span><select className="home-tool-filter" ref={filterRef} aria-label="工具筛选" value={filter} onChange={event=>{setFilter(event.target.value);setGuideId(null);setMenuId(null);}}><option value="all">全部</option><option value="favorites">已收藏</option></select></label><button type="button" className="home-text-link" onClick={()=>navigate('tools')}>进入工具库<ArrowRight size={15}/></button></div></div>
+          {hasWorks&&<label className="home-tool-context"><input type="checkbox" aria-label="关联当前作品" checked={linkTools} onChange={event=>setLinkTools(event.target.checked)}/><span>关联当前作品</span><small>{linkTools?activeWork.title:'独立使用，打开工具后也可选择作品'}</small></label>}
+          <div className="home-tool-groups">{groups.map(group=><section className="home-tool-group" aria-label={group.title} key={group.id}><h3>{group.title}</h3><div className="home-tools-grid">{group.tools.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>{toggleFavorite(tool.id);if(filter==='favorites')filterRef.current?.focus();}} onOpen={()=>openTool(tool)} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div></section>)}</div>
+          {guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={prompt=>openTool(guideTool,{prompt})}/></div>}
+          {!list.length&&<div className="home-empty-tools home-tool-grid-empty"><Star size={24}/><h3>还没有收藏工具</h3><p>在工具的更多操作中收藏，下次可以直接找到。</p><button type="button" className="button secondary" onClick={()=>setFilter('all')}>看看全部工具<ArrowRight size={15}/></button></div>}
+        </section>
+        <section className="home-data-panel" aria-label="创作数据"><header><h2>创作数据</h2><span>当前文稿统计</span></header><dl><div><dt><Feather size={19}/>累计字数</dt><dd>{totals.words.toLocaleString()}<small>字</small></dd></div><div><dt><BookOpen size={19}/>作品数量</dt><dd>{availableWorks.length}<small>部</small></dd></div><div><dt><ListTree size={19}/>章节与场次</dt><dd>{totals.chapters}<small>章 / 场</small></dd></div></dl><div className="home-word-distribution"><h3>作品字数分布</h3>{maxWords>0?distribution.map(item=><div key={item.id}><span title={item.title}>{item.title}</span><i><b style={{width:(item.words/maxWords*100)+'%'}}/></i><small>{item.words.toLocaleString()}</small></div>):<p>写下第一章后，在这里查看作品的字数分布。</p>}</div></section>
+      </div>
+      <section className="home-membership-banner" aria-label="会员创作方案"><span className="home-membership-icon"><Crown size={28}/></span><div><h2>让每一个灵感，都有写下去的空间</h2><p>按创作节奏选择会员与墨点方案。当前为方案演示，不发生真实收款。</p></div><button type="button" onClick={()=>navigate('membership')}>查看创作方案<ArrowRight size={16}/></button></section>
+      <HomeSupport works={activeWork?[activeWork]:[]} navigate={navigate} setModal={setModal}/>
     </div>
-    <HomeSupport works={activeWork?[activeWork]:[]} navigate={navigate} setModal={setModal}/>
   </div>;
 }
