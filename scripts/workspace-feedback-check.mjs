@@ -84,7 +84,7 @@ const original={fetch:globalThis.fetch,window:globalThis.window,document:globalT
 const listeners=new Map();
 globalThis.window={innerWidth:1440,scrollTo(){},addEventListener(type,fn){if(!listeners.has(type))listeners.set(type,new Set());listeners.get(type).add(fn);},removeEventListener(type,fn){listeners.get(type)?.delete(fn);}};
 globalThis.document={body:{style:{}},activeElement:null,getElementById(){return null;},querySelector(){return null;},addEventListener(){},removeEventListener(){}};
-globalThis.location={hash:'#home'};globalThis.localStorage=storage;
+globalThis.location={hash:'#works'};globalThis.localStorage=storage;
 globalThis.fetch=async(url,options={})=>{
  const body=options.body?JSON.parse(options.body):undefined;
  try{return Response.json(await request(url,body));}catch(error){throw error;}

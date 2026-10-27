@@ -4,15 +4,16 @@ import { renderToString } from 'react-dom/server';
 import { createServer } from 'vite';
 
 // In-memory component rendering. No browser, external service, or user data is used.
-globalThis.localStorage = { getItem() { return null; } };
+const startupStorageReads=[];
+globalThis.localStorage = { getItem(key) { startupStorageReads.push(key);return null; } };
 globalThis.location = { hash: '#home' };
 const server = await createServer({ server: { middlewareMode: true, hmr:false }, appType: 'custom' });
 try {
   const { App, WritingApp } = await server.ssrLoadModule('/src/main.jsx');
   const { BillingProvider } = await server.ssrLoadModule('/src/Billing.jsx');
-  const startup=renderToString(React.createElement(App));assert.ok(startup.includes('正在打开创作空间'));assert.ok(!startup.includes('搜索作品名称'));
+  const startup=renderToString(React.createElement(App));assert.ok(startup.includes('今天，想写一个什么故事？'),'The public homepage must render before account/private-workspace loading');assert.ok(!startup.includes('搜索作品名称'));assert.equal(startupStorageReads.length,0,'Public app startup cannot read private local collections');
   const pages = [
-    ['home', '一句话生成'], ['works', '搜索作品名称'],
+    ['home', '今天，想写一个什么故事？'], ['works', '搜索作品名称'],
     ['novels', '小说写作'], ['tools', '写作工具'], ['workflows', '从灵感到黄金三章'],
     ['dismantle', '点击上传 TXT 文稿'], ['scripts', '新建剧本'],
     ['video', '视频相关功能已暂缓'], ['submit', '保存投稿计划'],

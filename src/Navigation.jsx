@@ -5,11 +5,12 @@ import {BillingBadge} from './Billing.jsx';
 import {useAccount} from './Account.jsx';
 import {WorkspaceStatus} from './Workspace.jsx';
 
-export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dialogOpen = false, children}) {
+export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dialogOpen = false, publicView=false, navigationId='main-sidebar', children}) {
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const account = useAccount();
+  const accountMenuId=navigationId==='main-sidebar'?'sidebar-account-menu':navigationId+'-account-menu';
   const [desktop, setDesktop] = useState(() => typeof window === 'undefined' || window.innerWidth > 1024);
   const sidebarRef = useRef(null);
   const mobileToggleRef = useRef(null);
@@ -166,7 +167,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   const accountName = account?.user?.username || '个人空间';
 
 
-  return <div className="app-shell commercial sidebar-auto">
+  return <div className={`app-shell commercial sidebar-auto${publicView?' public-home-shell':''}`}>
     {mobileOpen && !desktop && <button className="mobile-scrim" aria-label="关闭菜单" onClick={() => setMobileOpen(false)}/>}
     <div className="sidebar-hover-zone" ref={hoverZoneRef} data-open={desktop && desktopOpen} onPointerEnter={event => {
       if (!desktop || event.pointerType === 'touch') return;
@@ -178,25 +179,25 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
       if (desktop && !event.currentTarget.contains(event.relatedTarget)) scheduleHide();
     }}>
 
-    <aside id="main-sidebar" ref={sidebarRef} className={`sidebar${mobileOpen ? ' mobile-open' : ''}`} aria-label="工作台导航" data-collapsed={desktop && !desktopOpen} aria-hidden={hidden} inert={hidden}>
+    <aside id={navigationId} ref={sidebarRef} className={`sidebar${mobileOpen ? ' mobile-open' : ''}`} aria-label="工作台导航" data-collapsed={desktop && !desktopOpen} aria-hidden={hidden} inert={hidden}>
       <div className="sidebar-header"><button className="brand" aria-label="墨多多写作首页" onClick={() => go('home')}><Brand/><span className="brand-lockup"><span className="brand-wordmark"><strong>墨多多</strong><span className="brand-writing">写作</span></span><small>让好故事发生</small></span></button><button className="icon-button mobile-nav-close" aria-label="关闭导航" onClick={() => setMobileOpen(false)}><X size={19}/></button></div>
       <nav aria-label="主导航">{items.map(item => <React.Fragment key={item.id}>{item.section && <div className="nav-section">{item.section}</div>}<button className={`nav-item${item.nested ? ' nested' : ''}${route === item.id ? ' active' : ''}`} data-nav={item.id} aria-label={item.label} title={item.label} aria-current={route === item.id ? 'page' : undefined} onClick={() => go(item.id)}><item.icon size={19} strokeWidth={1.75}/><span>{item.label}</span>{item.badge && <small>{item.badge}</small>}{route === item.id && <i/>}</button></React.Fragment>)}</nav>
       <div className="sidebar-bottom">
         <button className="sidebar-plan" aria-label="会员与墨点" title="会员与墨点" onClick={() => go('membership')}><Crown size={19}/><span><strong>会员与墨点</strong><small>查看创作方案</small></span><ChevronRight size={15}/></button>
         <div className="sidebar-user-wrap" ref={accountWrapRef} onBlurCapture={event => {if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false);}}>
-          {accountOpen && <div id="sidebar-account-menu" className="sidebar-account-menu" role="menu" aria-label="账号菜单" ref={accountMenuRef} onKeyDown={accountMenuKeyDown}>
+          {accountOpen && <div id={accountMenuId} className="sidebar-account-menu" role="menu" aria-label="账号菜单" ref={accountMenuRef} onKeyDown={accountMenuKeyDown}>
             <p>创作空间</p>
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('account')}><UserRound size={17}/>个人空间<ChevronRight size={14}/></button>
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('settings')}><Settings2 size={17}/>创作与数据设置</button>
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('help')}><CircleHelp size={17}/>帮助与反馈</button>
           </div>}
-          <button className="sidebar-user" ref={accountButtonRef} aria-label="我的创作空间" title="账号与设置" aria-haspopup="menu" aria-expanded={accountOpen} aria-controls="sidebar-account-menu" onClick={() => accountOpen ? setAccountOpen(false) : openAccountMenu()} onKeyDown={event => {if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {event.preventDefault();openAccountMenu(event.key === 'ArrowUp' ? 'last' : 'first');}}}><div className="avatar">{account?.user?.username?.slice(0,1).toUpperCase() || '墨'}</div><span><strong>{accountName}</strong><small>账号与设置</small></span><ChevronsUpDown size={16}/></button>
+          <button className="sidebar-user" ref={accountButtonRef} aria-label="我的创作空间" title="账号与设置" aria-haspopup="menu" aria-expanded={accountOpen} aria-controls={accountMenuId} onClick={() => accountOpen ? setAccountOpen(false) : openAccountMenu()} onKeyDown={event => {if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {event.preventDefault();openAccountMenu(event.key === 'ArrowUp' ? 'last' : 'first');}}}><div className="avatar">{account?.user?.username?.slice(0,1).toUpperCase() || '墨'}</div><span><strong>{accountName}</strong><small>账号与设置</small></span><ChevronsUpDown size={16}/></button>
         </div>
       </div>
     </aside>
     </div>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label="显示导航" title="显示完整导航，也可将鼠标移到左侧图标栏" aria-controls="main-sidebar" aria-expanded={desktopOpen} onClick={focusSidebar}><PanelLeftOpen size={20}/></button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls="main-sidebar" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><button className="topbar-brand" aria-label="墨多多写作首页" onClick={()=>go('home')}><Brand small/><span>墨多多写作</span></button><span className="topbar-location-separator" aria-hidden="true"/><strong className="topbar-location">{route==='home'?'创作工作台':current.label}</strong><WorkspaceStatus compact/></div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>搜索作品、工具或灵感</span><kbd>⌘ K</kbd></button><BillingBadge onClick={() => go('membership')}/><div className="topbar-divider"/><button className="icon-button" aria-label="创作与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button><button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button></div></header>
+      <header className="topbar"><div className="breadcrumb"><button ref={desktopToggleRef} className="icon-button desktop-sidebar-toggle" aria-label="显示导航" title="显示完整导航，也可将鼠标移到左侧图标栏" aria-controls={navigationId} aria-expanded={desktopOpen} onClick={focusSidebar}><PanelLeftOpen size={20}/></button><button ref={mobileToggleRef} className="icon-button mobile-menu" aria-label="打开菜单" aria-controls={navigationId} aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}><Menu size={21}/></button><button className="topbar-brand" aria-label="墨多多写作首页" onClick={()=>go('home')}><Brand small/><span>墨多多写作</span></button><span className="topbar-location-separator" aria-hidden="true"/><strong className="topbar-location">{route==='home'?(publicView?'首页':'创作工作台'):current.label}</strong>{!publicView&&<WorkspaceStatus compact/>}</div><div className="topbar-right"><button className="global-search" onClick={onSearch}><Search size={16}/><span>{publicView?'搜索工具与创作方法':'搜索作品、工具或灵感'}</span><kbd>⌘ K</kbd></button>{!publicView&&<BillingBadge onClick={() => go('membership')}/>}<div className="topbar-divider"/><button className="icon-button" aria-label="创作与数据设置" onClick={() => setModal({type:'settings'})}><Settings2 size={19}/></button><button className="icon-button notification" aria-label="通知" onClick={() => setModal({type:'notifications'})}><Bell size={19}/><i/></button>{publicView?<button type="button" className="public-account-action" aria-label={account?.user?'个人中心':'登录或注册'} onClick={()=>setModal({type:'account'})}>{account?.user?'个人中心':'登录 / 注册'}</button>:<button className="avatar small" aria-label="个人空间" onClick={() => setModal({type:'account'})}>墨</button>}</div></header>
       {children}
     </div>
   </div>;

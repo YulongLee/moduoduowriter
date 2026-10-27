@@ -1,0 +1,12 @@
+.public-home-shell .public-account-action { display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:7px 13px;border:1px solid #245f4b;border-radius:7px;color:#fff;background:#245f4b;font-size:13px;white-space:nowrap; }
+.public-home-shell .public-account-action:hover { background:#194c3a; }
+.public-home-dialog { max-width:560px; }
+.public-home-dialog .account-form { width:100%;max-width:none;padding:0;background:transparent;box-shadow:none; }
+.public-home-dialog h2 { display:flex;align-items:center;gap:9px; }
+.public-tool-search { display:grid;gap:9px;margin:18px 0;color:#52685d;font-size:14px; }
+.public-tool-search input { width:100%;padding:11px 13px;border:1px solid #dce5df;border-radius:8px;font-size:15px; }
+.public-home-dialog .search-results { max-height:360px;overflow:auto; }
+.public-help-copy { margin:18px 0 24px;color:#52685d;font-size:15px;line-height:1.9; }
+.modal.home-conversation-modal { width:min(1050px,calc(100vw - 48px));max-width:1050px;padding:38px 30px 24px; }
+.home-conversation-modal .home-chat { border:0;padding:0;box-shadow:none; }
+@media(max-width:640px) { .public-home-shell .topbar-right .notification,.public-home-shell .topbar-right>.icon-button { display:none; }.public-home-shell .public-account-action { min-height:34px;padding:6px 10px;font-size:12px; }.modal.home-conversation-modal { width:calc(100vw - 24px);padding:38px 18px 20px; } }

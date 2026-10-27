@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import React,{useState} from 'react';
+import React from 'react';
 import TestRenderer,{act} from 'react-test-renderer';
 import {createServer} from 'vite';
 import {createChapterQueue,prepareQueueJob,completeQueueJob} from '../src/chapterQueue.js';
@@ -11,15 +11,16 @@ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:
 const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
 const click=async node=>{assert.ok(node,'Expected a reachable control');await act(async()=>node.props.onClick());};
 const button=(root,label)=>root.findAllByType('button').find(node=>text(node).trim()===label);
-const originalFetch=globalThis.fetch,originalDocument=globalThis.document;
-const networkRequests=[],listeners=new Map(),menuNodes=new Map();
+const originalFetch=globalThis.fetch,originalDocument=globalThis.document,originalStorage=globalThis.localStorage;
+const networkRequests=[],storageReads=[],storageWrites=[],listeners=new Map(),menuNodes=new Map();
+globalThis.localStorage={getItem(key){storageReads.push(key);return null;},setItem(key){storageWrites.push(key);}};
 globalThis.fetch=async(url)=>{networkRequests.push(url);throw new Error('Homepage actions must not request a service');};
 globalThis.document={activeElement:null,addEventListener(type,listener){if(!listeners.has(type))listeners.set(type,new Set());listeners.get(type).add(listener);},removeEventListener(type,listener){listeners.get(type)?.delete(listener);}};
 const emit=(type,event={})=>{for(const listener of [...(listeners.get(type)||[])])listener(event);};
 const change=async(node,value)=>act(async()=>node.props.onChange({target:{value,checked:typeof value==='boolean'?value:undefined}}));
 const hidden=node=>{for(let item=node;item;item=item.parent)if(item.props?.hidden)return true;return false;};
 const nodeMock=element=>{
- const node={label:element.props['aria-label'],focus(){document.activeElement=node;},contains:target=>target===node,querySelectorAll:()=>[],querySelector:()=>null};
+ const node={label:element.props['aria-label'],focus(){document.activeElement=node;},contains:target=>target===node,querySelectorAll:()=>[],querySelector:()=>null,scrollIntoView(){}};
  if(element.props.role==='menu'){
   const items=['guide','favorite'].map(name=>({name,focus(){document.activeElement=this;}}));
   node.querySelectorAll=()=>items;node.items=items;menuNodes.set(element.props['aria-label'],node);
@@ -32,119 +33,87 @@ try{
  const {ReferenceTools}=await server.ssrLoadModule('/src/Dashboard.jsx');
  const {ToolGuide}=await server.ssrLoadModule('/src/ToolGuide.jsx');
  const {toolGuides}=await server.ssrLoadModule('/src/toolGuides.js');
- const {initialWorks,tools,workWords}=await server.ssrLoadModule('/src/data.js');
- let modal,route,imports=0;const notices=[];
- const sampleWorks=[{...initialWorks[0],lastEditedChapterId:initialWorks[0].chapters[1].id},...initialWorks.slice(1)];
- const emptyWork={id:'empty-project',title:'尚未动笔的故事',kind:'长篇小说',genre:'悬疑',outline:'',characters:'',chapters:[{id:'empty-1',title:'第一章',text:''}]};
- function Home({works=sampleWorks}={}){
-  const [favorites,setFavorites]=useState([]);
-  return React.createElement(ReferenceHome,{works,favorites,toggleFavorite:id=>setFavorites(values=>values.includes(id)?values.filter(value=>value!==id):[...values,id]),setModal:value=>modal=value,navigate:value=>route=value,notify:value=>notices.push(value),onImport:()=>imports++});
- }
- const mountHome=async works=>act(async()=>{renderer=TestRenderer.create(React.createElement(Home,{works}),{createNodeMock:nodeMock});});
- const updateHome=async works=>act(async()=>renderer.update(React.createElement(Home,{works})));
+ const {initialWorks,tools}=await server.ssrLoadModule('/src/data.js');
+ const {getHomeWorkState}=await server.ssrLoadModule('/src/homeModel.js');
+ const {AccountContext}=await server.ssrLoadModule('/src/Account.jsx');
+ let modal,route,imports=0;const notices=[],pendingActions=[],favoriteActions=[];
+ const secretWork={...initialWorks[0],id:'private-home-secret',title:'绝不能出现在公开首页的私有作品',description:'私密作品介绍独有标记',outline:'私密大纲独有标记',characters:'私密人物资料独有标记',chapters:[{id:'secret-chapter',title:'私密章节标题',text:'私密正文只属于作者，不能在首页读取或展示。'}]};
+ const secretWorks=new Proxy([secretWork],{get(target,key){if(key===Symbol.iterator||['filter','map','reduce','forEach','length'].includes(key))throw new Error('Public homepage attempted to inspect supplied private works');return Reflect.get(target,key);}});
+ const homeTree=({authenticated=false,works=secretWorks,favorites=['ideas']}={})=>React.createElement(AccountContext.Provider,{value:{ready:true,configured:true,user:authenticated?{id:'private-user',username:'不应出现在通用首页的账号名'}:null,spaceId:authenticated?'private-space':'local'}},React.createElement(ReferenceHome,{authenticated,works,favorites,toggleFavorite:id=>favoriteActions.push(id),onRequireAccount:action=>pendingActions.push(action),setModal:value=>modal=value,navigate:value=>route=value,notify:value=>notices.push(value),onImport:()=>imports++}));
+ const mountHome=async props=>act(async()=>{renderer=TestRenderer.create(homeTree(props),{createNodeMock:nodeMock});});
  const byLabel=label=>renderer.root.findByProps({'aria-label':label});
  const rows=()=>renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card'));
  const more=tool=>byLabel(`${tool.title}更多操作`);
  const submit=async()=>act(async()=>renderer.root.findByProps({className:'home-composer-form'}).props.onSubmit({preventDefault(){}}));
+ const continueAfterAccount=async action=>{assert.equal(typeof action,'function','Private actions must be passed as deferred callbacks');await act(async()=>action());};
+ const gated=async action=>{modal=undefined;const before=pendingActions.length;await action();assert.equal(pendingActions.length,before+1,'A private action must first request account access');assert.equal(modal,undefined,'A private dialog cannot open before the account callback executes');const deferred=pendingActions.pop();await continueAfterAccount(deferred);};
+ const normalizedTree=()=>JSON.stringify(renderer.toJSON(),(key,value)=>['id','htmlFor','form','aria-controls','aria-labelledby'].includes(key)?undefined:value);
+ const privateLabels=['我的作品','继续创作','创作数据','当前作品','对话关联作品','对话记录'];
  await mountHome();
- assert.equal(text(renderer.root.findByType('h1')),'今天，想写一个什么故事？');
- assert.ok(byLabel('首页创作入口').findByProps({'aria-label':'创作对话'}).props.className.includes('home-chat-hero'));
- assert.ok(text(renderer.root).includes('一句话生成爆款小说'),'The existing core creation label must remain visible');
- assert.equal(byLabel('当前作品').type,'select');assert.equal(byLabel('当前作品').props.value,sampleWorks[0].id);
- assert.equal(byLabel('对话关联作品').props.value,sampleWorks[0].id,'The primary conversation must use the author-selected work');
- assert.equal(renderer.root.findAllByProps({'aria-label':'继续创作'}).length,1);
- const shelf=byLabel('我的作品');
- for(const sample of sampleWorks){const card=byLabel(`作品卡片：${sample.title}`);assert.ok(text(card).includes(`${workWords(sample).toLocaleString()} 字`));assert.equal(card.findAll(node=>node.props.className?.startsWith('book-cover ')).length,1);}
- assert.equal(shelf.findAll(node=>node.type==='article'&&node.props['aria-label']?.startsWith('作品卡片：')).length,sampleWorks.length,'The bookshelf must show actual supplied projects, rather than fixed example books');
- const metrics=()=>Object.fromEntries(byLabel('创作数据').findByType('dl').findAllByType('div').map(node=>[text(node.findByType('dt')),text(node.findByType('dd'))]));
- assert.equal(metrics()['累计字数'],sampleWorks.reduce((sum,item)=>sum+workWords(item),0).toLocaleString()+'字');assert.equal(metrics()['作品数量'],sampleWorks.length+'部');assert.equal(metrics()['章节与场次'],sampleWorks.reduce((sum,item)=>sum+item.chapters.length,0)+'章 / 场');
- const shelfCards=()=>shelf.findAll(node=>node.type==='article'&&node.props['aria-label']?.startsWith('作品卡片：'));
- const shelfFilter=label=>byLabel('作品筛选').findAllByType('button').find(node=>text(node).startsWith(label));
- await click(shelfFilter('短篇故事'));assert.equal(shelfCards().length,sampleWorks.filter(item=>item.kind==='短篇故事').length);assert.equal(byLabel('当前作品').props.value,sampleWorks[0].id,'Filtering the bookshelf must not silently change the active work');
- await click(shelfFilter('全部作品'));await click(byLabel(`选择作品：${sampleWorks[1].title}`));assert.equal(byLabel('当前作品').props.value,sampleWorks[1].id);assert.equal(byLabel('对话关联作品').props.value,sampleWorks[1].id);
- await click(byLabel(`选择作品：${sampleWorks[0].title}`));assert.equal(byLabel('对话关联作品').props.value,sampleWorks[0].id);
- await click(byLabel(`作品资料：${sampleWorks[1].title}`));assert.equal(modal.type,'work-details');assert.equal(modal.work.id,sampleWorks[1].id);
- assert.ok(text(byLabel('继续创作')).includes(sampleWorks[0].chapters[1].title));
- assert.ok(text(byLabel('作品准备状态')).includes('大纲')&&text(byLabel('作品准备状态')).includes('人物'));
- assert.ok(!text(byLabel('作品准备状态')).includes('%'),'Preparation must not invent a completion percentage');
- await click(byLabel(`继续最近作品：${sampleWorks[0].title}`));assert.equal(route,`editor/${sampleWorks[0].id}`);
- await click(byLabel('当前作品下一步'));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'review');assert.equal(modal.workId,sampleWorks[0].id);assert.equal(modal.chapterId,sampleWorks[0].chapters[1].id);
- assert.equal(hidden(byLabel('一句话故事灵感')),true,'Returning writers should see their project before an expanded new-story form');
- await click(button(renderer.root,'开始新故事'));assert.equal(hidden(byLabel('一句话故事灵感')),false);assert.equal(document.activeElement.label,'一句话故事灵感');
- await change(byLabel('一句话故事灵感'),'尚未提交的私人构思');await change(byLabel('故事题材'),'治愈');
- await click(byLabel('创作偏好'));await change(byLabel('目标读者'),'女频');
- await click(byLabel('展开故事创作'));assert.equal(hidden(byLabel('一句话故事灵感')),true);
- await click(button(renderer.root,'开始新故事'));assert.equal(byLabel('一句话故事灵感').props.value,'尚未提交的私人构思');assert.equal(byLabel('故事题材').props.value,'治愈');assert.equal(byLabel('目标读者').props.value,'女频');
- assert.equal(networkRequests.length,0,'Opening and folding creation must not generate content');
- console.log('PASS Hero conversation, genuine bookshelf totals, chapter preparation and recommended review, and preserved unsent creation/preferences on folding');
+ assert.equal(text(renderer.root.findByType('h1')),'今天，想写一个什么故事？');assert.ok(byLabel('首页创作入口'));
+ for(const label of privateLabels)assert.equal(renderer.root.findAllByProps({'aria-label':label}).length,0,`Public home cannot include ${label}`);
+ for(const marker of ['绝不能出现在公开首页','私密作品介绍','私密大纲','私密人物','私密章节','私密正文','不应出现在通用首页的账号名'])assert.ok(!text(renderer.root).includes(marker));
+ const anonymousSnapshot=normalizedTree();await act(async()=>renderer.update(homeTree({authenticated:true,works:[],favorites:[]})));
+ assert.equal(normalizedTree(),anonymousSnapshot,'The universal homepage must render the same body for signed-in and signed-out visitors, regardless of private works or favorites');
+ assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0,'Public home cannot read workspace collections or local conversation history');assert.equal(storageWrites.length,0);
+ console.log('PASS universal public homepage, identical account-state content and no private manuscript/favorite/storage exposure');
 
- // The same existing tools use the currently selected project only when the author opts in.
+ // The public input may prepare a prompt; only explicit account-gated actions can enter private creation.
+ const chatInput=byLabel('故事灵感输入'),chatForm=(()=>{let node=chatInput.parent;while(node&&node.type!=='form')node=node.parent;return node;})();assert.ok(chatForm);
+ const firstPending=pendingActions.length;
+ for(const label of ['聊聊故事灵感','设计一个角色','讨论下一章']){await click(button(renderer.root,label));assert.ok(byLabel('故事灵感输入').props.value.trim());assert.equal(pendingActions.length,firstPending);}
+ const inputKey=async extra=>act(async()=>byLabel('故事灵感输入').props.onKeyDown?.({key:'Enter',shiftKey:false,isComposing:false,nativeEvent:{isComposing:false},preventDefault(){},...extra}));
+ await inputKey({shiftKey:true});await inputKey({isComposing:true});await inputKey({nativeEvent:{isComposing:true}});assert.equal(pendingActions.length,firstPending);
+ await change(byLabel('故事灵感输入'),'  一位修复师收到来自未来的信  ');
+ await gated(()=>act(async()=>chatForm.props.onSubmit({preventDefault(){}})));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'一位修复师收到来自未来的信');assert.equal(modal.workId,undefined);
+ assert.equal(networkRequests.length,0,'A public chat prompt must never automatically call a model');
+ console.log('PASS public example chips only fill the draft, input methods do not submit and discussion enters an account-gated private dialog');
+
  const iconClasses={ideas:'lucide-lightbulb',outline:'lucide-list-tree',character:'lucide-users-round',polish:'lucide-wand-sparkles',continue:'lucide-feather',dialogue:'lucide-messages-square',review:'lucide-scan-text',title:'lucide-type'};
  assert.equal(rows().length,8);assert.ok(text(renderer.root).includes('构思与规划'));assert.ok(text(renderer.root).includes('正文与修改'));
- assert.equal(byLabel('关联当前作品').props.checked,true);
  for(const tool of tools){
-  const main=byLabel(`使用${tool.title}`),icon=main.findByProps({className:'home-tool-icon'}).findByType('svg');
-  assert.ok(icon.props.className.includes(iconClasses[tool.id]),`${tool.title}: preserve the existing SVG glyph`);
-  await click(main);assert.equal(modal.type,'tool');assert.deepEqual(modal.tool,tool);assert.equal(modal.workId,sampleWorks[0].id);assert.equal(modal.chapterId,sampleWorks[0].chapters[1].id);
-  assert.equal(renderer.root.findAllByProps({'aria-label':`查看${tool.title}使用指南`}).length,0);
-  await click(more(tool));assert.equal(more(tool).props['aria-expanded'],true);
-  await click(byLabel(`查看${tool.title}使用指南`));assert.equal(document.activeElement.label,`${tool.title}更多操作`);
-  const guide=byLabel(`${tool.title}使用指南`);assert.ok(text(guide).includes(toolGuides[tool.id].scene));
-  await click(guide.findByProps({'aria-label':`使用${tool.title}示例`}));assert.deepEqual(modal.tool,tool);assert.equal(modal.prompt,toolGuides[tool.id].prompt);assert.equal(modal.workId,sampleWorks[0].id);assert.equal(modal.chapterId,sampleWorks[0].chapters[1].id);
+  const main=byLabel(`使用${tool.title}`),icon=main.findByProps({className:'home-tool-icon'}).findByType('svg');assert.ok(icon.props.className.includes(iconClasses[tool.id]),`${tool.title}: preserve the existing SVG glyph`);
+  await gated(()=>click(main));assert.equal(modal.type,'tool');assert.deepEqual(modal.tool,tool);assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
+  const beforeGuide=pendingActions.length;await click(more(tool));assert.equal(more(tool).props['aria-expanded'],true);await click(byLabel(`查看${tool.title}使用指南`));assert.equal(pendingActions.length,beforeGuide,'Authored usage guides are readable without login');
+  assert.equal(document.activeElement.label,`${tool.title}更多操作`);const guide=byLabel(`${tool.title}使用指南`);assert.ok(text(guide).includes(toolGuides[tool.id].scene));
+  await gated(()=>click(guide.findByProps({'aria-label':`使用${tool.title}示例`})));assert.deepEqual(modal.tool,tool);assert.equal(modal.prompt,toolGuides[tool.id].prompt);assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
  }
  await click(byLabel('收起工具使用指南'));
- await change(byLabel('关联当前作品'),false);await click(byLabel('使用故事灵感发生器'));assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
- await change(byLabel('关联当前作品'),true);await change(byLabel('当前作品'),sampleWorks[1].id);
- assert.equal(byLabel('对话关联作品').props.value,sampleWorks[1].id,'Changing the active work must update the Hero conversation scope');
- await click(byLabel('使用故事灵感发生器'));assert.equal(modal.workId,sampleWorks[1].id);assert.equal(modal.chapterId,sampleWorks[1].chapters[0].id);
- await click(byLabel(`继续最近作品：${sampleWorks[1].title}`));assert.equal(route,`editor/${sampleWorks[1].id}`);
  const entries=byLabel('创作快捷入口');assert.equal(entries.findAllByType('button').length,6);
- for(const [label,expected] of [['故事大纲','outline'],['人物设定','character'],['寻找灵感','ideas'],['剧情续写','continue'],['文字润色','polish']]){await click(entries.findAllByType('button').find(item=>text(item).includes(label)));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,expected);assert.equal(modal.workId,sampleWorks[1].id);assert.equal(modal.chapterId,sampleWorks[1].chapters[0].id);}
- await click(byLabel('展开故事创作'));assert.equal(hidden(byLabel('一句话故事灵感')),true);await click(entries.findAllByType('button').find(item=>text(item).includes('生成小说')));assert.equal(hidden(byLabel('一句话故事灵感')),false);assert.equal(byLabel('一句话故事灵感').props.value,'尚未提交的私人构思');
- for(const [label,expected] of [['小说写作','novels'],['剧本创作','scripts'],['小说拆书','dismantle'],['投稿中心','submit']]){await click(button(renderer.root,label));assert.equal(route,expected);}
- await click(button(renderer.root,'进入工具库'));assert.equal(route,'tools');
- const firstTool=tools.find(tool=>tool.id==='ideas');
- await act(async()=>more(firstTool).props.onKeyDown({key:'ArrowUp',preventDefault(){}}));
+ for(const [label,id]of [['故事大纲','outline'],['人物设定','character'],['寻找灵感','ideas'],['剧情续写','continue'],['文字润色','polish']]){await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes(label))));assert.equal(modal.tool.id,id);assert.equal(modal.workId,undefined);}
+ const firstTool=tools.find(tool=>tool.id==='ideas');await act(async()=>more(firstTool).props.onKeyDown({key:'ArrowUp',preventDefault(){}}));
  const menu=byLabel(`${firstTool.title}操作`),menuKey=async key=>act(async()=>menu.props.onKeyDown({key,preventDefault(){}}));
- assert.equal(document.activeElement,menuNodes.get(`${firstTool.title}操作`).items[1]);
- await menuKey('ArrowDown');assert.equal(document.activeElement.name,'guide');await menuKey('End');assert.equal(document.activeElement.name,'favorite');await menuKey('Home');assert.equal(document.activeElement.name,'guide');
+ assert.equal(document.activeElement,menuNodes.get(`${firstTool.title}操作`).items[1]);await menuKey('ArrowDown');assert.equal(document.activeElement.name,'guide');await menuKey('End');assert.equal(document.activeElement.name,'favorite');await menuKey('Home');assert.equal(document.activeElement.name,'guide');
  await act(async()=>emit('keydown',{key:'Escape',preventDefault(){},stopPropagation(){}}));assert.equal(more(firstTool).props['aria-expanded'],false);assert.equal(document.activeElement.label,`${firstTool.title}更多操作`);
  await click(more(firstTool));await act(async()=>emit('pointerdown',{target:{}}));assert.equal(more(firstTool).props['aria-expanded'],false);
- await click(more(firstTool));await click(byLabel('收藏故事灵感发生器'));assert.equal(document.activeElement.label,'故事灵感发生器更多操作');
- await change(byLabel('工具筛选'),'favorites');assert.equal(rows().length,1);await click(more(firstTool));await click(byLabel('取消收藏故事灵感发生器'));assert.equal(rows().length,0);assert.equal(document.activeElement.label,'工具筛选');
- await click(button(renderer.root,'看看全部工具'));assert.equal(rows().length,8);
- for(const label of ['创作设置','备份恢复']){await click(button(renderer.root,label));assert.equal(modal.type,'settings');}
- await click(byLabel('使用帮助'));assert.equal(modal.type,'help');await click(button(renderer.root,'查看创作方案'));assert.equal(route,'membership');await click(button(renderer.root,'查看工作流'));assert.equal(route,'workflows');
- console.log('PASS retained tool labels/glyphs, optional author-controlled work context, original routes, guides, favorites and keyboard/menu focus');
+ await click(more(firstTool));route=undefined;await gated(()=>click(byLabel('收藏故事灵感发生器')));assert.equal(route,'tools');assert.equal(favoriteActions.length,0,'The public page cannot mutate or display private favorites');
+ assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0);assert.equal(storageWrites.length,0);
+ console.log('PASS eight retained tools/icons, six shortcuts, public authored guides and explicit account gating for tool use and favorites');
 
- // Selected projects can disappear after restore/deletion; no old project may remain attached.
- await updateHome([emptyWork]);assert.equal(byLabel('当前作品').props.value,emptyWork.id);assert.ok(text(byLabel(`继续最近作品：${emptyWork.title}`)).includes('开始第一章'));
- await click(byLabel('当前作品下一步'));assert.equal(modal.tool.id,'outline');assert.equal(modal.workId,emptyWork.id);
- await click(byLabel('使用故事灵感发生器'));assert.equal(modal.workId,emptyWork.id);assert.equal(modal.chapterId,emptyWork.chapters[0].id);
- await updateHome([{...emptyWork,outline:'已经确认的主线'}]);await click(byLabel('当前作品下一步'));assert.equal(modal.tool.id,'character');
- await updateHome([{...emptyWork,outline:'已经确认的主线',characters:'人物的目标与边界'}]);await click(byLabel('当前作品下一步'));assert.equal(modal.type,'chapter-plan');assert.equal(modal.workId,emptyWork.id);
- const memoryCharacter={...emptyWork,outline:'已经确认的主线',memory:{version:1,entries:[{id:'character-fact',type:'character',title:'修复师',content:'主角寻找寄信人。'}]}};
- await updateHome([memoryCharacter]);await click(byLabel('当前作品下一步'));assert.equal(modal.type,'chapter-plan','A character already recorded in structured memory must not be reported missing');
- const scriptWork={...emptyWork,id:'script-project',title:'尚未开场的剧本',kind:'剧本',outline:'第一场的冲突与行动',characters:'人物的目标和关系',chapters:[{id:'scene-1',title:'第一场 · 修复铺',text:''}]};
- await updateHome([scriptWork]);assert.ok(text(byLabel(`继续最近作品：${scriptWork.title}`)).includes('开始第一场'));
- assert.ok(text(byLabel(`作品卡片：${scriptWork.title}`)).includes('0 字 · 1 场'));assert.ok(text(byLabel('作品准备状态')).includes('分场正文'));
- await click(byLabel('当前作品下一步'));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'outline');assert.equal(modal.workId,scriptWork.id);assert.ok(text(byLabel('当前作品下一步')).includes('梳理场次安排'),'An unwritten script must use scene planning rather than novel chapter planning');
- const partlyWritten={...initialWorks[0],lastEditedChapterId:'blank',chapters:[{id:'written',title:'已有正文',text:'人物推开了旧书店的门。'},{id:'blank',title:'待写章节',text:''}]};
- await updateHome([partlyWritten]);await click(byLabel('当前作品下一步'));assert.equal(modal.tool.id,'review');assert.equal(modal.chapterId,'written','Review recommendations must target actual prose rather than the remembered blank chapter');
- const queuedWork={...initialWorks[0],id:'queue-story',chapters:[{...initialWorks[0].chapters[0],plan:'从收到信开始调查'}]};
- const queued=createChapterQueue(queuedWork,{chapterIds:[queuedWork.chapters[0].id]});
- const prepared=prepareQueueJob(queuedWork,queued,queued.jobs[0].id);
- queuedWork.chapterQueue=completeQueueJob(prepared,queued.jobs[0].id,{text:'尚未确认的章节候选。',source:'ai'});
- await updateHome([queuedWork]);await click(byLabel('当前作品下一步'));assert.equal(modal.type,'chapter-queue');assert.equal(modal.workId,queuedWork.id);
- await updateHome([{...queuedWork,chapterQueue:{...queuedWork.chapterQueue,status:'completed',jobs:queuedWork.chapterQueue.jobs.map(job=>({...job,status:'succeeded'}))}}]);await click(byLabel('当前作品下一步'));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'review','A finished queue must not keep appearing as an unfinished task');
- await updateHome([]);assert.equal(renderer.root.findAllByProps({'aria-label':'继续创作'}).length,0);assert.equal(byLabel('创作对话输入').props.disabled,false,'An empty workspace must have a usable creative conversation');assert.equal(metrics()['累计字数'],'0字');assert.equal(metrics()['作品数量'],'0部');assert.equal(metrics()['章节与场次'],'0章 / 场');
- await click(byLabel('使用故事灵感发生器'));assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);assert.ok(!text(renderer.root).includes('NaN'));
- await click(button(renderer.root,'导入文稿'));assert.ok(imports>0);
- await click(byLabel('会员创作方案').findByType('button'));assert.equal(route,'membership');assert.ok(text(byLabel('会员创作方案')).includes('方案演示'));
- assert.equal(networkRequests.length,0,'Recommendations, context changes and queue restoration only open UI');
- await act(async()=>renderer.unmount());renderer=null;
+ assert.equal(renderer.root.findAllByProps({'aria-label':'一句话故事灵感'}).length,0,'Public home must not mount the private generation form');
+ const beforeExample=pendingActions.length;await click(button(renderer.root,'查看生成示例'));assert.ok(text(byLabel('预写创作示例')).includes('预先编写的示例'));assert.equal(pendingActions.length,beforeExample);
+ await click(button(renderer.root,'填入示例灵感'));assert.ok(byLabel('故事灵感输入').props.value.includes('旧物记忆'));assert.equal(pendingActions.length,beforeExample,'Public preview use only fills the draft');
+ const publicDraft=byLabel('故事灵感输入').props.value;await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes('生成小说'))));assert.equal(modal.type,'quick-start');assert.equal(modal.idea,publicDraft);assert.equal(modal.autoGenerate,true);assert.equal(modal.workId,undefined);
+ await change(byLabel('故事灵感输入'),'');await gated(()=>click(entries.findAllByType('button').find(node=>text(node).includes('生成小说'))));assert.equal(modal.type,'quick-start');assert.equal(modal.autoGenerate,false,'A blank quick entry opens private planning without starting generation');
+ await gated(()=>click(button(renderer.root,'添加参考资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
+ for(const [label,expected]of [['小说写作','novels'],['剧本创作','scripts'],['小说拆书','dismantle'],['投稿中心','submit']]){route=undefined;await gated(()=>click(button(renderer.root,label)));assert.equal(route,expected);}
+ route=undefined;await gated(()=>click(button(renderer.root,'进入工具库')));assert.equal(route,'tools');await gated(()=>click(byLabel('会员创作方案').findByType('button')));assert.equal(route,'membership');
+ assert.equal(imports,0,'Supplying a private import callback must not cause the public page to inspect or import documents');
+ assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0);assert.equal(storageWrites.length,0);await act(async()=>renderer.unmount());renderer=null;
  assert.ok([...listeners.values()].every(values=>values.size===0));
- console.log('PASS zero-word start, missing-outline/character/planning recommendations, author-confirmed queue recovery and removed/empty-project context safety');
+ console.log('PASS authored previews only fill public drafts, while generation, references and private destinations wait for account access');
+
+ // The existing work-state business model remains covered even though universal home no longer displays private projects.
+ const emptyWork={id:'empty-project',title:'尚未动笔的故事',kind:'长篇小说',genre:'悬疑',outline:'',characters:'',chapters:[{id:'empty-1',title:'第一章',text:''}]};
+ assert.equal(getHomeWorkState(emptyWork).actionLabel,'开始第一章');assert.equal(getHomeWorkState(emptyWork).words,0);assert.equal(getHomeWorkState(emptyWork).nextAction.toolId,'outline');
+ assert.equal(getHomeWorkState({...emptyWork,outline:'已经确认的主线'}).nextAction.toolId,'character');
+ assert.equal(getHomeWorkState({...emptyWork,outline:'已经确认的主线',characters:'人物的目标与边界'}).nextAction.type,'chapter-plan');
+ const memoryCharacter={...emptyWork,outline:'已经确认的主线',memory:{version:1,entries:[{id:'character-fact',type:'character',title:'修复师',content:'主角寻找寄信人。'}]}};assert.equal(getHomeWorkState(memoryCharacter).nextAction.type,'chapter-plan');
+ const scriptWork={...emptyWork,kind:'剧本',outline:'冲突与场景',characters:'角色的目标'};assert.equal(getHomeWorkState(scriptWork).actionLabel,'开始第一场');assert.equal(getHomeWorkState(scriptWork).unit,'场');assert.equal(getHomeWorkState(scriptWork).nextAction.toolId,'outline');
+ const partlyWritten={...initialWorks[0],lastEditedChapterId:'blank',chapters:[{id:'written',title:'已有正文',text:'人物推开了旧书店的门。'},{id:'blank',title:'待写章节',text:''}]};assert.equal(getHomeWorkState(partlyWritten).nextAction.chapterId,'written');
+ const queuedWork={...initialWorks[0],id:'queue-story',chapters:[{...initialWorks[0].chapters[0],plan:'从收到信开始调查'}]};const queued=createChapterQueue(queuedWork,{chapterIds:[queuedWork.chapters[0].id]});const prepared=prepareQueueJob(queuedWork,queued,queued.jobs[0].id);queuedWork.chapterQueue=completeQueueJob(prepared,queued.jobs[0].id,{text:'尚未确认的章节候选。',source:'ai'});
+ assert.equal(getHomeWorkState(queuedWork).nextAction.type,'chapter-queue');assert.equal(getHomeWorkState({...queuedWork,chapterQueue:{...queuedWork.chapterQueue,status:'completed',jobs:queuedWork.chapterQueue.jobs.map(job=>({...job,status:'succeeded'}))}}).nextAction.toolId,'review');assert.equal(getHomeWorkState(null),null);
+ console.log('PASS retained zero-word, script scene, character-memory, actual-prose review and pending queue recommendations as private work-state model behavior');
 
  // Standalone Generator keeps the original planning contract; visual folding must not change generation semantics.
  await act(async()=>{renderer=TestRenderer.create(React.createElement(Generator,{setModal:value=>modal=value,notify:value=>notices.push(value),onImport:()=>imports++}),{createNodeMock:nodeMock});});
@@ -199,5 +168,5 @@ try{
   console.log('PASS existing market guide handoff, controlled page width, hidden controls and mobile layout rules');
 }finally{
  if(renderer)await act(async()=>renderer.unmount());await server.close();globalThis.fetch=originalFetch;
- if(originalDocument===undefined)delete globalThis.document;else globalThis.document=originalDocument;
+ if(originalDocument===undefined)delete globalThis.document;else globalThis.document=originalDocument;if(originalStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=originalStorage;
 }

@@ -24,18 +24,19 @@ const latestFor=(records,workId)=>records.filter(item=>item.workId===workId).sor
 const errorText=error=>error?.message||'本轮没有完成，请稍后恢复结果或重试。';
 const quoteForRequest=request=>quoteTask({taskId:'chat',model:request.mode,inputChars:JSON.stringify({prompt:request.prompt||'',context:request.context||{},previous:{}}).length,outputChars:Math.min(4000,Math.max(300,Number(request.target)||1000))});
 
-export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appearance='default'}) {
+export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appearance='default',initialPrompt=''}) {
  const [records,setRecords,saveError]=useCollection('conversations',[]),generation=useGeneration();
  const recordsRef=useRef(records),setterRef=useRef(setRecords),generationRef=useRef(generation),alive=useRef(true),running=useRef(null),restoring=useRef(null),viewToken=useRef(0),draftTimer=useRef(null),draftPending=useRef(null),inputRef=useRef(null),logRef=useRef(null),heroControlsRef=useRef(null);
  recordsRef.current=records;setterRef.current=setRecords;generationRef.current=generation;
  const available=works.filter(item=>item&&!item.deletedAt),initialWorkId=work?.id||'';
  const [scopeId,setScopeId]=useState(initialWorkId);
- const [scratch,setScratch]=useState(()=>createConversation({workId:initialWorkId,referenceIds:defaultReferences(work)}));
- const [activeId,setActiveId]=useState(()=>latestFor(records,initialWorkId)?.id||'');
+ const seed=typeof initialPrompt==='string'?initialPrompt.slice(0,4000):'';
+ const [scratch,setScratch]=useState(()=>createConversation({workId:initialWorkId,referenceIds:defaultReferences(work),draft:seed}));
+ const [activeId,setActiveId]=useState(()=>seed?'':latestFor(records,initialWorkId)?.id||'');
  const session=records.find(item=>item.id===activeId)||scratch;
  const associated=available.find(item=>item.id===session.workId)||null;
  const orphan=Boolean(session.workId&&!associated);
- const [input,setInput]=useState(()=>latestFor(records,initialWorkId)?.draft||''),[referenceIds,setReferenceIds]=useState(()=>latestFor(records,initialWorkId)?.referenceIds||defaultReferences(work));
+ const [input,setInput]=useState(()=>seed||latestFor(records,initialWorkId)?.draft||''),[referenceIds,setReferenceIds]=useState(()=>seed?defaultReferences(work):latestFor(records,initialWorkId)?.referenceIds||defaultReferences(work));
  const [busy,setBusy]=useState(false),[cancelling,setCancelling]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[deleteConfirm,setDeleteConfirm]=useState(false),[persistenceError,setPersistenceError]=useState(false),[checkedTask,setCheckedTask]=useState(null);
  const inputValue=useRef(input),sessionRef=useRef(session);inputValue.current=input;sessionRef.current=session;
  const contextId=useId(),meterId=useId();
@@ -98,6 +99,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
  },[initialWorkId]);
  useEffect(()=>{
   alive.current=true;
+  if(seed)draftPending.current={session:sessionRef.current,draft:seed,referenceIds:[...sessionRef.current.referenceIds]};
   const recovered=recoverConversations(recordsRef.current);
   if(JSON.stringify(recovered)!==JSON.stringify(recordsRef.current))write(()=>recovered);
   return()=>{

@@ -17,7 +17,9 @@ import { SettingsDialog } from './Settings';
 import { ServiceAdmin } from './ServiceSettings';
 import { WorkDetailsDialog, ChapterManager, VersionDialog } from './WorkManagement';
 import { VideoStudio, SubmissionDesk } from './StudioPages';
-import { AccountProvider,AccountAccess,useAccount } from './Account';
+import { AccountProvider,AccountAccess,PrivateAccountGate,canAccessPrivate,useAccount } from './Account';
+import {PublicHomeShell} from './PublicHome.jsx';
+import {HomeConversation} from './HomeConversation.jsx';
 import { WorkspaceProvider,WorkspaceStatus,useCollection,useWorkspace } from './Workspace.jsx';
 import {workspaceFeedback} from './workspaceFeedback.js';
 import { GenerationHistory } from './GenerationHistory';
@@ -58,9 +60,19 @@ const cn = (...classes) => classes.filter(Boolean).join(' ');
 function Icon({ name, ...props }) { const Component = iconMap[name] || Sparkles; return <Component {...props}/>; }
 function Empty({ title, text, action }) { return <div className="empty-state"><Feather size={36}/><h3>{title}</h3><p>{text}</p>{action}</div>; }
 
-export function App() { return <AccountProvider><WorkspaceProvider><GenerationProvider><BillingProvider><WritingApp/></BillingProvider></GenerationProvider></WorkspaceProvider></AccountProvider>; }
+export function App() { return <AccountProvider allowPublic><ApplicationRouter/></AccountProvider>; }
 
-export function WritingApp() {
+export function ApplicationRouter() {
+ const account=useAccount();
+ const [route,setRoute]=useState(()=>location.hash.slice(1)||'home'),[launch,setLaunch]=useState(null);
+ useEffect(()=>{if(route==='home'&&launch&&account?.ready&&!canAccessPrivate(account))setLaunch(null);},[route,launch,account?.ready,account?.error,account?.user,account?.configured,account?.spaceId]);
+ useEffect(()=>{const change=()=>{const next=location.hash.slice(1)||'home';setRoute(next);if(next==='home')setLaunch(null);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
+ const navigate=id=>{location.hash=id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};
+ const publicVisible=route==='home'&&!launch;
+ return <><PublicHomeShell items={navItems} visible={publicVisible} onNavigate={navigate} onLaunch={modal=>setLaunch({id:uid(),modal})}/>{!publicVisible&&<PrivateAccountGate onHome={()=>navigate('home')}><WorkspaceProvider key={`${account?.spaceId||'unconfirmed'}:${launch?.id||'route'}`}><GenerationProvider><BillingProvider><WritingApp initialModal={launch?.modal||null} onReturnPublicHome={()=>setLaunch(null)}/></BillingProvider></GenerationProvider></WorkspaceProvider></PrivateAccountGate>}</>;
+}
+
+export function WritingApp({initialModal=null,onReturnPublicHome}) {
  const billing=useBilling(),workspace=useWorkspace();
  const [route, setRoute] = useState(location.hash.slice(1) || 'home');
  const [allWorks, setWorks, workSaveError] = useStored('mdd-works-v1', initialWorks);
@@ -69,19 +81,22 @@ export function WritingApp() {
  const trashWorks=allWorks.filter(work=>work.deletedAt);
  const [favorites, setFavorites] = useStored('mdd-favorites-v1', ['ideas', 'polish']);
  const [submissions, setSubmissions] = useStored('mdd-submissions-v1', []);
- const [modal, setModal] = useState(null);const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
- useEffect(()=>setModal(null),[billing.navigationKey]);
+ const [modal, setModal] = useState(initialModal);const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
+ const initialBillingNavigation=useRef(billing?.navigationKey);
+ useEffect(()=>{if(initialBillingNavigation.current!==billing?.navigationKey){initialBillingNavigation.current=billing?.navigationKey;setModal(null);}},[billing?.navigationKey]);
+ useEffect(()=>{if(initialModal&&route==='home'&&!modal)onReturnPublicHome?.();},[modal,route,initialModal,onReturnPublicHome]);
  const [toast, setToast] = useState('');
  const [search, setSearch] = useState('');
  const toastTimer = useRef();
  const importRef = useRef();
+ const modalElement = useRef();
  const notify = message => { setToast(message); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 3200); };
  const navigate = id => {if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId(''); location.hash = id; setRoute(id); window.scrollTo(0,0); };
  useEffect(() => { const change = () => { setRoute(location.hash.slice(1) || 'home'); setModal(null); window.scrollTo(0,0); }; window.addEventListener('hashchange',change); return () => window.removeEventListener('hashchange',change); }, []);
  useEffect(() => { const onKey = event => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setModal({ type:'search' }); } if (event.key === 'Escape') { setModal(null); } }; window.addEventListener('keydown',onKey); return () => window.removeEventListener('keydown',onKey); }, []);
  useEffect(() => {
   if(!modal) return;
-  const dialog=document.querySelector('.modal');
+  const dialog=modalElement.current;
   if(!dialog) return;
   const previous=document.activeElement;
   const elements=()=>Array.from(dialog.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex="0"]')).filter(element=>element.offsetParent!==null);
@@ -101,13 +116,13 @@ export function WritingApp() {
  const importFile = async event => {try{ const file = event.target.files?.[0]; if (!file) return; if (!/\.txt$/i.test(file.name)) { notify('请导入 TXT 格式的文稿'); return; } const text = await file.text(); if (text.length > 1500000) { notify('请导入小于 150 万字的文稿'); return; } const id = uid(); setWorks(prev => [{ id, title:file.name.replace(/\.txt$/i,''), kind:'长篇小说', genre:'其他', cover:'plain', subtitle:'YOUR OWN STORY', description:'从本地导入的作品', updated:'刚刚', progress:0, chapters:splitManuscript(text), outline:'', characters:'' }, ...prev]); navigate(`editor/${id}`); notify('文稿导入成功'); event.target.value = ''; }catch{notify('文稿读取失败，请检查文件后重试');}finally{event.target.value='';} };
  const openVideo=(work,chapter)=>{setVideoHandoff({workId:work.id,script:chapter?.text||work.chapters.map(c=>c.text).join('\n\n'),title:work.title});navigate('video');};
  const openSubmission=work=>{setSubmissionWorkId(work.id);navigate('submit');};
- const common = { works, navigate, setModal, notify, favorites, openVideo,openSubmission, toggleFavorite, createWork, onImport:() => importRef.current.click(), trashWorks, onRestoreWork:work=>{updateWork({...work,deletedAt:undefined});notify('作品已恢复到书架');} };
+ const common = { works, navigate, setModal, notify, favorites, authenticated:true,onRequireAccount:action=>action(),openVideo,openSubmission, toggleFavorite, createWork, onImport:() => importRef.current.click(), trashWorks, onRestoreWork:work=>{updateWork({...work,deletedAt:undefined});notify('作品已恢复到书架');} };
  const currentWork = route.startsWith('editor/') && works.find(work => work.id === route.split('/')[1]);
  const modalWork=allWorks.find(work=>work.id===modal?.workId&&!work.deletedAt)||currentWork;
  return <>
   {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到本地服务，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
-  {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
+  {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
     <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content")} key={`${route}-${workspaceRevision}`}>
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
@@ -126,7 +141,9 @@ export function WritingApp() {
      <footer className="page-footer"><span>墨多多写作</span><i/>让灵感落笔，让故事生长。</footer>
     </main>
   </WorkbenchFrame>}
-  {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" aria-label={modal.type === 'create' ? '新建作品' : '墨多多写作'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
+  {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal',modal.type==='home-conversation'&&'home-conversation-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" ref={modalElement} aria-label={modal.type === 'create' ? '新建作品' : '墨多多写作'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
+   {modal.type === 'home-conversation' && <HomeConversation works={works} work={null} initialPrompt={modal.initialPrompt||''} setModal={setModal} notify={notify}/>}
+   {modal.type === 'import' && <><h2>导入你的文稿</h2><p className="modal-desc">选择 TXT 文件，文稿将保存到当前创作空间。</p><button type="button" className="button primary full" onClick={()=>importRef.current?.click()}><Upload size={16}/>选择 TXT 文稿</button></>}
    {modal.type === 'settings' && <SettingsDialog works={allWorks} notify={notify} onRestore={data=>{setWorks(data.works);setFavorites(data.favorites);setSubmissions(data.submissions);setWorkspaceRevision(value=>value+1);}}/>}
    {modal.type === 'work-details' && <WorkDetailsDialog work={allWorks.find(w=>w.id===modal.work.id)||modal.work} onSave={work=>{updateWork(work);setModal(null);notify('作品资料已保存');}} onTrash={work=>{updateWork({...work,deletedAt:new Date().toISOString()});setModal(null);if(currentWork)navigate('works');notify('作品已移入回收站，可随时恢复');}}/>}
    {modal.type === 'chapter-plan' && <ChapterPlanner work={allWorks.find(w=>w.id===modal.workId)||currentWork} initialPlans={modal.plans} onChange={updateWork} notify={notify} onClose={()=>setModal(null)} onOpenQueue={work=>setModal({type:'chapter-queue',workId:work.id})}/>}
