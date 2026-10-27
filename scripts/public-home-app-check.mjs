@@ -35,6 +35,7 @@ globalThis.fetch=async(url,options={})=>{
   if(statusBehavior==='mixed-local')return Response.json(mixedLegacy());
   return Response.json(auth);
  }
+ if(url==='/api/auth/methods')return Response.json({ownerConfigured:true,...Object.fromEntries(['phone','email','wechat'].map(name=>[name,{enabled:false,configured:false,available:false,reason:'暂未开通'}]))});
  if(url==='/api/auth/login'){auth=member('alice');return Response.json({user:auth.user});}
  if(url==='/api/auth/register'){auth=member(auth.configured?'new-author':'local');return Response.json({user:auth.user,recoveryCode:'fixture-first-account-recovery-code'});}
  if(url==='/api/data'){
@@ -72,12 +73,13 @@ try{
   const controls=renderer.root.findAll(node=>node.type==='button'&&['展开导航','收起导航','打开菜单'].includes(node.props['aria-label']));
   assert.equal(controls.filter(node=>node.props['aria-controls']==='main-sidebar').length,2,'The one workbench associates its desktop and mobile navigation controls with its sidebar');
  };
- const privateCalls=()=>calls.filter(call=>call.url!=='/api/auth/status');
+ const privateCalls=()=>calls.filter(call=>!['/api/auth/status','/api/auth/methods'].includes(call.url));
  const privateReads=()=>reads.filter(key=>/mdd-(works|conversations|favorites|submissions|reading|workflows|video|planningDrafts|evaluations|billing|ai-mode)/.test(key));
  const assertPublic=label=>{
   assert.ok(publicWrapper(),`${label}: public shell should exist`);assert.ok(!publicWrapper().props.hidden,`${label}: public shell should remain visible`);
   assert.equal(renderer.root.findAllByType('aside').length,0,`${label}: the public marketing page must not mount a sidebar`);
   assert.ok(publicMain().findAllByType('h1').length,`${label}: the public entry must keep its main heading`);
+  assert.deepEqual(calls.filter(call=>call.url!=='/api/auth/status'),[],`${label}: homepage must only read account status`);
   assert.deepEqual(privateCalls(),[],`${label}: homepage must not initialize private providers`);
   assert.deepEqual(privateReads(),[],`${label}: homepage must not read private browser caches`);
   assert.deepEqual(writes,[],`${label}: simply opening the homepage must not create workspace records`);
@@ -91,7 +93,8 @@ try{
   const form=renderer.root.findAllByType('form').find(node=>node.findAllByProps({'aria-label':'创作账号'}).length);assert.ok(form);
   await act(async()=>{await form.props.onSubmit({preventDefault(){}});await sleep(20);});
  };
- const fillAccount=async()=>{await change(renderer.root.findByProps({'aria-label':'创作账号'}),'fixture_alice');await change(renderer.root.findByProps({'aria-label':'创作密码'}),'fixture-login-password');};
+ const revealPassword=async()=>{const button=renderer.root.findAllByProps({'aria-label':'账号密码登录'})[0];if(button)await click(button);};
+ const fillAccount=async()=>{await revealPassword();await change(renderer.root.findByProps({'aria-label':'创作账号'}),'fixture_alice');await change(renderer.root.findByProps({'aria-label':'创作密码'}),'fixture-login-password');};
 
  let publicHeading,publicSections;
  for(const [name,state]of [['guest',guest()],['signed-in',member('alice')],['legacy-local',legacy()]]){
@@ -120,9 +123,9 @@ try{
  await mount();
  await click(renderer.root.findByProps({'aria-label':'登录'}));
  assert.ok(publicWrapper()&&!publicWrapper().props.hidden,'the login action should open over the public marketing homepage');
- assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length);assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
+ assert.ok(renderer.root.findAllByProps({'aria-label':'账号密码登录'}).length);await revealPassword();assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length);assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
  await mount();await go('works');
- assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length,'a direct private URL must show the account gate');
+ assert.ok(renderer.root.findAllByProps({'aria-label':'账号密码登录'}).length,'a direct private URL must show the login methods');await revealPassword();assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length,'password login remains reachable');
  assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
  for(const behavior of ['failure','malformed','mixed-local']){
   await mount({behavior,hash:'#works'});assert.deepEqual(privateCalls(),[],`${behavior}: private route must fail closed`);assert.deepEqual(privateReads(),[]);

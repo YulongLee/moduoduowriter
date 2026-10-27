@@ -5,10 +5,11 @@ import { createHash,randomBytes,scrypt,timingSafeEqual,randomUUID } from 'node:c
 import { promisify } from 'node:util';
 import { validateBackup } from '../src/backup.js';
 import {newBillingAccount,refreshBilling,reserveTask,finishTask,applyDemoPurchase,balanceOf,quoteTask} from '../src/billing.js';
+import {createAuthIdentityStore} from './auth-identity.mjs';
 const derive=promisify(scrypt),hash=value=>createHash('sha256').update(value).digest('hex');
 const fail=(message,status=400,code)=>Object.assign(new Error(message),{status,code});
 export const collections=['works','favorites','submissions','reading','workflows','video','planningDrafts','evaluations','conversations'];
-export function createStore(directory) {
+export function createStore(directory,{authNow=()=>Date.now()}={}) {
  mkdirSync(directory,{recursive:true,mode:0o700});const file=join(directory,'studio.sqlite');const db=new DatabaseSync(file);chmodSync(file,0o600);
  db.exec([
  'PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;',
@@ -30,14 +31,16 @@ export function createStore(directory) {
  const interrupted=db.prepare("SELECT user_id,id FROM user_generations WHERE status='running' AND (task!='video' OR result IS NULL)").all();
  db.prepare("UPDATE user_generations SET status='interrupted',error='服务重启，任务未完成。可以手动继续。',finished_at=? WHERE status='running' AND (task!='video' OR result IS NULL)").run(new Date().toISOString());
  const transaction=fn=>{db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}};
- const publicUser=u=>({id:u.id,username:u.username,role:u.role,createdAt:u.created_at});
+ let authIdentity;
+ const publicUser=u=>({id:u.id,username:u.username,role:u.role,createdAt:u.created_at,hasPassword:authIdentity?authIdentity.hasPassword(u.id):true});
  const profile=username=>db.prepare('SELECT * FROM users WHERE username=? COLLATE NOCASE').get(username);
  const userCount=()=>db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
  const validUser=value=>typeof value==='string'&&/^[a-zA-Z0-9_\u4e00-\u9fff-]{3,30}$/.test(value);
  const validatePassword=p=>{if(typeof p!=='string'||p.length<8||p.length>128)throw fail('密码需为 8–128 个字符');};
  const session=userId=>{const token=randomBytes(32).toString('hex');db.prepare('INSERT INTO sessions(token_hash,expires_at,user_id) VALUES(?,?,?)').run(hash(token),Date.now()+7*86400000,userId);db.prepare('DELETE FROM sessions WHERE expires_at<?').run(Date.now());return token;};
  const credentials=async(password,salt)=>derive(password,salt,64,{N:32768,maxmem:64*1024*1024});
- const verify=async(u,password)=>{if(typeof password!=='string'||password.length>128)return false;const actual=await credentials(password,u?.salt||'unconfigured-workspace');return !!u&&timingSafeEqual(Buffer.from(u.password_hash,'hex'),actual);};
+ const verify=async(u,password)=>{if(typeof password!=='string'||password.length>128)return false;const actual=await credentials(password,u?.salt||'unconfigured-workspace');return !!u&&authIdentity.hasPassword(u.id)&&timingSafeEqual(Buffer.from(u.password_hash,'hex'),actual);};
+ try{authIdentity=createAuthIdentityStore({db,directory,transaction,publicUser,createSession:session,now:authNow});}catch(error){db.close();throw error;}
  const saveBilling=(id,data)=>{db.prepare('INSERT INTO billing_accounts(user_id,data,updated_at,revision) VALUES(?,?,?,1) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at,revision=billing_accounts.revision+1').run(id,JSON.stringify(data),new Date().toISOString());return data;};
  const readBilling=id=>{const row=db.prepare('SELECT data FROM billing_accounts WHERE user_id=?').get(id);const before=row?JSON.parse(row.data):newBillingAccount();const current=refreshBilling(before);if(!row||current!==before)saveBilling(id,current);return current;};
  const snapshot=id=>{const account=readBilling(id);return {account,revision:db.prepare('SELECT revision FROM billing_accounts WHERE user_id=?').get(id).revision,mode:'server-demo',paymentConfigured:false};};
@@ -94,7 +97,7 @@ export function createStore(directory) {
   };
  };
  const api={
-  ...forUser(),forUser,
+  ...forUser(),forUser,...authIdentity,
   auth(token){const configured=userCount()>0;const row=token&&db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').get(hash(token),Date.now());return {configured,user:row?publicUser(row):null,spaceId:row?.id||(!configured?'local':null),canRegister:true};},
   async register(username,password){
    if(!validUser(username))throw fail('账号需为 3–30 位中文、字母、数字或下划线');validatePassword(password);

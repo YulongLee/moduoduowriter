@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {LoaderCircle, RefreshCw, Save, Settings2, ShieldCheck, Sparkles} from 'lucide-react';
 import {useAccount} from './Account.jsx';
 import {requestApi, useGeneration} from './Generation';
+import {LoginServiceSettings} from './LoginServiceSettings.jsx';
 
 export function CreationSettings() {
   const generation = useGeneration();
@@ -62,5 +63,6 @@ export function ServiceAdmin() {
     </fieldset>
     <button className="text-button" disabled={busy} onClick={load}><RefreshCw size={14}/>重新载入配置</button>
     {message && <p className="settings-message" role="status">{message}</p>}
+    {account?.user?.role==='admin'&&<LoginServiceSettings/>}
   </section>;
 }

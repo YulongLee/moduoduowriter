@@ -26,7 +26,7 @@
     "test:account-ui": "node scripts/account-ui-check.mjs",
     "test:extended-workspace": "node scripts/extended-workspace-check.mjs",
     "test:service-upgrade": "node scripts/service-upgrade-check.mjs",
-    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home",
+    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home && npm run test:auth-identity && npm run test:auth-providers && npm run test:auth-api && npm run test:login-methods && npm run test:login-settings",
     "test:evaluation": "node scripts/writing-evaluation-check.mjs",
     "test:billing-concurrency": "node scripts/billing-concurrency-check.mjs",
     "test:home-resume": "node scripts/home-resume-check.mjs",
@@ -34,11 +34,17 @@
     "test:conversation-api": "node scripts/conversation-api-check.mjs",
     "test:conversation-data": "node scripts/conversation-data-check.mjs",
     "test:conversation-ui": "node scripts/conversation-ui-check.mjs",
-    "test:public-home": "node scripts/public-home-check.mjs && node scripts/public-home-app-check.mjs"
+    "test:public-home": "node scripts/public-home-check.mjs && node scripts/public-home-app-check.mjs",
+    "test:auth-identity": "node scripts/auth-identity-check.mjs",
+    "test:auth-providers": "node scripts/auth-providers-check.mjs",
+    "test:auth-api": "node scripts/auth-api-check.mjs",
+    "test:login-methods": "node scripts/login-methods-check.mjs",
+    "test:login-settings": "node scripts/login-settings-check.mjs"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",
     "lucide-react": "^0.468.0",
+    "nodemailer": "^10.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

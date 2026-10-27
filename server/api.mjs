@@ -8,6 +8,7 @@ import {videoEnabled} from '../src/features.js';
 import {createMediaService} from './media.mjs';
 import {createStore,collections} from './store.mjs';
 import { createCloudStore,defaultOSS,publicOSS,validateOSS } from './oss.mjs';
+import {createLoginApi} from './login-api.mjs';
 
 const defaultConfig={baseUrl:'',model:'',protocol:'chat',apiKey:'',jsonMode:false,defaultMode:'demo'};
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
@@ -46,7 +47,9 @@ async function limitedJSON(response) {
  for await(const chunk of response.body){size+=chunk.length;if(size>1500000)throw fail('模型响应过大，请减少目标篇幅',502);chunks.push(chunk);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw fail('模型服务返回了无法识别的响应',502);}
 }
-export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis.fetch,cloudStore=createCloudStore()}={}) {
+export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis.fetch,cloudStore=createCloudStore(),mailTransport,publicOrigin=process.env.MDD_PUBLIC_ORIGIN||''}={}) {
+ let deploymentOrigin='';
+ if(publicOrigin){let value;try{value=new URL(publicOrigin);}catch{throw fail('正式访问域名配置无效。');}if(value.protocol!=='https:'||value.username||value.password||value.pathname!=='/'||value.search||value.hash||/^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[|.*\.local$)/i.test(value.hostname)||!value.hostname.includes('.'))throw fail('正式访问域名必须为公开 HTTPS 来源。');deploymentOrigin=value.origin;}
  let active=0,writeQueue=Promise.resolve();
  const configFile=path.join(directory,'ai.json'),backupFile=path.join(directory,'workspace.json'),ossFile=path.join(directory,'oss.json'),mediaPermissionsFile=path.join(directory,'media-permissions.json');
  const serial=fn=>{const job=writeQueue.then(fn);writeQueue=job.catch(()=>{});return job;};
@@ -60,21 +63,24 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
  const failures=new Map();
  const sessionToken=req=>String(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('mdd_session='))?.slice(12);
  const quoteForGeneration=body=>quoteTask({taskId:['plan','chapterPlan'].includes(body.task)?'outline':body.task==='memoryExtract'?'review':body.task==='chapterDraft'?'continue':body.task,inputChars:JSON.stringify({prompt:body.prompt||'',context:body.context||{},previous:body.previous||{}}).length,outputChars:Math.min(4000,Math.max(300,Number(body.target)||1000)),model:body.mode==='refine'?'refine':'standard',dimensions:body.dimensions?.length||4});
- const cookie=(res,token)=>res.setHeader('Set-Cookie',`mdd_session=${token||''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${token?604800:0}`);
+ const cookie=(res,token,secure=false)=>res.setHeader('Set-Cookie',`mdd_session=${token||''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${token?604800:0}${secure?'; Secure':''}`);
+ const loginApi=createLoginApi({directory,database,fetchImpl,mailTransport,sendJSON:send,readBody,setSessionCookie:cookie,publicOrigin:deploymentOrigin});
  const handle=async(req,res,next=()=>send(res,404,{error:'接口不存在'}))=>{
   const url=new URL(req.url,'http://localhost');if(!url.pathname.startsWith('/api/'))return next();
   try {
    const host=req.headers.host||'';
-   if(!/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host))throw fail('仅允许从本机打开创作空间',403);
-   if(req.headers.origin&&req.headers.origin!==`http://${host}`&&req.headers.origin!==`https://${host}`)throw fail('请求来源不被允许',403);
+   const local=/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host),deployed=Boolean(deploymentOrigin&&host===new URL(deploymentOrigin).host),origin=deployed?deploymentOrigin:`${req.socket?.encrypted?'https':'http'}://${host}`,secure=deployed||Boolean(req.socket?.encrypted);
+   if(!local&&!deployed)throw fail('仅允许从本机或已配置的正式域名打开创作空间',403);
+   if(req.headers.origin&&!(url.pathname==='/api/auth/wechat/callback'&&req.method==='GET')&&req.headers.origin!==origin&&!(local&&[`http://${host}`,`https://${host}`].includes(req.headers.origin)))throw fail('请求来源不被允许',403);
    if(req.method!=='GET'&&req.headers['x-mdd-client']!=='workspace-v1')throw fail('请求缺少本地工作台标记',403);
+   if(await loginApi.handle(req,res,{url,origin,secure}))return;
    if(url.pathname==='/api/auth/status'&&req.method==='GET')return send(res,200,database().auth(sessionToken(req)));
    if(['/api/auth/login','/api/auth/register','/api/auth/recover'].includes(url.pathname)&&req.method==='POST') {
     const address=req.socket?.remoteAddress||'local',attempts=failures.get(address)||{count:0,until:0};if(attempts.until>Date.now()&&attempts.count>=5)throw fail('尝试次数过多，请 15 分钟后再试',429);
     failures.set(address,{count:attempts.until>Date.now()?attempts.count+1:1,until:Date.now()+900000});
     const body=await readBody(req,2000);let result;
     try{result=url.pathname.endsWith('register')?await database().register(body.username,body.password):url.pathname.endsWith('recover')?await database().recover(body.username,body.recoveryCode,body.password):await database().login(body.username,body.password);failures.delete(address);}catch(e){throw e;}
-    cookie(res,result.token);return send(res,200,{user:result.user,...(result.recoveryCode?{recoveryCode:result.recoveryCode}:{})});
+    cookie(res,result.token,secure);return send(res,200,{user:result.user,...(result.recoveryCode?{recoveryCode:result.recoveryCode}:{})});
    }
    const auth=database().auth(sessionToken(req));if(auth.configured&&!auth.user)throw fail('请先登录本机创作空间',401);
    const spaceId=auth.spaceId||'local',workspace=database().forUser(spaceId),isAdmin=!auth.configured||auth.user?.role==='admin';
@@ -84,7 +90,7 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    const scopedOSS=async()=>{const value=await ossConfig();return spaceId==='local'?value:{...value,prefix:value.prefix+'/users/'+spaceId};};
    const userBackup=spaceId==='local'?backupFile:path.join(directory,'users',spaceId,'workspace.json');
    if(url.pathname==='/api/auth/recovery'&&req.method==='POST'){if(!auth.user)throw fail('请先设置账号并登录',401);const body=await readBody(req,2000);return send(res,200,await database().rotateRecovery(auth.user.id,body.password));}
-   if(url.pathname==='/api/auth/logout'&&req.method==='POST'){database().logout(sessionToken(req));cookie(res,'');return send(res,200,{ok:true});}
+   if(url.pathname==='/api/auth/logout'&&req.method==='POST'){database().logout(sessionToken(req));cookie(res,'',secure);return send(res,200,{ok:true});}
    if(url.pathname==='/api/data'&&req.method==='GET')return send(res,200,{spaceId,collections:workspace.all()});
    if(url.pathname.startsWith('/api/data/')&&req.method==='PUT'){const name=url.pathname.slice('/api/data/'.length),body=await readBody(req,20000000);return send(res,200,{...workspace.save(name,body.data,body.revision),spaceId});}
    if(!videoEnabled&&url.pathname.startsWith('/api/media/')){if(url.pathname==='/api/media/status'&&req.method==='GET')return send(res,200,{enabled:false,configured:false,reason:'视频相关功能已暂缓'});throw fail('视频相关功能已暂缓，当前版本专注文字创作',503);}
@@ -181,6 +187,6 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    return send(res,404,{error:'接口不存在'});
   }catch(e){return send(res,e.status||400,{error:e.status?e.message:'任务未完成，请检查设置或稍后重试',...(e.code?{code:e.code}:{})});}
  };
- handle.close=()=>{closed=true;for(const timer of timers.values())clearTimeout(timer);timers.clear();store?.close();};return handle;
+ handle.close=()=>{closed=true;for(const timer of timers.values())clearTimeout(timer);timers.clear();loginApi.close();store?.close();};return handle;
 }
 export function localApiPlugin(){const handler=createApi();return {name:'mdd-local-api',configureServer(server){server.middlewares.use(handler);server.httpServer?.once('close',()=>handler.close());},configurePreviewServer(server){server.middlewares.use(handler);server.httpServer?.once('close',()=>handler.close());}};}
