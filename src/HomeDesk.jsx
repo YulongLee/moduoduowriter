@@ -5,6 +5,7 @@ import {BookCover} from './Art';
 import {ToolGuide} from './ToolGuide';
 import {tools, inspirations} from './data';
 import {getHomeWorkState} from './homeModel.js';
+import {HomeConversation} from './HomeConversation.jsx';
 
 const genres = ['玄幻','都市','言情','悬疑','科幻','仙侠','历史','奇幻','武侠','末世','游戏','现实','青春','治愈'];
 const ideas = ['离职后，我继承了一家能修复记忆的旧书店','全城停电那晚，只有失踪十年的灯塔亮了','穿越成小说里的反派，我决定先救下主角','重逢的第一天，他归还了那封迟到的情书','星舰最后一位乘客，是来自未来的自己','她的每一幅画，都会在第二天变成现实','最后一班地铁，把我送回了十年前的夏天','我在末日开了一家只接受故事付款的旅馆'];
@@ -191,6 +192,7 @@ export function ReferenceHome({works, navigate, setModal, notify, favorites, tog
   ];
   return <div className="home-v2 home-business">
     <header className="home-page-heading"><div><h1>创作工作台</h1><p>继续写作，或从一个新灵感开始。</p></div><div className="home-page-actions">{onImport&&<button type="button" className="button secondary" onClick={onImport}><Upload size={16}/>导入文稿</button>}<button type="button" className="button primary" onClick={openComposer}><Plus size={17}/>开始新故事</button></div></header>
+    <HomeConversation works={availableWorks} work={activeWork} setModal={setModal} notify={notify}/>
     {hasWorks&&<ProjectPanel work={activeWork} workState={workState} works={availableWorks} navigate={navigate} setModal={setModal} onSelect={setSelectedWorkId} onNext={openNext}/>}
     <Generator setModal={setModal} notify={notify} onImport={onImport} expanded={!hasWorks||composerOpen} onToggle={toggleComposer} focusRequest={focusRequest} collapsible={hasWorks}/>
     <div className="home-assist-layout">

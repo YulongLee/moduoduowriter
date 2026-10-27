@@ -6,7 +6,7 @@ import {tools,workWords} from './data';
 import {readingDimensions,buildReadingReport,applyDraft} from './research';
 import {videoEnabled} from './features';
 import {newId,saveChapterVersion} from './works';
-const labels={chapterDraft:'章节正文',memoryExtract:'资料提取',plan:'一键创作',chapterPlan:'章节规划',reading:'小说拆书',storyboard:'分镜脚本',...Object.fromEntries(tools.map(t=>[t.id,t.title]))};
+const labels={chat:'创作对话',chapterDraft:'章节正文',memoryExtract:'资料提取',plan:'一键创作',chapterPlan:'章节规划',reading:'小说拆书',storyboard:'分镜脚本',...Object.fromEntries(tools.map(t=>[t.id,t.title]))};
 const states={succeeded:'生成完成',running:'生成中',failed:'失败',cancelled:'已取消',interrupted:'服务重启中断'};
 export function GenerationHistory({works,createWork,navigate,setModal,onChange,notify}) {
  const worksRef=useRef(works);worksRef.current=works;

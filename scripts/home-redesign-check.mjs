@@ -45,7 +45,7 @@ try{
  const byLabel=label=>renderer.root.findByProps({'aria-label':label});
  const rows=()=>renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card'));
  const more=tool=>byLabel(`${tool.title}更多操作`);
- const submit=async()=>act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ const submit=async()=>act(async()=>renderer.root.findByProps({className:'home-composer-form'}).props.onSubmit({preventDefault(){}}));
  await mountHome();
  assert.equal(text(renderer.root.findByType('h1')),'创作工作台');
  assert.ok(text(renderer.root).includes('一句话生成爆款小说'),'The existing core creation label must remain visible');

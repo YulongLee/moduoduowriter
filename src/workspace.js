@@ -1,6 +1,6 @@
 import {newId} from './works.js';
 import {scopedStorage} from './storage.js';
-export const collectionKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1'};
+export const collectionKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1',conversations:'mdd-conversations-v1'};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 export function mergeCollection(name,base,local,remote) {
  if(name==='favorites'){const values=new Set([...base,...local,...remote]);return [...values].filter(value=>local.includes(value)===base.includes(value)?remote.includes(value):local.includes(value));}

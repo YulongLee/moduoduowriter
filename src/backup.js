@@ -1,6 +1,7 @@
 import { newId } from './works.js';
 import {validateWritingEvaluation} from './writingEvaluation.js';
-export const backupKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1'};
+import {validateConversations} from './conversation.js';
+export const backupKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1',conversations:'mdd-conversations-v1'};
 const array=(v,label)=>{if(!Array.isArray(v))throw new Error(`${label}格式不正确`);return v;};
 const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const string=(value,max=1500000)=>typeof value==='string'&&value.length<=max;
@@ -65,6 +66,7 @@ export function validateBackup(data) {
  result.planningDrafts.forEach(validatePlanningDraft);
  if(result.evaluations.length>100)throw new Error('评估记录最多100份，请先导出归档');
  result.evaluations.forEach(validateWritingEvaluation);
+ validateConversations(result.conversations);
  if(result.workflows.some(w=>!w||typeof w.id!=='string'||!Number.isInteger(w.step)||typeof w.idea!=='string'||typeof w.content!=='string'||!w.results||typeof w.results!=='object'||Object.values(w.results).some(v=>typeof v!=='string')))throw new Error('工作流草稿格式不正确');
  if(result.video.some(v=>!v||typeof v.id!=='string'||typeof v.script!=='string'||!Array.isArray(v.boards)||v.boards.some(b=>!b||typeof b.name!=='string'||typeof b.text!=='string')))throw new Error('分镜草稿格式不正确');
  return result;

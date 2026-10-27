@@ -15,6 +15,7 @@ export const writingModes = [
   { id:'refine', name:'精修模式', multiplier:3, desc:'复杂任务的计费预案' }
 ];
 export const billingTasks = [
+  { id:'chat', name:'创作对话', minimum:5 },
   { id:'ideas', name:'故事灵感', minimum:5 }, { id:'outline', name:'大纲规划', minimum:20 },
   { id:'character', name:'人物设定', minimum:10 }, { id:'continue', name:'正文续写', minimum:10 },
   { id:'polish', name:'文字润色', minimum:10 }, { id:'dialogue', name:'对白打磨', minimum:10 },

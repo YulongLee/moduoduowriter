@@ -18,7 +18,8 @@ export function WorkspaceProvider({children}) {
 export function useCollection(name,fallback=[]) {
  const workspace=useContext(Context);const key=`mdd-${name==='video'?'video':name}-v1`;
  const [local,setLocal]=useState(()=>workspace?fallback:readStoredArray(globalThis.localStorage,key,fallback)),[error,setError]=useState(false);
- const set=updater=>{if(workspace){const cached=workspace.client.set(name,updater);setError(!cached);return cached;}const next=typeof updater==='function'?updater(local):updater;setLocal(next);const cached=writeStoredValue(globalThis.localStorage,key,next);setError(!cached);return cached;};
+ const localRef=useRef(local);localRef.current=local;
+ const set=updater=>{if(workspace){const cached=workspace.client.set(name,updater);setError(!cached);return cached;}const next=typeof updater==='function'?updater(localRef.current):updater;localRef.current=next;setLocal(next);const cached=writeStoredValue(globalThis.localStorage,key,next);setError(!cached);return cached;};
  return [workspace?workspace.client.entries[name].data:local,set,error];
 }
 export function useWorkspace(){return useContext(Context);}

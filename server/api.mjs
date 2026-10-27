@@ -158,7 +158,7 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
     active++;const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),90000);
     const disconnected=()=>controller.abort();res.on('close',disconnected);
     try {
-     const reservation=taskKey?workspace.reserveGeneration(taskKey,quoteForGeneration(body)):null;
+     const reservation=taskKey?workspace.reserveGeneration(taskKey,quoteForGeneration(body).request):null;
      const responses=settings.protocol==='responses';
      const payload=responses?{model:settings.model,instructions:prompt.system,input:prompt.user,store:false,max_output_tokens:test?256:Math.min(10000,prompt.target*3)}:{model:settings.model,messages:[{role:'system',content:prompt.system},{role:'user',content:prompt.user}],stream:false,max_tokens:test?256:Math.min(10000,prompt.target*3)};
      if(!responses&&new URL(settings.baseUrl).hostname.endsWith('.aliyuncs.com')&&typeof settings.enableThinking==='boolean')payload.enable_thinking=settings.enableThinking;

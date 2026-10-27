@@ -131,10 +131,10 @@ try {
   await click(findButton(renderer,'创作设置'));assert.equal(modal.type,'settings');await click(findButton(renderer,'备份恢复'));assert.equal(modal.type,'settings');
   await click(renderer.root.findByProps({'aria-label':'使用帮助'}));assert.equal(modal.type,'help');await click(findButton(renderer,'查看创作方案'));assert.equal(homeRoute,'membership');
   await click(findButton(renderer,'开始新故事'));assert.equal(renderer.root.findByProps({'aria-label':'新故事创作内容'}).props.hidden,false);
-  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
+  await act(async()=>renderer.root.findByProps({className:'home-composer-form'}).props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
   await choose('故事题材','悬疑');await choose('作品篇幅','短篇故事');await click(renderer.root.findByProps({'aria-label':'创作偏好'}));await choose('目标读者','女频');await choose('叙述视角','第一人称');
   await act(async()=>renderer.root.findByProps({'aria-label':'一句话故事灵感'}).props.onChange({target:{value:'  停摆钟楼里的明日来信  '}}));await choose('创作模式','长篇规划');
-  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
+  await act(async()=>renderer.root.findByProps({className:'home-composer-form'}).props.onSubmit({preventDefault(){}}));
   assert.deepEqual({type:modal.type,idea:modal.idea,genre:modal.genre,audience:modal.audience,perspective:modal.perspective,kind:modal.kind,mode:modal.mode,autoGenerate:modal.autoGenerate},{type:'quick-start',idea:'停摆钟楼里的明日来信',genre:'悬疑',audience:'女频',perspective:'第一人称',kind:'短篇故事',mode:'长篇规划',autoGenerate:true});
   await click(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').find(b=>textOf(b).includes('投稿中心')));assert.equal(homeRoute,'submit');
   await click(renderer.root.findByProps({'aria-label':'故事灵感发生器更多操作'}));await click(renderer.root.findByProps({'aria-label':'收藏故事灵感发生器'}));await choose('工具筛选','favorites');assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,1);
