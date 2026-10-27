@@ -116,30 +116,32 @@ try {
   let homeRoute,homeImport=false;
   function HomeHarness(){const [favorites,setFavorites]=useState([]);return React.createElement(ReferenceHome,{works:initialWorks,favorites,toggleFavorite:id=>setFavorites(prev=>prev.includes(id)?prev.filter(v=>v!==id):[...prev,id]),setModal:m=>modal=m,navigate:route=>homeRoute=route,onImport(){homeImport=true;},notify});}
   await act(async()=>{renderer=TestRenderer.create(React.createElement(HomeHarness));});
-  const home=renderer.root.findByProps({className:'home-v2'});const composer=home.findAllByType('section')[0];assert.equal(composer.props['aria-label'],'一句话创作');assert.equal(textOf(renderer.root.findByType('h1')),'一句话生成爆款小说');assert.ok(textOf(composer).includes('大纲、人物到开篇'));assert.equal(composer.findAllByProps({'aria-label':'继续创作与创作概况'}).length,0);assert.equal(home.findByProps({className:'home-books-section'}).findAllByProps({'aria-label':'继续创作与创作概况'}).length,1);
+  const home=renderer.root.findAll(node=>node.type==='div'&&node.props.className?.split(' ').includes('home-v2'))[0];
+  assert.ok(home);assert.equal(textOf(renderer.root.findByType('h1')),'创作工作台');
+  assert.equal(renderer.root.findAllByProps({'aria-label':'继续创作'}).length,1);
+  assert.equal(renderer.root.findByProps({'aria-label':'新故事创作内容'}).props.hidden,true);
   await click(findButton(renderer,'导入文稿'));assert.equal(homeImport,true);
   assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);
   await act(async()=>renderer.root.findByProps({'aria-label':'工具筛选'}).props.onChange({target:{value:'favorites'}}));assert.ok(textOf(renderer.root).includes('还没有收藏工具'));
   await click(findButton(renderer,'看看全部工具'));assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);
-  await click(renderer.root.findByProps({'aria-label':'使用故事灵感发生器'}));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'ideas');
+  await click(renderer.root.findByProps({'aria-label':'使用故事灵感发生器'}));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'ideas');assert.equal(modal.workId,initialWorks[0].id);
   await click(renderer.root.findByProps({'aria-label':`继续最近作品：${initialWorks[0].title}`}));assert.equal(homeRoute,`editor/${initialWorks[0].id}`);
-  await click(renderer.root.findByProps({'aria-label':`打开作品：${initialWorks[1].title}`}));assert.equal(homeRoute,`editor/${initialWorks[1].id}`);
-  await click(findButton(renderer,'创作设置'));assert.equal(modal.type,'settings');
-  await click(findButton(renderer,'备份恢复'));assert.equal(modal.type,'settings');
-  await click(renderer.root.findByProps({'aria-label':'使用帮助'}));assert.equal(modal.type,'help');
-  await click(findButton(renderer,'查看创作方案'));assert.equal(homeRoute,'membership');
-  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
   const choose=async(label,value)=>act(async()=>renderer.root.findByProps({'aria-label':label}).props.onChange({target:{value}}));
+  await choose('当前作品',initialWorks[1].id);await click(renderer.root.findByProps({'aria-label':`继续最近作品：${initialWorks[1].title}`}));assert.equal(homeRoute,`editor/${initialWorks[1].id}`);
+  await click(findButton(renderer,'创作设置'));assert.equal(modal.type,'settings');await click(findButton(renderer,'备份恢复'));assert.equal(modal.type,'settings');
+  await click(renderer.root.findByProps({'aria-label':'使用帮助'}));assert.equal(modal.type,'help');await click(findButton(renderer,'查看创作方案'));assert.equal(homeRoute,'membership');
+  await click(findButton(renderer,'开始新故事'));assert.equal(renderer.root.findByProps({'aria-label':'新故事创作内容'}).props.hidden,false);
+  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.ok(notices.at(-1).includes('先写下一点灵感'));
   await choose('故事题材','悬疑');await choose('作品篇幅','短篇故事');await click(renderer.root.findByProps({'aria-label':'创作偏好'}));await choose('目标读者','女频');await choose('叙述视角','第一人称');
-  await act(async()=>renderer.root.findByProps({'aria-label':'一句话故事灵感'}).props.onChange({target:{value:'  停摆钟楼里的明日来信  '}}));
-  await act(async()=>renderer.root.findByProps({'aria-label':'创作模式'}).props.onChange({target:{value:'长篇规划'}}));
+  await act(async()=>renderer.root.findByProps({'aria-label':'一句话故事灵感'}).props.onChange({target:{value:'  停摆钟楼里的明日来信  '}}));await choose('创作模式','长篇规划');
   await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
   assert.deepEqual({type:modal.type,idea:modal.idea,genre:modal.genre,audience:modal.audience,perspective:modal.perspective,kind:modal.kind,mode:modal.mode,autoGenerate:modal.autoGenerate},{type:'quick-start',idea:'停摆钟楼里的明日来信',genre:'悬疑',audience:'女频',perspective:'第一人称',kind:'短篇故事',mode:'长篇规划',autoGenerate:true});
-  await click(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').find(b=>textOf(b).startsWith('投稿中心')));assert.equal(homeRoute,'submit');
+  await click(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').find(b=>textOf(b).includes('投稿中心')));assert.equal(homeRoute,'submit');
   await click(renderer.root.findByProps({'aria-label':'故事灵感发生器更多操作'}));await click(renderer.root.findByProps({'aria-label':'收藏故事灵感发生器'}));await choose('工具筛选','favorites');assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,1);
   assert.equal(textOf(renderer.root.findByProps({className:'home-service-status'})),'示例体验');assert.equal(renderer.root.findAllByProps({className:'home-model-button'}).length,0);await act(async()=>renderer.unmount());
-  await act(async()=>{renderer=TestRenderer.create(React.createElement(ReferenceHome,{works:[],favorites:[],toggleFavorite(){},setModal:m=>modal=m,navigate(){},onImport(){},notify}));});assert.ok(textOf(renderer.root).includes('创建第一部作品'));assert.ok(!textOf(renderer.root).includes('NaN'));await click(findButton(renderer,'新建我的第一部作品'));assert.equal(modal.type,'create');await click(renderer.root.findByProps({'aria-label':'创建第一部作品'}));assert.equal(modal.type,'create');await act(async()=>renderer.unmount());
-  console.log('PASS redesigned home creation settings, continue-writing, book navigation, tool launch, favorites, services and empty workspace');
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(ReferenceHome,{works:[],favorites:[],toggleFavorite(){},setModal:m=>modal=m,navigate(){},onImport(){},notify}));});
+  assert.equal(renderer.root.findAllByProps({'aria-label':'继续创作'}).length,0);assert.equal(renderer.root.findByProps({'aria-label':'新故事创作内容'}).props.hidden,false);assert.ok(!textOf(renderer.root).includes('NaN'));await act(async()=>renderer.unmount());
+  console.log('PASS project-oriented home, author-selected work context, preserved creation settings and tool/favorite/service routes');
 
 
   await act(async()=>{renderer=TestRenderer.create(React.createElement(NovelDesk,{works:initialWorks,navigate(){},setModal:value=>{modal=value;},onImport(){}}));});

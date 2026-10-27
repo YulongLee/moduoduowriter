@@ -1,5 +1,6 @@
 import React,{createContext,useContext,useEffect,useRef,useState} from 'react';
-import { Cloud, RefreshCw } from 'lucide-react';
+import {ChevronDown,Cloud,RefreshCw} from 'lucide-react';
+import {workspaceFeedback} from './workspaceFeedback.js';
 import {createWorkspaceClient} from './workspace';
 import {initialWorks} from './data';
 import {requestApi} from './Generation';
@@ -21,4 +22,13 @@ export function useCollection(name,fallback=[]) {
  return [workspace?workspace.client.entries[name].data:local,set,error];
 }
 export function useWorkspace(){return useContext(Context);}
-export function WorkspaceStatus(){const workspace=useContext(Context);if(!workspace)return null;return <div className={`workspace-save-status ${workspace.status==='offline'||workspace.status==='space-mismatch'?'offline':''}`} role="status"><Cloud size={13}/><span>{workspace.status==='saved'?'已保存到本机':workspace.status==='saving'||workspace.status==='pending'?'正在保存…':workspace.status==='offline'?'离线缓存中':workspace.status==='space-mismatch'?'账号已切换 · 同步已停止':'正在连接存储…'}</span>{workspace.error&&<small>{workspace.error}</small>}{workspace.conflicts>0&&<small>并发修改已保留为副本</small>}{workspace.status==='offline'&&<button onClick={()=>workspace.client.initialize()}><RefreshCw size={12}/>重试</button>}</div>;}
+export function WorkspaceStatusView({workspace,compact=false}) {
+ const feedback=workspaceFeedback(workspace),detailsRef=useRef(null);
+ if(!feedback)return null;
+ const content=<>{feedback.detail&&<p>{feedback.detail}</p>}{feedback.retry&&<button type="button" onClick={()=>workspace.client?.initialize()}><RefreshCw size={13}/>重新连接</button>}</>;
+ return <div className={`workspace-save-status status-${feedback.tone}${compact?' compact':''}${feedback.status==='offline'||feedback.status==='space-mismatch'?' offline':''}`} role="status" aria-label="保存状态" aria-live="polite" data-save-state={feedback.status}>
+  <Cloud size={14} aria-hidden="true"/><span className="workspace-save-label">{feedback.label}</span>
+  {compact&&(feedback.detail||feedback.retry)?<details className="workspace-status-details" ref={detailsRef} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(detailsRef.current){detailsRef.current.open=false;detailsRef.current.querySelector('summary')?.focus();}}}}><summary aria-label="查看保存详情"><ChevronDown size={14}/></summary><div className="workspace-status-popover"><strong>保存详情</strong>{content}</div></details>:!compact&&(feedback.detail||feedback.retry)?<div className="workspace-status-message">{content}</div>:null}
+ </div>;
+}
+export function WorkspaceStatus({compact=false}) {const workspace=useContext(Context);return <WorkspaceStatusView workspace={workspace} compact={compact}/>;}

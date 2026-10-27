@@ -34,7 +34,7 @@ npm run dev -- --port 5173
 
 2026-10-26 已完成新版首页、规划保护、多轮追改、选段采纳、作品资料库与可控引用、正文队列、不可变投稿版本、多用户账号与恢复码、服务端演示账本和固定案例人工评估。完整入口与验收见 [优化实施与验收](./优化实施与验收-2026-10-26.md)。
 
-首页已按确认的 [v4 设计稿](./design/homepage-editorial-tools-2026-10-26-v4.png) 调整：1320px 受控宽度、左对齐标题、一体输入与折叠偏好、统一续写作品条、单行功能入口、两栏开放工具列表和素文本指南。原品牌标识与功能图标直接复用；示例、指南和收藏功能保留，最近编辑章节可真实恢复。
+2026-10-27 首页已按创作业务重新组织：已有作品时优先回到当前项目，未建作品时直接展开新故事创作；工具分为构思规划与正文修改，并可关联当前作品。原功能标签、品牌和图标保留，顶部统一保存反馈，连接恢复后继续提交待同步内容。详见 [首页业务重构与验收](./首页业务重构与验收-2026-10-27.md)。
 
 - **作品管理**：创建、搜索、筛选、排序、卡片与列表切换，修改名称、题材、类型、简介和封面；移入回收站及恢复。
 - **TXT 导入与导出**：识别中文章节或 Chapter 标题自动分章，保留序章；导出完整作品正文。
@@ -119,7 +119,7 @@ npm run build
 ## 文件说明
 
 - `src/main.jsx`：工作台、编辑器与各功能入口。
-- `src/HomeDesk.jsx`、`src/home.css`：一句话创作、折叠偏好、继续写作、两栏工具列表与预写示例。
+- `src/HomeDesk.jsx`、`src/home.css`：项目优先的作者工作台、新故事创作、分组工具及预写示例。
 - `src/Dashboard.jsx`、`src/ScriptDesk.jsx`：工具广场与文字剧本工作台。
 - `src/ToolArtwork.jsx`、`src/tool-artwork.css`：工具广场和文字剧本共用的原创工具封面；首页使用两栏开放工具列表。
 - `src/Library.jsx`、`src/library.css`：作品书架、最近编辑、真实统计、筛选与列表视图。
@@ -128,8 +128,9 @@ npm run build
 - `public/brand-mark.svg`、`public/brand-lockup.svg`：书页与笔尖品牌图标、组合字标；`public/favicon.svg` 为同款页签图标。
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和创作/备份设置。
 - `src/ServiceSettings.jsx`：普通服务状态与创作方式、独立的本机模型配置管理。
-- `src/Workspace.jsx`、`src/workspace.js`、`server/store.mjs`：自动保存、浏览器迁移、修订合并和 SQLite。
+- `src/Workspace.jsx`、`src/workspaceFeedback.js`、`src/workspace.js`、`server/store.mjs`：统一保存反馈、断线恢复、浏览器迁移、修订合并和 SQLite。
 - `src/Account.jsx`：本机账号与登录界面。
+- `src/homeModel.js`：作品准备状态、小说／剧本阶段和实际下一步建议。
 - `src/ChapterPlanner.jsx`、`src/GenerationHistory.jsx`：章纲创建和真实生成记录。
 - `src/StoryMemory.jsx`、`src/storyMemory.js`：结构化资料、原文证据提取、锁定与可控引用。
 - `src/ChapterQueue.jsx`、`src/chapterQueue.js`：逐章正文队列、中断恢复与确认采纳。

@@ -26,10 +26,11 @@
     "test:account-ui": "node scripts/account-ui-check.mjs",
     "test:extended-workspace": "node scripts/extended-workspace-check.mjs",
     "test:service-upgrade": "node scripts/service-upgrade-check.mjs",
-    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume",
+    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback",
     "test:evaluation": "node scripts/writing-evaluation-check.mjs",
     "test:billing-concurrency": "node scripts/billing-concurrency-check.mjs",
-    "test:home-resume": "node scripts/home-resume-check.mjs"
+    "test:home-resume": "node scripts/home-resume-check.mjs",
+    "test:workspace-feedback": "node scripts/workspace-feedback-check.mjs"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",

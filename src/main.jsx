@@ -19,6 +19,7 @@ import { WorkDetailsDialog, ChapterManager, VersionDialog } from './WorkManageme
 import { VideoStudio, SubmissionDesk } from './StudioPages';
 import { AccountProvider,AccountAccess,useAccount } from './Account';
 import { WorkspaceProvider,WorkspaceStatus,useCollection,useWorkspace } from './Workspace.jsx';
+import {workspaceFeedback} from './workspaceFeedback.js';
 import { GenerationHistory } from './GenerationHistory';
 import { ChapterPlanner } from './ChapterPlanner';
 import {StoryMemoryPanel} from './StoryMemory.jsx';
@@ -60,7 +61,7 @@ function Empty({ title, text, action }) { return <div className="empty-state"><F
 export function App() { return <AccountProvider><WorkspaceProvider><GenerationProvider><BillingProvider><WritingApp/></BillingProvider></GenerationProvider></WorkspaceProvider></AccountProvider>; }
 
 export function WritingApp() {
- const billing=useBilling();
+ const billing=useBilling(),workspace=useWorkspace();
  const [route, setRoute] = useState(location.hash.slice(1) || 'home');
  const [allWorks, setWorks, workSaveError] = useStored('mdd-works-v1', initialWorks);
  const worksRef=useRef(allWorks);worksRef.current=allWorks;
@@ -104,7 +105,7 @@ export function WritingApp() {
  const currentWork = route.startsWith('editor/') && works.find(work => work.id === route.split('/')[1]);
  const modalWork=allWorks.find(work=>work.id===modal?.workId&&!work.deletedAt)||currentWork;
  return <>
-  {workSaveError&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>文稿暂未写入本地存储。请先导出作品备份，避免刷新后丢失本次修改。</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
+  {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到本地服务，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
   {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
     <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content")} key={`${route}-${workspaceRevision}`}>
@@ -122,7 +123,7 @@ export function WritingApp() {
      {route === 'membership' && <MembershipPage navigate={navigate}/>}
      {route === 'service-admin' && <ServiceAdmin/>}
      {!navItems.some(item => item.id === route) && !['video','service-admin'].includes(route) && <ReferenceHome {...common}/>}
-     <footer className="page-footer"><span>墨多多写作</span><i/>让灵感落笔，让故事生长。<span className="footer-right"><WorkspaceStatus/><span className="status-dot"/>{workSaveError?'当前有文稿未保存':'文稿自动保存到本机'}</span></footer>
+     <footer className="page-footer"><span>墨多多写作</span><i/>让灵感落笔，让故事生长。</footer>
     </main>
   </WorkbenchFrame>}
   {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" aria-label={modal.type === 'create' ? '新建作品' : '墨多多写作'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
@@ -218,7 +219,7 @@ function LearnPage({setModal,notify}) {
 export function Editor({work,onChange,onBack,notify,setModal,saveError=false,openVideo,openSubmission}) {
  const [chapterId,setChapterId]=useState(()=>work.chapters.find(ch=>ch.id===work.lastEditedChapterId)?.id||work.chapters[0]?.id);const [tab,setTab]=useState('正文');const [aiTab,setAiTab]=useState('AI 助手');const [busy,setBusy]=useState(false);const [focus,setFocus]=useState(false);const [showAI,setShowAI]=useState(() => typeof window === 'undefined' || window.innerWidth > 1180);const [fontSize,setFontSize]=useState(17);const [saveState,setSaveState]=useState('已自动保存');const [aiAction,setAiAction]=useState('续写故事');const [customChapter,setCustomChapter]=useState(false);const [chapterName,setChapterName]=useState('');const [showChapters,setShowChapters]=useState(false);const manuscriptRef=useRef();const [lastAdoption,setLastAdoption]=useState(null);const [selection,setSelection]=useState(null),[selectionIntent,setSelectionIntent]=useState('润色');
  const generation=useGeneration();const workspace=useWorkspace();
- const displayedSave=workspace?(workspace.status==='saved'?'已保存到本机':workspace.status==='offline'?'离线缓存中':'保存中…'):saveState;
+ const displayedSave=workspace?workspaceFeedback(workspace).label:saveState;
  useEffect(()=>{generation.cancel();setSelection(null);},[chapterId,tab]);
  const chapter=work.chapters.find(ch=>ch.id===chapterId)||work.chapters[0];
  useEffect(()=>{if(!work.chapters.some(ch=>ch.id===chapterId))setChapterId(work.chapters[0].id);},[work.chapters,chapterId]);

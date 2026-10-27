@@ -1,9 +1,10 @@
-import React, {useCallback, useEffect, useId, useRef, useState} from 'react';
-import {ArrowRight, BookMarked, BookOpen, ChevronDown, ChevronRight, CircleHelp, Clapperboard, Cloud, Crown, Ellipsis, Feather, Lightbulb, ListTree, MessagesSquare, Plus, RefreshCw, ScanText, Send, Settings2, Sparkles, Star, Type, Upload, UsersRound, WandSparkles, X} from 'lucide-react';
+import React, {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import {ArrowRight, BookMarked, BookOpen, Check, ChevronDown, ChevronRight, CircleHelp, Clapperboard, Cloud, Crown, Ellipsis, Feather, Lightbulb, ListTree, MessagesSquare, Plus, RefreshCw, ScanText, Send, Settings2, Sparkles, Star, Type, Upload, UsersRound, WandSparkles, X} from 'lucide-react';
 import {useGeneration} from './Generation';
 import {BookCover} from './Art';
 import {ToolGuide} from './ToolGuide';
-import {tools, inspirations, workWords} from './data';
+import {tools, inspirations} from './data';
+import {getHomeWorkState} from './homeModel.js';
 
 const genres = ['玄幻','都市','言情','悬疑','科幻','仙侠','历史','奇幻','武侠','末世','游戏','现实','青春','治愈'];
 const ideas = ['离职后，我继承了一家能修复记忆的旧书店','全城停电那晚，只有失踪十年的灯塔亮了','穿越成小说里的反派，我决定先救下主角','重逢的第一天，他归还了那封迟到的情书','星舰最后一位乘客，是来自未来的自己','她的每一幅画，都会在第二天变成现实','最后一班地铁，把我送回了十年前的夏天','我在末日开了一家只接受故事付款的旅馆'];
@@ -19,7 +20,10 @@ const homeToolCopy = {
   review:['章节审稿','检查逻辑、节奏与衔接'],
   title:['书名与简介','写好故事与读者的第一次见面']
 };
-const homeToolOrder = ['ideas','polish','outline','dialogue','character','review','continue','title'];
+const homeToolGroups = [
+  {id:'planning',title:'构思与规划',description:'把想法、主线与角色准备好',ids:['ideas','outline','character','title']},
+  {id:'writing',title:'正文与修改',description:'推动情节，反复打磨每一章',ids:['continue','polish','dialogue','review']}
+];
 // Authored preview only. Opening or using it never invokes generation.
 const storyExample = {
   idea:'一位能听见旧物记忆的修复师，收到了一封来自明天的信。',
@@ -33,15 +37,20 @@ function HomeSelect({label,value,onChange,values}) {
   return <label className="home-select-field"><span>{label}</span><select aria-label={label} value={value} onChange={event=>onChange(event.target.value)}>{values.map(option=><option key={option}>{option}</option>)}</select></label>;
 }
 
-export function Generator({setModal, notify, onImport}) {
+export function Generator({setModal, notify, onImport, expanded, onToggle, focusRequest=0, collapsible=true}) {
   const generation = useGeneration();
-  const preferencesId = useId(), exampleId = useId(), promptId = useId();
+  const preferencesId = useId(), exampleId = useId(), promptId = useId(), bodyId = useId();
   const preferenceToggle = useRef(null), promptField = useRef(null);
+  const [localExpanded,setLocalExpanded] = useState(true);
+  const isExpanded = expanded===undefined?localExpanded:expanded;
+  const toggleExpanded = () => onToggle?onToggle(!isExpanded):setLocalExpanded(!isExpanded);
   const [prompt,setPrompt] = useState(''), [genre,setGenre] = useState('玄幻'), [audience,setAudience] = useState('全频');
   const [perspective,setPerspective] = useState('第三人称'), [length,setLength] = useState('长篇小说'), [mode,setMode] = useState('灵感共创');
   const [batch,setBatch] = useState(0), [preferencesOpen,setPreferencesOpen] = useState(false), [exampleOpen,setExampleOpen] = useState(false);
+  useEffect(()=>{if(isExpanded&&focusRequest>0)promptField.current?.focus();},[isExpanded,focusRequest]);
   const submit = event => {
     event.preventDefault();
+    if(!isExpanded)return;
     if (!prompt.trim()) return notify('先写下一点灵感，或者选择下方的示例');
     setModal({type:'quick-start', autoGenerate:true, idea:prompt.trim(), genre, audience, perspective, kind:length, mode});
   };
@@ -49,8 +58,9 @@ export function Generator({setModal, notify, onImport}) {
   const useExample = () => {fillIdea(storyExample.idea,'悬疑');setLength('长篇小说');notify('示例灵感已填入，点击开始生成后才会创作');};
   const serviceLabel = generation.mode === 'ai' ? '智能创作' : '示例体验';
   const generationNotice = generation.mode === 'ai' ? '智能创作 · 结果确认后写入作品' : '示例体验 · 不产生真实费用';
-  return <section className="home-composer" aria-label="一句话创作">
-    <header className="home-composer-heading"><h1>一句话生成<span>爆款小说</span></h1><p>输入一个故事灵感，从大纲、人物到开篇，一步开始创作</p></header>
+  return <section className="home-composer" aria-label="一句话创作" data-expanded={isExpanded}>
+    <header className="home-composer-heading"><div><h2>一句话生成<span>爆款小说</span></h2><p>{isExpanded?'输入一个故事灵感，先得到可修改的大纲、人物和开篇。':'准备开启下一部作品？从一个新灵感开始。'}</p></div>{collapsible&&<button type="button" className="home-composer-toggle" aria-label="展开故事创作" aria-expanded={isExpanded} aria-controls={bodyId} onClick={toggleExpanded}>{isExpanded?'收起创作':'展开创作'}<ChevronDown size={16}/></button>}</header>
+    <div className="home-composer-body" id={bodyId} aria-label="新故事创作内容" hidden={!isExpanded}>
     <form className="home-composer-form" onSubmit={submit}>
       <label className="home-prompt-label" htmlFor={promptId}>故事灵感</label>
       <div className="home-prompt-field"><textarea id={promptId} ref={promptField} aria-label="一句话故事灵感" maxLength={500} value={prompt} onChange={event=>setPrompt(event.target.value)} placeholder={'你想写一个怎样的故事？\n例如：一位能听见旧物记忆的修复师，收到了一封来自明天的信……'}/><span>{prompt.length} / 500</span></div>
@@ -78,18 +88,27 @@ export function Generator({setModal, notify, onImport}) {
       <div className="home-example-columns"><div><h3>故事大纲 · {storyExample.title}</h3><p>{storyExample.outline}</p></div><div><h3>人物设定</h3><p>{storyExample.character}</p></div><div><h3>开篇正文</h3><p>{storyExample.text}</p></div></div>
       <footer><p>以下为预先编写的示例，仅说明输出形式，不是本次生成的结果。</p><button type="button" className="home-text-link" onClick={useExample}>用这个灵感<ArrowRight size={14}/></button></footer>
     </section>}
+    </div>
   </section>;
 }
 
-function ContinueCard({works, navigate, setModal, onImport}) {
-  return <section className="home-resume" aria-label="继续创作与创作概况">
-    {works.length?<div className="home-books-grid">{works.slice(0,3).map((work,index)=>{
-      const editedChapter = work.chapters.find(chapter=>chapter.id===work.lastEditedChapterId);
-      return <article className={`home-book-card${index===0?' home-book-recent':''}`} key={work.id}>
-        <button className="home-book-open" aria-label={`打开作品：${work.title}`} onClick={()=>navigate(`editor/${work.id}`)}><div className="home-book-cover" aria-hidden="true"><BookCover work={work}/></div><span className="home-book-copy"><strong>{work.title}</strong><small>{work.kind} · {work.genre}</small>{index===0&&editedChapter?<small className="home-book-chapter">上次编辑：{editedChapter.title}</small>:<small>{workWords(work).toLocaleString()} 字 · {work.chapters.length} 章</small>}</span><ChevronRight size={16}/></button>
-        {index===0&&<div className="home-book-actions"><button className="home-resume-action" aria-label={`继续最近作品：${work.title}`} onClick={()=>navigate(`editor/${work.id}`)}>继续写作<ArrowRight size={14}/></button></div>}
-      </article>;
-    })}</div>:<div className="home-resume-empty"><span className="home-empty-book-icon"><BookOpen size={25}/></span><div><h3>创建第一部作品</h3><p>从一个灵感开始，给故事一个归处。</p></div><button className="home-resume-action" aria-label="创建第一部作品" onClick={()=>setModal({type:'create'})}><Plus size={15}/>新建我的第一部作品<ArrowRight size={15}/></button>{onImport&&<button className="home-text-link" onClick={onImport}><Upload size={15}/>导入已有文稿</button>}</div>}
+function ProjectPanel({work,workState,works,navigate,setModal,onSelect,onNext}) {
+  return <section className="home-project-section" aria-label="继续创作">
+    <div className="home-section-heading"><div><h2>继续创作</h2><p>从上一次停下的地方接着写。</p></div><div className="home-heading-actions"><label className="home-project-picker"><span>当前作品</span><select aria-label="当前作品" value={work.id} onChange={event=>onSelect(event.target.value)}>{works.map(item=><option value={item.id} key={item.id}>{item.title}</option>)}</select></label><button type="button" className="home-text-link" onClick={()=>navigate('works')}>全部作品<ArrowRight size={15}/></button></div></div>
+    <div className="home-project-panel">
+      <div className="home-project-main">
+        <div className="home-project-cover" aria-hidden="true"><BookCover work={work}/></div>
+        <div className="home-project-copy">
+          <p className="home-project-kind">{work.kind} · {work.genre}</p>
+          <h3><button type="button" aria-label={'打开作品：'+work.title} onClick={()=>navigate('editor/'+work.id)}>{work.title}</button></h3>
+          <div className="home-project-stats"><span>{workState.words.toLocaleString()} 字</span><i/><span>{workState.chapterCount} {workState.unit}</span></div>
+          <p className="home-project-chapter">{workState.rememberedChapter?'上次编辑：'+workState.rememberedChapter.title:workState.chapter?'继续章节：'+workState.chapter.title:'先创建'+workState.firstPart+'，给故事一个开始。'}</p>
+          <div className="home-project-actions"><button type="button" className="button primary home-project-continue" aria-label={'继续最近作品：'+work.title} onClick={()=>navigate('editor/'+work.id)}>{workState.actionLabel}<ArrowRight size={17}/></button><button type="button" className="home-text-link" onClick={()=>setModal({type:'work-details',work})}>作品资料<ChevronRight size={14}/></button></div>
+        </div>
+      </div>
+      <aside className="home-next-action"><span className="home-next-kicker">下一步</span><h3>{workState.nextAction.label}</h3><p>{workState.nextAction.description}</p><button type="button" className="home-next-action-link" aria-label="当前作品下一步" onClick={onNext}>{workState.nextAction.label}<ArrowRight size={16}/></button></aside>
+    </div>
+    <div className="home-project-readiness" aria-label="作品准备状态">{workState.readiness.map(item=><div className={item.ready?'ready':''} key={item.id}><i aria-hidden="true">{item.ready?<Check size={14}/>:<span/>}</i><span className="home-readiness-label">{item.label}</span><strong>{item.value}</strong></div>)}</div>
   </section>;
 }
 
@@ -139,21 +158,51 @@ function HomeSupport({works, navigate, setModal}) {
 }
 
 export function ReferenceHome({works, navigate, setModal, notify, favorites, toggleFavorite, onImport}) {
-  const [filter,setFilter] = useState('all'), [guideId,setGuideId] = useState(null), [menuId,setMenuId] = useState(null);
+  const availableWorks=works.filter(work=>work&&!work.deletedAt);
+  const [selectedWorkId,setSelectedWorkId]=useState(()=>availableWorks[0]?.id||'');
+  const activeWork=availableWorks.find(work=>work.id===selectedWorkId)||availableWorks[0]||null;
+  const workState=useMemo(()=>getHomeWorkState(activeWork),[activeWork]);
+  const hasWorks=Boolean(activeWork);
+  const [composerOpen,setComposerOpen]=useState(()=>!hasWorks),[focusRequest,setFocusRequest]=useState(0);
+  const [filter,setFilter]=useState('all'),[guideId,setGuideId]=useState(null),[menuId,setMenuId]=useState(null),[linkTools,setLinkTools]=useState(true);
   const closeMenu=useCallback(()=>setMenuId(null),[]);
   const filterRef=useRef(null);
-  const list=homeToolOrder.map(id=>tools.find(tool=>tool.id===id)).filter(tool=>tool&&(filter!=='favorites'||favorites.includes(tool.id)));
+  useEffect(()=>{if(selectedWorkId!==(activeWork?.id||''))setSelectedWorkId(activeWork?.id||'');setGuideId(null);setMenuId(null);},[activeWork?.id]);
+  const groups=homeToolGroups.map(group=>({...group,tools:group.ids.map(id=>tools.find(tool=>tool.id===id)).filter(tool=>tool&&(filter!=='favorites'||favorites.includes(tool.id)))})).filter(group=>group.tools.length);
+  const list=groups.flatMap(group=>group.tools);
   const guideTool=list.find(tool=>tool.id===guideId);
-  const entries=[['小说写作',BookOpen,'novels','mint'],['剧本创作',Clapperboard,'scripts','violet'],['小说拆书',BookMarked,'dismantle','blue'],['投稿中心',Send,'submit','amber']];
-  return <div className="home-v2">
-    <Generator setModal={setModal} notify={notify} onImport={onImport}/>
-    <section className="home-books-section"><div className="home-section-heading"><h2>继续写作</h2><button type="button" className="home-text-link" onClick={()=>navigate('works')}>全部作品<ArrowRight size={15}/></button></div><ContinueCard works={works} navigate={navigate} setModal={setModal} onImport={onImport}/></section>
-    <section className="home-entry-grid" aria-label="创作快捷入口"><h2 className="home-entry-title">写作与出版</h2>{entries.map(([title,Icon,route,color])=><button type="button" className={`home-entry entry-${color}`} key={route} onClick={()=>navigate(route)}><span className="home-entry-icon"><Icon size={23} strokeWidth={1.8}/></span><strong>{title}</strong></button>)}</section>
-    <section className="home-tools-section"><div className="home-section-heading"><h2>写作工具</h2><div className="home-heading-actions"><select className="home-tool-filter" ref={filterRef} aria-label="工具筛选" value={filter} onChange={event=>{setFilter(event.target.value);setGuideId(null);setMenuId(null);}}><option value="all">全部工具</option><option value="favorites">我的收藏</option></select><button type="button" className="home-text-link" onClick={()=>navigate('tools')}>查看全部<ArrowRight size={15}/></button></div></div>
-      <div className="home-tools-grid">{list.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>{toggleFavorite(tool.id);if(filter==='favorites')filterRef.current?.focus();}} onOpen={()=>setModal({type:'tool',tool})} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div>
-      {guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={prompt=>setModal({type:'tool',tool:guideTool,prompt})}/></div>}
-      {!list.length&&<div className="home-empty-tools home-tool-grid-empty"><Star size={24}/><h3>还没有收藏工具</h3><p>在工具的更多操作中收藏，下次可以直接找到。</p><button type="button" className="button secondary" onClick={()=>setFilter('all')}>看看全部工具<ArrowRight size={15}/></button></div>}
-    </section>
-    <HomeSupport works={works} navigate={navigate} setModal={setModal}/>
+  const context=linkTools&&workState?workState.context:{};
+  const openTool=(tool,extra={})=>setModal({type:'tool',tool,...context,...extra});
+  const openComposer=()=>{setComposerOpen(true);setFocusRequest(value=>value+1);};
+  const toggleComposer=next=>{setComposerOpen(next);if(next)setFocusRequest(value=>value+1);};
+  const openNext=()=>{
+    if(!activeWork||!workState)return;
+    const next=workState.nextAction;
+    if(next.type==='tool'){
+      const tool=tools.find(item=>item.id===next.toolId);
+      if(tool)setModal({type:'tool',tool,...workState.context,...(next.chapterId?{chapterId:next.chapterId}:{})});
+    }else setModal({type:next.type,workId:activeWork.id});
+  };
+  const entries=[
+    ['小说写作','从大纲、人物到正文，完成你的故事',BookOpen,'novels','mint'],
+    ['剧本创作','组织场景、动作与对白',Clapperboard,'scripts','violet'],
+    ['小说拆书','拆解结构，学习故事的写法',BookMarked,'dismantle','blue'],
+    ['投稿中心','整理文稿，跟进投稿与反馈',Send,'submit','amber']
+  ];
+  return <div className="home-v2 home-business">
+    <header className="home-page-heading"><div><h1>创作工作台</h1><p>继续写作，或从一个新灵感开始。</p></div><div className="home-page-actions">{onImport&&<button type="button" className="button secondary" onClick={onImport}><Upload size={16}/>导入文稿</button>}<button type="button" className="button primary" onClick={openComposer}><Plus size={17}/>开始新故事</button></div></header>
+    {hasWorks&&<ProjectPanel work={activeWork} workState={workState} works={availableWorks} navigate={navigate} setModal={setModal} onSelect={setSelectedWorkId} onNext={openNext}/>}
+    <Generator setModal={setModal} notify={notify} onImport={onImport} expanded={!hasWorks||composerOpen} onToggle={toggleComposer} focusRequest={focusRequest} collapsible={hasWorks}/>
+    <div className="home-assist-layout">
+      <section className="home-tools-section" aria-label="写作工具">
+        <div className="home-section-heading"><div><h2>写作工具</h2><p>按当前遇到的问题，找到合适的帮手。</p></div><div className="home-heading-actions"><label className="home-tool-filter-label"><span>显示</span><select className="home-tool-filter" ref={filterRef} aria-label="工具筛选" value={filter} onChange={event=>{setFilter(event.target.value);setGuideId(null);setMenuId(null);}}><option value="all">全部</option><option value="favorites">已收藏</option></select></label><button type="button" className="home-text-link" onClick={()=>navigate('tools')}>进入工具库<ArrowRight size={15}/></button></div></div>
+        {hasWorks&&<label className="home-tool-context"><input type="checkbox" aria-label="关联当前作品" checked={linkTools} onChange={event=>setLinkTools(event.target.checked)}/><span>关联当前作品</span><small>{linkTools?activeWork.title:'独立使用，打开工具后也可选择作品'}</small></label>}
+        <div className="home-tool-groups">{groups.map(group=><section className="home-tool-group" aria-label={group.title} key={group.id}><h3>{group.title}</h3><p>{group.description}</p><div className="home-tools-grid">{group.tools.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={()=>{toggleFavorite(tool.id);if(filter==='favorites')filterRef.current?.focus();}} onOpen={()=>openTool(tool)} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div></section>)}</div>
+        {guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={prompt=>openTool(guideTool,{prompt})}/></div>}
+        {!list.length&&<div className="home-empty-tools home-tool-grid-empty"><Star size={24}/><h3>还没有收藏工具</h3><p>在工具的更多操作中收藏，下次可以直接找到。</p><button type="button" className="button secondary" onClick={()=>setFilter('all')}>看看全部工具<ArrowRight size={15}/></button></div>}
+      </section>
+      <section className="home-entry-grid home-publishing-section" aria-label="创作快捷入口"><h2 className="home-entry-title">写作与出版</h2><p className="home-publishing-description">在不同的创作阶段，继续下一步。</p>{entries.map(([title,description,Icon,route,color])=><button type="button" className={'home-entry entry-'+color} key={route} onClick={()=>navigate(route)}><span className="home-entry-icon"><Icon size={23} strokeWidth={1.8}/></span><span className="home-entry-copy"><strong>{title}</strong><small>{description}</small></span><ChevronRight size={14}/></button>)}</section>
+    </div>
+    <HomeSupport works={activeWork?[activeWork]:[]} navigate={navigate} setModal={setModal}/>
   </div>;
 }

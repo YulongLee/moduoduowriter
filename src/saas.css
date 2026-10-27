@@ -48,14 +48,31 @@
 .commercial .sidebar-account-menu>button:hover { background:#EEF5F0;color:#174B3D; }
 .commercial .sidebar-account-menu>button:focus-visible { background:#EEF5F0;color:#174B3D;outline:2px solid #7EAB90;outline-offset:-2px; }
 .commercial .topbar { height:64px;padding:0 32px;background:#FFFFFF;border-color:var(--line);backdrop-filter:none; }
-.commercial .breadcrumb { gap:9px;font-size:13px; }
+.commercial .breadcrumb { gap:9px;min-width:0;flex:1;font-size:13px; }
 .commercial .breadcrumb strong { color:#3D4A43;font-weight:500; }
 .commercial .topbar-brand { display:inline-flex;align-items:center;gap:10px;padding:0;flex-shrink:0;min-height:36px;color:var(--text);white-space:nowrap; }
 .commercial .topbar-brand>.brand-mark { width:28px;height:28px; }
 .commercial .topbar-brand>span { font-size:18px;font-weight:650;letter-spacing:0; }
 .commercial .topbar-brand:focus-visible { outline:2px solid var(--accent);outline-offset:4px;border-radius:4px; }
 .commercial .topbar-location-separator { width:1px;height:20px;margin:0 5px;background:var(--line); }
-.commercial .topbar-location { font-size:14px;white-space:nowrap; }
+.commercial .topbar-location { min-width:0;max-width:140px;overflow:hidden;text-overflow:ellipsis;font-size:14px;white-space:nowrap; }
+.commercial .breadcrumb>.workspace-save-status { margin-left:12px; }
+.workspace-save-status.status-success { color:#285B49; }
+.workspace-save-status.status-warning { color:#855A21; }
+.workspace-save-status.status-error { color:#9B3B31; }
+.workspace-save-status.compact { flex-wrap:nowrap;gap:6px;max-width:230px;min-width:0;font-size:12px;white-space:nowrap; }
+.workspace-save-status.compact>.workspace-save-label { min-width:0;overflow:hidden;text-overflow:ellipsis; }
+.workspace-save-status>svg { flex-shrink:0; }
+.workspace-status-details { position:relative;flex-shrink:0;color:inherit; }
+.workspace-status-details>summary { display:grid;place-items:center;width:24px;height:28px;border-radius:4px;cursor:pointer;list-style:none; }
+.workspace-status-details>summary::-webkit-details-marker { display:none; }
+.workspace-status-details>summary:hover { background:#F1F3EF; }
+.workspace-status-details>summary:focus-visible { outline:2px solid var(--accent);outline-offset:2px; }
+.workspace-status-popover { position:absolute;z-index:80;top:calc(100% + 10px);left:0;width:min(340px,calc(100vw - 40px));padding:16px;border:1px solid var(--line);border-radius:9px;background:#FFFFFF;color:var(--text);white-space:normal;box-shadow:0 8px 28px #1725221A; }
+.workspace-status-popover>strong { display:block;font-size:14px; }
+.workspace-status-popover p,.workspace-status-message p { margin:7px 0 0;font-size:13px;line-height:1.8; }
+.workspace-status-popover button,.workspace-status-message button { display:inline-flex;align-items:center;gap:5px;min-height:32px;margin-top:8px;color:var(--accent);font-size:13px; }
+.workspace-status-message { flex-basis:100%; }
 .commercial .desktop-sidebar-toggle { border:0;width:30px;height:30px; }
 .commercial .desktop-sidebar-toggle:hover { background:#F1F4F2; }
 .commercial .global-search { width:248px;border-radius:7px;border-color:var(--line);background:#F7F8F6;padding:7px 10px; }
@@ -193,6 +210,8 @@
 @media(max-width:1200px) { .commercial .full-market-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:1180px) { .commercial .topbar-right { gap:8px; }.commercial .global-search { width:190px; }.commercial .topbar-location,.commercial .topbar-location-separator { display:none; } }
 @media(max-width:600px) { .commercial .topbar-brand { gap:7px; }.commercial .topbar-brand>span { font-size:16px; }.commercial .topbar-brand>.brand-mark { display:none; } }
+@media(max-width:900px) { .commercial .breadcrumb>.workspace-save-status { margin-left:4px;max-width:180px; } }
+@media(max-width:600px) { .commercial .topbar-brand>span { display:none; }.commercial .topbar-brand>.brand-mark { display:block;width:26px;height:26px; }.commercial .breadcrumb>.workspace-save-status { max-width:145px; }.workspace-status-popover { position:fixed;top:64px;left:16px; } }
 @media(max-width:1024px) { .commercial .topbar { height:58px;padding:0 24px; } .commercial .main-content { padding:24px 24px 0; } }
 @media(max-width:900px) { .script-feature { display:block;min-height:230px; } .script-feature-copy { max-width:65%; } .script-illustration { transform:scale(.7);right:18px;top:10px; } .commercial .full-market-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:800px) { .commercial .global-search { width:33px;padding:8px; } }
