@@ -179,7 +179,7 @@ export function buildConversationHistory(session,{maxTurns=CONVERSATION_LIMITS.h
 
 export function conversationText(session) {
  validateConversation(session);
- const lines=['墨多多写作 · 创作对话',session.title,`关联：${session.workId||'独立讨论'}`,`创建：${new Date(session.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}`,''];
+ const lines=['墨多多 · 创作对话',session.title,`关联：${session.workId||'独立讨论'}`,`创建：${new Date(session.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}`,''];
  for(const turn of session.turns){lines.push('你：',turn.userText,'');if(turn.status==='completed')lines.push(`墨多多（${turn.source==='demo'?'预置示例':'智能创作'}）：`,turn.assistantText,'');else lines.push(`本轮未完成：${turn.error||turn.status}`,'');}
  if(session.draft.trim())lines.push('尚未发送的草稿：',session.draft,'');
  return lines.join('\n');

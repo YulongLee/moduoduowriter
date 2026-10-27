@@ -4,6 +4,10 @@ export function Brand({ small = false }) {
  return <img className="brand-mark" src="/brand-mark.svg?v=3" width={small?26:36} height={small?26:36} alt="" aria-hidden="true" draggable={false}/>;
 }
 
+export function BrandWordmark() {
+ return <span className="brand-wordmark"><strong>墨多多</strong><span className="brand-writing">写作</span></span>;
+}
+
 export function HeroArt() {
  return <svg className="hero-art" viewBox="0 0 440 280" fill="none" aria-hidden="true">
   <defs><linearGradient id="page" x1="161" y1="114" x2="280" y2="246" gradientUnits="userSpaceOnUse"><stop stopColor="#fffef6"/><stop offset="1" stopColor="#e9e7d6"/></linearGradient><linearGradient id="back" x1="313" y1="101" x2="300" y2="242" gradientUnits="userSpaceOnUse"><stop stopColor="#7eaa8f"/><stop offset="1" stopColor="#37654f"/></linearGradient></defs>

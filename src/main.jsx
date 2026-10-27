@@ -144,10 +144,10 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
      {route === 'membership' && <MembershipPage navigate={navigate}/>}
      {route === 'service-admin' && <ServiceAdmin/>}
      {!navItems.some(item => item.id === route) && !['video','service-admin'].includes(route) && <ReferenceHome {...common}/>}
-     <footer className="page-footer"><span>墨多多写作</span><i/>让灵感落笔，让故事生长。</footer>
+     <footer className="page-footer"><span>墨多多</span><i/>让灵感落笔，让故事生长。</footer>
     </main>
   </WorkbenchFrame>}
-  {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal',modal.type==='home-conversation'&&'home-conversation-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" ref={modalElement} aria-label={modal.type === 'create' ? '新建作品' : '墨多多写作'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
+  {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal',modal.type==='home-conversation'&&'home-conversation-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" ref={modalElement} aria-label={modal.type === 'create' ? '新建作品' : '墨多多'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
    {modal.type === 'home-conversation' && <HomeConversation works={works} work={null} initialPrompt={modal.initialPrompt||''} setModal={setModal} notify={notify}/>}
    {modal.type === 'import' && <><h2>导入你的文稿</h2><p className="modal-desc">选择 TXT 文件，文稿将保存到当前创作空间。</p><button type="button" className="button primary full" onClick={()=>importRef.current?.click()}><Upload size={16}/>选择 TXT 文稿</button></>}
    {modal.type === 'settings' && <SettingsDialog works={allWorks} notify={notify} onRestore={data=>{setWorks(data.works);setFavorites(data.favorites);setSubmissions(data.submissions);setWorkspaceRevision(value=>value+1);}}/>}
