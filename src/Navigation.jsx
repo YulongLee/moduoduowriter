@@ -1,5 +1,5 @@
 import React, {createContext,useContext,useEffect,useRef,useState} from 'react';
-import {Bell, ChevronRight, ChevronsUpDown, CircleHelp, Crown, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings2, UserRound, X} from 'lucide-react';
+import {ShieldCheck, Bell, ChevronRight, ChevronsUpDown, CircleHelp, Crown, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings2, UserRound, X} from 'lucide-react';
 import {Brand,BrandWordmark} from './Art';
 import {BillingBadge} from './Billing.jsx';
 import {useAccount} from './Account.jsx';
@@ -122,6 +122,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
             <p>创作空间</p>
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('account')}><UserRound size={17}/>个人空间<ChevronRight size={14}/></button>
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('settings')}><Settings2 size={17}/>创作与数据设置</button>
+            {account?.user?.role==='admin'&&<button type="button" role="menuitem" tabIndex={-1} onClick={()=>go('admin')}><ShieldCheck size={17}/>管理后台<ChevronRight size={14}/></button>}
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => openAccountPanel('help')}><CircleHelp size={17}/>帮助与反馈</button>
           </div>}
           <button className="sidebar-user" ref={accountButtonRef} aria-label="我的创作空间" title="账号与设置" aria-haspopup="menu" aria-expanded={accountOpen} aria-controls={accountMenuId} onClick={() => accountOpen ? setAccountOpen(false) : openAccountMenu()} onKeyDown={event => {if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {event.preventDefault();openAccountMenu(event.key === 'ArrowUp' ? 'last' : 'first');}}}><div className="avatar">{account?.user?.username?.slice(0,1).toUpperCase() || '墨'}</div><span><strong>{accountName}</strong><small>账号与设置</small></span><ChevronsUpDown size={16}/></button>

@@ -15,6 +15,7 @@ import { placeRecentlyEdited, splitManuscript, saveChapterVersion } from './work
 import { GenerationProvider, GenerationStatus, useGeneration } from './Generation';
 import { SettingsDialog } from './Settings';
 import { ServiceAdmin } from './ServiceSettings';
+import {AdminConsole} from './AdminConsole.jsx';
 import { WorkDetailsDialog, ChapterManager, VersionDialog } from './WorkManagement';
 import { VideoStudio, SubmissionDesk } from './StudioPages';
 import { AccountProvider,AccountAccess,PrivateAccountGate,canAccessPrivate,useAccount } from './Account';
@@ -70,6 +71,7 @@ export function ApplicationRouter() {
  useEffect(()=>{const change=()=>{const next=location.hash.slice(1)||'home';setRoute(next);if(next==='home')setLaunch(null);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  const navigate=id=>{location.hash='#'+id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};
  const openCreation=modal=>{const destination=modal.type==='home-conversation'?'conversation':modal.type==='tool'?'tools':modal.type==='quick-start'?'novels':'works';setLaunch({id:uid(),modal});navigate(destination);};
+ if(route==='admin'||route.startsWith('admin/')||route==='service-admin')return <AdminConsole initialSection={route==='service-admin'?'services':route.split('/')[1]||'overview'}/>;
  const publicVisible=route==='home'&&!launch;
  return <><PublicHomeShell visible={publicVisible} onNavigate={navigate} onLaunch={openCreation}/>{!publicVisible&&<PrivateAccountGate requireLogin onHome={()=>navigate('home')}><WorkspaceProvider key={`${account?.spaceId||'unconfirmed'}:${launch?.id||'route'}`}><GenerationProvider><BillingProvider><WritingApp initialModal={launch?.modal?.type==='home-conversation'?null:launch?.modal||null} initialConversation={launch?.modal?.type==='home-conversation'?launch.modal:null} onReturnPublicHome={()=>setLaunch(null)}/></BillingProvider></GenerationProvider></WorkspaceProvider></PrivateAccountGate>}</>;
 }

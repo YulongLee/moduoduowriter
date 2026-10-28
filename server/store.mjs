@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { validateBackup } from '../src/backup.js';
 import {newBillingAccount,refreshBilling,reserveTask,finishTask,applyDemoPurchase,balanceOf,quoteTask} from '../src/billing.js';
 import {createAuthIdentityStore} from './auth-identity.mjs';
+import {createAdminStore} from './admin-store.mjs';
 const derive=promisify(scrypt),hash=value=>createHash('sha256').update(value).digest('hex');
 const fail=(message,status=400,code)=>Object.assign(new Error(message),{status,code});
 export const collections=['works','favorites','submissions','reading','workflows','video','planningDrafts','evaluations','conversations'];
@@ -31,16 +32,17 @@ export function createStore(directory,{authNow=()=>Date.now()}={}) {
  const interrupted=db.prepare("SELECT user_id,id FROM user_generations WHERE status='running' AND (task!='video' OR result IS NULL)").all();
  db.prepare("UPDATE user_generations SET status='interrupted',error='服务重启，任务未完成。可以手动继续。',finished_at=? WHERE status='running' AND (task!='video' OR result IS NULL)").run(new Date().toISOString());
  const transaction=fn=>{db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}};
- let authIdentity;
+ let authIdentity,adminStore;
  const publicUser=u=>({id:u.id,username:u.username,role:u.role,createdAt:u.created_at,hasPassword:authIdentity?authIdentity.hasPassword(u.id):true});
- const profile=username=>db.prepare('SELECT * FROM users WHERE username=? COLLATE NOCASE').get(username);
+ const profile=username=>db.prepare('SELECT * FROM users WHERE username=? COLLATE NOCASE').get(username)||db.prepare('SELECT u.* FROM users u JOIN auth_username_aliases a ON a.user_id=u.id WHERE a.alias=? COLLATE NOCASE').get(username);
  const userCount=()=>db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
- const validUser=value=>typeof value==='string'&&/^[a-zA-Z0-9_\u4e00-\u9fff-]{3,30}$/.test(value);
+ const validUser=value=>typeof value==='string'&&(/^[a-zA-Z0-9_\u4e00-\u9fff-]{3,30}$/.test(value)||(value.length<=254&&/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z][A-Za-z0-9-]{1,62}$/.test(value)));
  const validatePassword=p=>{if(typeof p!=='string'||p.length<8||p.length>128)throw fail('密码需为 8–128 个字符');};
- const session=userId=>{const token=randomBytes(32).toString('hex');db.prepare('INSERT INTO sessions(token_hash,expires_at,user_id) VALUES(?,?,?)').run(hash(token),Date.now()+7*86400000,userId);db.prepare('DELETE FROM sessions WHERE expires_at<?').run(Date.now());return token;};
+ const session=userId=>{adminStore?.assertEnabled(userId);const token=randomBytes(32).toString('hex');db.prepare('INSERT INTO sessions(token_hash,expires_at,user_id) VALUES(?,?,?)').run(hash(token),Date.now()+7*86400000,userId);db.prepare('DELETE FROM sessions WHERE expires_at<?').run(Date.now());return token;};
  const credentials=async(password,salt)=>derive(password,salt,64,{N:32768,maxmem:64*1024*1024});
  const verify=async(u,password)=>{if(typeof password!=='string'||password.length>128)return false;const actual=await credentials(password,u?.salt||'unconfigured-workspace');return !!u&&authIdentity.hasPassword(u.id)&&timingSafeEqual(Buffer.from(u.password_hash,'hex'),actual);};
- try{authIdentity=createAuthIdentityStore({db,directory,transaction,publicUser,createSession:session,now:authNow});}catch(error){db.close();throw error;}
+ try{authIdentity=createAuthIdentityStore({db,directory,transaction,publicUser,createSession:session,assertEnabled:userId=>adminStore?.assertEnabled(userId),now:authNow});}catch(error){db.close();throw error;}
+ adminStore=createAdminStore({db,transaction,publicUser,profile,credentials,validatePassword,now:authNow});
  const saveBilling=(id,data)=>{db.prepare('INSERT INTO billing_accounts(user_id,data,updated_at,revision) VALUES(?,?,?,1) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at,revision=billing_accounts.revision+1').run(id,JSON.stringify(data),new Date().toISOString());return data;};
  const readBilling=id=>{const row=db.prepare('SELECT data FROM billing_accounts WHERE user_id=?').get(id);const before=row?JSON.parse(row.data):newBillingAccount();const current=refreshBilling(before);if(!row||current!==before)saveBilling(id,current);return current;};
  const snapshot=id=>{const account=readBilling(id);return {account,revision:db.prepare('SELECT revision FROM billing_accounts WHERE user_id=?').get(id).revision,mode:'server-demo',paymentConfigured:false};};
@@ -97,22 +99,22 @@ export function createStore(directory,{authNow=()=>Date.now()}={}) {
   };
  };
  const api={
-  ...forUser(),forUser,...authIdentity,
-  auth(token){const configured=userCount()>0;const row=token&&db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').get(hash(token),Date.now());return {configured,user:row?publicUser(row):null,spaceId:row?.id||(!configured?'local':null),canRegister:true};},
+  ...forUser(),forUser,...authIdentity,...adminStore,
+  auth(token){const configured=userCount()>0;const row=token&&db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').get(hash(token),Date.now());const enabled=row&&adminStore.userStatus(row.id)==='active';return {configured,user:enabled?publicUser(row):null,spaceId:enabled?row.id:(!configured?'local':null),canRegister:true};},
   async register(username,password){
-   if(!validUser(username))throw fail('账号需为 3–30 位中文、字母、数字或下划线');validatePassword(password);
+   if(!validUser(username))throw fail('请输入有效邮箱或 3–30 位中文、字母、数字账号');validatePassword(password);
    if(profile(username))throw fail('此账号名称已存在',409);
    const salt=randomBytes(16).toString('hex'),derived=await credentials(password,salt),recoveryCode=randomBytes(24).toString('hex');
    return transaction(()=>{if(profile(username))throw fail('此账号名称已存在',409);const first=userCount()===0,userId=first?'local':randomUUID(),now=new Date().toISOString();db.prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)').run(userId,username,derived.toString('hex'),salt,first?'admin':'author',hash(recoveryCode),now);const user=publicUser(profile(username));return {token:session(userId),user,recoveryCode};});
   },
-  async login(username,password){const u=typeof username==='string'?profile(username):null;if(!await verify(u,password)||profile(username)?.password_hash!==u.password_hash)throw fail('账号或密码不正确',401);return {token:session(u.id),user:publicUser(u)};},
+  async login(username,password){const u=typeof username==='string'?profile(username):null;if(u)adminStore.assertEnabled(u.id);if(!await verify(u,password)||profile(username)?.password_hash!==u.password_hash)throw fail('账号或密码不正确',401);return {token:session(u.id),user:publicUser(u)};},
   async recover(username,recoveryCode,password){
-   validatePassword(password);const u=typeof username==='string'?profile(username):null;
+   validatePassword(password);const u=typeof username==='string'?profile(username):null;if(u)adminStore.assertEnabled(u.id);
    if(typeof recoveryCode!=='string'||recoveryCode.length>128||!u?.recovery_hash||!timingSafeEqual(Buffer.from(u.recovery_hash,'hex'),Buffer.from(hash(recoveryCode),'hex')))throw fail('账号或恢复码不正确',401);
    const expected=u.recovery_hash,salt=randomBytes(16).toString('hex'),derived=await credentials(password,salt),nextCode=randomBytes(24).toString('hex');
-   return transaction(()=>{if(profile(username)?.recovery_hash!==expected)throw fail('恢复码已使用，请使用最新的恢复码',409);db.prepare('UPDATE users SET password_hash=?,salt=?,recovery_hash=? WHERE id=?').run(derived.toString('hex'),salt,hash(nextCode),u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);releaseDemo(u.id);return {token:session(u.id),user:publicUser(profile(username)),recoveryCode:nextCode};});
+   return transaction(()=>{adminStore.assertEnabled(u.id);if(profile(username)?.recovery_hash!==expected)throw fail('恢复码已使用，请使用最新的恢复码',409);db.prepare('UPDATE users SET password_hash=?,salt=?,recovery_hash=? WHERE id=?').run(derived.toString('hex'),salt,hash(nextCode),u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);releaseDemo(u.id);return {token:session(u.id),user:publicUser(profile(username)),recoveryCode:nextCode};});
   },
-  async rotateRecovery(userId,password){const u=db.prepare('SELECT * FROM users WHERE id=?').get(userId);if(!await verify(u,password))throw fail('当前密码不正确',401);const code=randomBytes(24).toString('hex');return transaction(()=>{const latest=db.prepare('SELECT password_hash,recovery_hash FROM users WHERE id=?').get(userId);if(latest?.password_hash!==u.password_hash||latest?.recovery_hash!==u.recovery_hash)throw fail('账号安全信息已变化，请重新验证当前密码',409);db.prepare('UPDATE users SET recovery_hash=? WHERE id=?').run(hash(code),userId);return {recoveryCode:code};});},
+  async rotateRecovery(userId,password){const u=db.prepare('SELECT * FROM users WHERE id=?').get(userId);if(!await verify(u,password))throw fail('当前密码不正确',401);const code=randomBytes(24).toString('hex');return transaction(()=>{adminStore.assertEnabled(userId);const latest=db.prepare('SELECT password_hash,recovery_hash FROM users WHERE id=?').get(userId);if(latest?.password_hash!==u.password_hash||latest?.recovery_hash!==u.recovery_hash)throw fail('账号安全信息已变化，请重新验证当前密码',409);db.prepare('UPDATE users SET recovery_hash=? WHERE id=?').run(hash(code),userId);return {recoveryCode:code};});},
   logout(token){if(!token)return;const current=db.prepare('SELECT user_id FROM sessions WHERE token_hash=?').get(hash(token));transaction(()=>{if(current)releaseDemo(current.user_id);db.prepare('DELETE FROM sessions WHERE token_hash=?').run(hash(token));});},
   close(){db.close();}
  };

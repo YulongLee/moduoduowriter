@@ -8,6 +8,7 @@ import {videoEnabled} from '../src/features.js';
 import {createMediaService} from './media.mjs';
 import {createStore,collections} from './store.mjs';
 import { createCloudStore,defaultOSS,publicOSS,validateOSS } from './oss.mjs';
+import {createAdminApi} from './admin-api.mjs';
 import {createLoginApi} from './login-api.mjs';
 
 const defaultConfig={baseUrl:'',model:'',protocol:'chat',apiKey:'',jsonMode:false,defaultMode:'demo'};
@@ -65,6 +66,7 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
  const quoteForGeneration=body=>quoteTask({taskId:['plan','chapterPlan'].includes(body.task)?'outline':body.task==='memoryExtract'?'review':body.task==='chapterDraft'?'continue':body.task,inputChars:JSON.stringify({prompt:body.prompt||'',context:body.context||{},previous:body.previous||{}}).length,outputChars:Math.min(4000,Math.max(300,Number(body.target)||1000)),model:body.mode==='refine'?'refine':'standard',dimensions:body.dimensions?.length||4});
  const cookie=(res,token,secure=false)=>res.setHeader('Set-Cookie',`mdd_session=${token||''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${token?604800:0}${secure?'; Secure':''}`);
  const loginApi=createLoginApi({directory,database,fetchImpl,mailTransport,sendJSON:send,readBody,setSessionCookie:cookie,publicOrigin:deploymentOrigin});
+ const adminApi=createAdminApi({database,sendJSON:send,readBody});
  const handle=async(req,res,next=()=>send(res,404,{error:'接口不存在'}))=>{
   const url=new URL(req.url,'http://localhost');if(!url.pathname.startsWith('/api/'))return next();
   try {
@@ -73,6 +75,7 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    if(!local&&!deployed)throw fail('仅允许从本机或已配置的正式域名打开创作空间',403);
    if(req.headers.origin&&!(url.pathname==='/api/auth/wechat/callback'&&req.method==='GET')&&req.headers.origin!==origin&&!(local&&[`http://${host}`,`https://${host}`].includes(req.headers.origin)))throw fail('请求来源不被允许',403);
    if(req.method!=='GET'&&req.headers['x-mdd-client']!=='workspace-v1')throw fail('请求缺少本地工作台标记',403);
+   if(await adminApi(req,res,{url,origin,secure}))return;
    if(await loginApi.handle(req,res,{url,origin,secure}))return;
    if(url.pathname==='/api/auth/status'&&req.method==='GET')return send(res,200,database().auth(sessionToken(req)));
    if(['/api/auth/login','/api/auth/register','/api/auth/recover'].includes(url.pathname)&&req.method==='POST') {
@@ -118,12 +121,14 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    if(url.pathname==='/api/settings'&&req.method==='PUT') {
     const body=await readBody(req,10000);
     const updated=await serial(async()=>{const updated=validateConfig(body,await config());await atomicJSON(configFile,updated);return updated;});
+    if(auth.user)database().addAdminAudit({actorId:auth.user.id,action:'ai-settings.update',targetLabel:'AI 生成服务配置'});
     return send(res,200,adminConfig(updated));
    }
    if(url.pathname==='/api/oss/settings'&&req.method==='GET')return send(res,200,isAdmin?{...publicOSS(await scopedOSS()),canManage:true}:{configured:publicOSS(await scopedOSS()).configured,verifiedAt:(await scopedOSS()).verifiedAt,canManage:false});
    if(url.pathname==='/api/oss/settings'&&req.method==='PUT') {
     const body=await readBody(req,15000);
     const updated=await serial(async()=>{const value=validateOSS(body,await ossConfig());await atomicJSON(ossFile,value);return value;});
+    if(auth.user)database().addAdminAudit({actorId:auth.user.id,action:'oss-settings.update',targetLabel:'OSS 存储配置'});
     return send(res,200,publicOSS(updated));
    }
    if(url.pathname==='/api/oss/test'&&req.method==='POST') {

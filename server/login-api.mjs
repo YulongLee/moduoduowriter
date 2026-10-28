@@ -36,7 +36,7 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
    if(path==='/api/auth/settings'){
     authenticated(req,auth);if(auth.user.role!=='admin')throw fail('登录服务配置需要管理员权限。',403);
     if(req.method==='GET'){sendJSON(res,200,publicAuthConfig(await load()));return true;}
-    if(req.method==='PUT'){sendJSON(res,200,publicAuthConfig(await save(await readBody(req,20000))));return true;}
+    if(req.method==='PUT'){const saved=await save(await readBody(req,20000));database().addAdminAudit({actorId:auth.user.id,action:'login-settings.update',targetLabel:'登录服务配置'});sendJSON(res,200,publicAuthConfig(saved));return true;}
     throw fail('不支持的请求方式。',405);
    }
    if(path==='/api/auth/identities'&&req.method==='GET'){const userId=authenticated(req,auth);sendJSON(res,200,{identities:database().identities(userId)});return true;}

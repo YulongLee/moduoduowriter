@@ -56,6 +56,14 @@ npm run dev -- --port 5173
 - **本机磁盘备份**：原作者空间保存到项目 `.local/workspace.json`，新账号使用 `.local/users/<空间编号>/workspace.json`，保留前一个磁盘快照；用修订号阻止另一窗口的旧快照覆盖新备份。
 - **会员与墨点**：真实 App 使用服务端保存的演示账本，包含规范价格订单、额度预留、幂等结算与失败退回，不收款；浏览器中的数字不能覆盖服务端余额。
 
+## 后台管理平台
+
+独立后台入口为 `http://127.0.0.1:5173/#admin`，包含运营概览、用户管理、生成记录、演示订单账本、AI/登录服务配置及操作日志。原 `#service-admin` 地址作为服务配置别名保留。管理员在创作工作台账号菜单也可进入；后台不加载作者个人文稿、账本或缓存，普通作者不可访问管理接口。
+
+管理员凭据仅按本地初始化设置，不写入仓库、不在应用启动时重置。维护脚本 `scripts/provision-admin.mjs` 通过标准输入接收资料，先备份 SQLite 再初始化并验证登录；给旧管理员增加邮箱别名时保留用户名和原作品空间。如果邮箱已属于普通作者，则拒绝自动提升。初始化会使目标管理员的旧密码、恢复码和会话失效。
+
+用户停用会撤销会话，并阻止密码、验证码和微信登录；文稿保留，重新启用后需重新登录。后台生成与订单列表只提供管理元数据，不回传创作正文、提示词和密钥。订单依然是演示账本。详见 [后台管理平台与验收](./后台管理平台与验收-2026-10-28.md)。
+
 ## 三种登录方式
 
 已实现微信扫码、手机号验证码和邮箱验证码，当前按「先做好配置入口」要求默认关闭。原账号密码与恢复码继续可用；管理员可在 `http://127.0.0.1:5173/#service-admin` 的「登录与账号服务」保存资料并分别启用，保存不会发送消息或发起授权。资料尚未申请，未做真实短信、邮件和微信联通验证。
@@ -141,6 +149,8 @@ npm run build
 - `src/Generation.jsx`、`src/Settings.jsx`：统一生成客户端和创作/备份设置。
 - `src/ServiceSettings.jsx`：普通服务状态与创作方式、独立的本机模型配置管理。
 - `src/Workspace.jsx`、`src/workspaceFeedback.js`、`src/workspace.js`、`server/store.mjs`：统一保存反馈、断线恢复、浏览器迁移、修订合并和 SQLite。
+- `src/AdminConsole.jsx`、`src/admin.css`、`server/admin-api.mjs`、`server/admin-store.mjs`：独立运营后台、用户访问管理、真实汇总与审计。
+- `scripts/provision-admin.mjs`：本地管理员初始化及修改前数据库备份，密码通过标准输入传入。
 - `src/Account.jsx`、`src/LoginMethods.jsx`、`src/IdentitySettings.jsx`：账号密码、三种登录与显式身份绑定。
 - `src/LoginServiceSettings.jsx`、`server/login-api.mjs`、`server/auth-providers.mjs`：管理员登录配置、验证码接口与阿里云短信／SMTP／微信适配。
 - `server/auth-identity.mjs`、`server/login-flows.mjs`：身份与验证码安全存储、浏览器绑定的微信临时状态。

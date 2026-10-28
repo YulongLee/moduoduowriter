@@ -45,7 +45,7 @@ function readPepper(directory,hasProtectedRecords) {
  chmodSync(file,0o600);return secret;
 }
 
-export function createAuthIdentityStore({db,directory,transaction,publicUser,createSession,now=()=>Date.now()}) {
+export function createAuthIdentityStore({db,directory,transaction,publicUser,createSession,assertEnabled=()=>{},now=()=>Date.now()}) {
  db.exec([
   'CREATE TABLE IF NOT EXISTS auth_identities(id TEXT PRIMARY KEY,provider TEXT NOT NULL,subject_hash TEXT NOT NULL,user_id TEXT NOT NULL,masked TEXT NOT NULL,created_at TEXT NOT NULL,UNIQUE(provider,subject_hash),UNIQUE(user_id,provider));',
   'CREATE TABLE IF NOT EXISTS auth_external_users(user_id TEXT PRIMARY KEY);',
@@ -58,7 +58,7 @@ export function createAuthIdentityStore({db,directory,transaction,publicUser,cre
  const subjectHash=(provider,subject)=>digest('identity:'+provider+':'+subject);
  const user=id=>typeof id==='string'?db.prepare('SELECT * FROM users WHERE id=?').get(id):null;
  const assertOwner=()=>{if(!db.prepare("SELECT 1 FROM users WHERE role='admin' LIMIT 1").get())throw fail('请先设置首个管理员账号，再开通其他登录方式。',409,'owner-required');};
- const assertUser=id=>{const found=user(id);if(!found)throw fail('请先登录，再绑定账号。',401);return found;};
+ const assertUser=id=>{const found=user(id);if(!found)throw fail('请先登录，再绑定账号。',401);assertEnabled(id);return found;};
  const identities=userId=>{assertUser(userId);return db.prepare('SELECT id,provider,masked,created_at FROM auth_identities WHERE user_id=? ORDER BY created_at,id').all(userId).map(row=>({id:row.id,provider:row.provider,masked:row.masked,createdAt:row.created_at}));};
  const codeDigest=(id,code)=>digest('code:'+id+':'+code);
  const identity=(provider,subject)=>db.prepare('SELECT * FROM auth_identities WHERE provider=? AND subject_hash=?').get(provider,subjectHash(provider,subject));
@@ -73,7 +73,7 @@ export function createAuthIdentityStore({db,directory,transaction,publicUser,cre
  };
  const loginIdentity=(provider,subject,masked)=>{
   assertOwner();let entry=identity(provider,subject),account=entry&&user(entry.user_id),created=false;
-  if(entry&&!account)throw fail('账号身份记录不完整，请联系管理员。',500);
+  if(entry&&!account)throw fail('账号身份记录不完整，请联系管理员。',500);if(account)assertEnabled(account.id);
   if(!entry){
    const id=randomUUID(),prefix=provider==='phone'?'手机用户':provider==='email'?'邮箱用户':'微信用户';
    const username=prefix+'_'+randomBytes(6).toString('hex'),date=new Date(now()).toISOString();

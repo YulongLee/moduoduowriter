@@ -26,7 +26,7 @@
     "test:account-ui": "node scripts/account-ui-check.mjs",
     "test:extended-workspace": "node scripts/extended-workspace-check.mjs",
     "test:service-upgrade": "node scripts/service-upgrade-check.mjs",
-    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home && npm run test:auth-identity && npm run test:auth-providers && npm run test:auth-api && npm run test:login-methods && npm run test:login-settings",
+    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home && npm run test:auth-identity && npm run test:auth-providers && npm run test:auth-api && npm run test:login-methods && npm run test:login-settings && npm run test:admin-store && npm run test:admin-api && npm run test:admin-provision && npm run test:admin-ui && npm run test:admin-boundary",
     "test:evaluation": "node scripts/writing-evaluation-check.mjs",
     "test:billing-concurrency": "node scripts/billing-concurrency-check.mjs",
     "test:home-resume": "node scripts/home-resume-check.mjs",
@@ -39,7 +39,13 @@
     "test:auth-providers": "node scripts/auth-providers-check.mjs",
     "test:auth-api": "node scripts/auth-api-check.mjs",
     "test:login-methods": "node scripts/login-methods-check.mjs",
-    "test:login-settings": "node scripts/login-settings-check.mjs"
+    "test:login-settings": "node scripts/login-settings-check.mjs",
+    "admin:init": "node scripts/provision-admin.mjs --stdin",
+    "test:admin-store": "node scripts/admin-store-check.mjs",
+    "test:admin-api": "node scripts/admin-api-check.mjs",
+    "test:admin-provision": "node scripts/admin-provision-check.mjs",
+    "test:admin-ui": "node scripts/admin-ui-check.mjs",
+    "test:admin-boundary": "node scripts/admin-boundary-check.mjs"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",
