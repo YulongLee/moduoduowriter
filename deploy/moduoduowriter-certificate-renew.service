@@ -1,0 +1,17 @@
+[Unit]
+Description=Renew only the Moduoduo Writer HTTPS certificate
+Wants=network-online.target
+After=network-online.target
+ConditionPathIsDirectory=/etc/moduoduowriter/letsencrypt/renewal
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/certbot renew --config-dir /etc/moduoduowriter/letsencrypt --work-dir /var/lib/moduoduowriter-certbot --logs-dir /var/log/moduoduowriter-certbot --non-interactive --deploy-hook /opt/moduoduowriter/current/deploy/reload-nginx-after-certificate.sh
+Nice=15
+CPUQuota=25%
+MemoryMax=256M
+TasksMax=64
+NoNewPrivileges=true
+PrivateTmp=true

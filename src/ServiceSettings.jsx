@@ -43,7 +43,7 @@ export function ServiceAdmin() {
   };
   if(!allowed)return <section className="surface service-admin"><h1>服务管理</h1><p role="status">此页面仅供管理员维护服务连接。你可以继续使用创作和备份功能。</p></section>;
   return <section className="surface service-admin">
-    <span className="modal-symbol"><Settings2/></span><h1>本机服务管理</h1>
+    <span className="modal-symbol"><Settings2/></span><h1>{import.meta.env.PROD?'平台服务管理':'本机服务管理'}</h1>
     <p className="modal-desc">在本机维护创作服务连接。普通创作页面只展示服务状态。</p>
     <fieldset className="settings-block" disabled={busy || !ready}>
       <legend>AI 生成服务</legend>

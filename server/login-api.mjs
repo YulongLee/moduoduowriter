@@ -29,7 +29,7 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
  };
  const callbackResponse=(res,ok)=>{res.writeHead(ok?200:400,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'self'"});res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>墨多多微信登录</title><body style="font-family:system-ui;padding:32px;color:#245f4b"><h2>${ok?'微信身份已确认':'微信登录未完成'}</h2><p>${ok?'请回到墨多多页面继续，当前窗口可以关闭。':'请回到打开二维码的浏览器重试；也可使用新窗口微信登录。'}</p></body></html>`);};
  return {
-  async handle(req,res,{url,origin,secure=false}) {
+  async handle(req,res,{url,origin,secure=false,requester=req.socket?.remoteAddress||'local'}) {
    const path=url.pathname;
    if(!['/api/auth/methods','/api/auth/settings','/api/auth/code/send','/api/auth/code/login','/api/auth/identities','/api/auth/identities/code/send','/api/auth/identities/code/bind','/api/auth/wechat/start','/api/auth/wechat/status','/api/auth/wechat/consume','/api/auth/wechat/cancel',callbackPath].includes(path))return false;
    const auth=database().auth(cookieValue(req,'mdd_session'));
@@ -51,7 +51,7 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
     }catch{if(claim)getFlows().fail(claim.id);callbackResponse(res,false);}return true;
    }
    if(req.method!=='POST')throw fail('不支持的请求方式。',405);
-   const body=await readBody(req,5000),requester=req.socket?.remoteAddress||'local';
+   const body=await readBody(req,5000);
    if(['/api/auth/code/send','/api/auth/identities/code/send'].includes(path)){
     const channel=body.channel;if(!['phone','email'].includes(channel))throw fail('请选择手机号或邮箱登录。');assertAvailable(methods,channel);
     const binding=path.includes('/identities/'),userId=binding?authenticated(req,auth):null,code=String(randomInt(0,1000000)).padStart(6,'0'),target=normalizeLoginTarget(channel,body.target);

@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import {isIP} from 'node:net';
 import { buildPrompt, parseStructured } from './prompts.mjs';
 import { validateBackup } from '../src/backup.js';
 import {quoteTask} from '../src/billing.js';
@@ -48,7 +49,7 @@ async function limitedJSON(response) {
  for await(const chunk of response.body){size+=chunk.length;if(size>1500000)throw fail('模型响应过大，请减少目标篇幅',502);chunks.push(chunk);}
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw fail('模型服务返回了无法识别的响应',502);}
 }
-export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis.fetch,cloudStore=createCloudStore(),mailTransport,publicOrigin=process.env.MDD_PUBLIC_ORIGIN||''}={}) {
+export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis.fetch,cloudStore=createCloudStore(),mailTransport,publicOrigin=process.env.MDD_PUBLIC_ORIGIN||'',requireAccount=false,trustLoopbackProxy=false}={}) {
  let deploymentOrigin='';
  if(publicOrigin){let value;try{value=new URL(publicOrigin);}catch{throw fail('正式访问域名配置无效。');}if(value.protocol!=='https:'||value.username||value.password||value.pathname!=='/'||value.search||value.hash||/^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[|.*\.local$)/i.test(value.hostname)||!value.hostname.includes('.'))throw fail('正式访问域名必须为公开 HTTPS 来源。');deploymentOrigin=value.origin;}
  let active=0,writeQueue=Promise.resolve();
@@ -62,6 +63,11 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
  const pollVideo=async(id)=>{if(polls.has(id))return polls.get(id);const task=database().task(id);if(task.status!=='running')return {id,status:task.status,result:task.result,error:task.error};if(Date.now()-Date.parse(task.started_at)>23*3600000){database().finishTask(id,task.result,'视频任务超过查询时限，请检查服务商任务记录');return {id,status:'failed',result:task.result,error:'视频任务超过查询时限'};}if(Date.now()-(task.result?.lastPoll||0)<4000)return {id,status:'running',result:task.result};const promise=(async()=>{try{const state=await media.poll(await config(),await ossConfig(),id,task.result);if(!closed){if(state.done)database().finishTask(id,state.result,null);else database().pendingTask(id,state.result);}return {id,status:state.done?'succeeded':'running',result:state.result};}catch(e){if(e.status&&(/视频任务未完成/.test(e.message)||e.code==='Model.AccessDenied')){if(!closed)database().finishTask(id,task.result,e.message);return {id,status:'failed',result:task.result,error:e.message};}throw e;}finally{polls.delete(id);}})();polls.set(id,promise);return promise;};
  const schedulePoll=id=>{if(!videoEnabled||closed||timers.has(id))return;timers.set(id,setTimeout(async()=>{timers.delete(id);try{const state=await pollVideo(id);if(state.status==='running')schedulePoll(id);}catch{if(!closed)schedulePoll(id);}},10000));};
  const failures=new Map();
+ const clientAddress=req=>{
+  const remote=req.socket?.remoteAddress||'local',header=req.headers['x-real-ip'];
+  if(trustLoopbackProxy&&['127.0.0.1','::1','::ffff:127.0.0.1'].includes(remote)&&typeof header==='string'&&header.length<=45&&isIP(header))return header.toLowerCase();
+  return remote;
+ };
  const sessionToken=req=>String(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('mdd_session='))?.slice(12);
  const quoteForGeneration=body=>quoteTask({taskId:['plan','chapterPlan'].includes(body.task)?'outline':body.task==='memoryExtract'?'review':body.task==='chapterDraft'?'continue':body.task,inputChars:JSON.stringify({prompt:body.prompt||'',context:body.context||{},previous:body.previous||{}}).length,outputChars:Math.min(4000,Math.max(300,Number(body.target)||1000)),model:body.mode==='refine'?'refine':'standard',dimensions:body.dimensions?.length||4});
  const cookie=(res,token,secure=false)=>res.setHeader('Set-Cookie',`mdd_session=${token||''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${token?604800:0}${secure?'; Secure':''}`);
@@ -75,11 +81,13 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    if(!local&&!deployed)throw fail('仅允许从本机或已配置的正式域名打开创作空间',403);
    if(req.headers.origin&&!(url.pathname==='/api/auth/wechat/callback'&&req.method==='GET')&&req.headers.origin!==origin&&!(local&&[`http://${host}`,`https://${host}`].includes(req.headers.origin)))throw fail('请求来源不被允许',403);
    if(req.method!=='GET'&&req.headers['x-mdd-client']!=='workspace-v1')throw fail('请求缺少本地工作台标记',403);
+   if(requireAccount&&!database().auth(sessionToken(req)).configured)throw fail('写作服务尚未初始化，请联系管理员。',503);
+   const requester=clientAddress(req);
    if(await adminApi(req,res,{url,origin,secure}))return;
-   if(await loginApi.handle(req,res,{url,origin,secure}))return;
+   if(await loginApi.handle(req,res,{url,origin,secure,requester}))return;
    if(url.pathname==='/api/auth/status'&&req.method==='GET')return send(res,200,database().auth(sessionToken(req)));
    if(['/api/auth/login','/api/auth/register','/api/auth/recover'].includes(url.pathname)&&req.method==='POST') {
-    const address=req.socket?.remoteAddress||'local',attempts=failures.get(address)||{count:0,until:0};if(attempts.until>Date.now()&&attempts.count>=5)throw fail('尝试次数过多，请 15 分钟后再试',429);
+    const address=requester,attempts=failures.get(address)||{count:0,until:0};if(attempts.until>Date.now()&&attempts.count>=5)throw fail('尝试次数过多，请 15 分钟后再试',429);
     failures.set(address,{count:attempts.until>Date.now()?attempts.count+1:1,until:Date.now()+900000});
     const body=await readBody(req,2000);let result;
     try{result=url.pathname.endsWith('register')?await database().register(body.username,body.password):url.pathname.endsWith('recover')?await database().recover(body.username,body.recoveryCode,body.password):await database().login(body.username,body.password);failures.delete(address);}catch(e){throw e;}

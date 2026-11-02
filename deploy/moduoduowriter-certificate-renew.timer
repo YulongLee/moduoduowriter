@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the Moduoduo Writer certificate twice a day
+
+[Timer]
+OnCalendar=*-*-* 03,15:17:00
+RandomizedDelaySec=45m
+Persistent=true
+Unit=moduoduowriter-certificate-renew.service
+
+[Install]
+WantedBy=timers.target

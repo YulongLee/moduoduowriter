@@ -3,8 +3,8 @@ import { Settings2, LoaderCircle, X } from 'lucide-react';
 import {getRequestSpace} from './sessionScope.js';
 const GenerationContext=createContext(null);
 export async function requestApi(url,body,{method='POST',signal,spaceId=getRequestSpace()}={}) {
- let response;try{response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1',...(spaceId?{'X-Mdd-Space':spaceId}:{})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal});}catch(e){if(e.name==='AbortError')throw new Error('生成已取消');throw new Error('本地服务未连接，请确认网站服务正在运行');}
- let data;try{data=await response.json();}catch{throw new Error('本地服务尚未就绪，请重启网站服务');}
+ let response;try{response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1',...(spaceId?{'X-Mdd-Space':spaceId}:{})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal});}catch(e){if(e.name==='AbortError')throw new Error('生成已取消');throw new Error('暂时无法连接写作服务，请稍后重试');}
+ let data;try{data=await response.json();}catch{throw new Error('服务响应暂时异常，请稍后重试');}
  if(!response.ok)throw Object.assign(new Error(data.error||'服务暂时不可用，请重试'),{status:response.status,code:data.code});return data;
 }
 export function GenerationProvider({children}) {

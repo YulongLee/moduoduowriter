@@ -1,0 +1,44 @@
+[Unit]
+Description=Moduoduo Writer production application
+After=network.target
+ConditionPathIsFile=/etc/moduoduowriter.env
+ConditionPathIsDirectory=/opt/moduoduowriter/current/dist
+
+[Service]
+Type=simple
+User=moduoduo
+Group=moduoduo
+WorkingDirectory=/opt/moduoduowriter/current
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/moduoduowriter.env
+ExecStart=/opt/moduoduowriter/runtime/node/bin/node /opt/moduoduowriter/current/server/http.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=30
+TimeoutStopSec=110
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=8192
+CPUQuota=80%
+CPUWeight=50
+MemoryHigh=512M
+MemoryMax=768M
+MemorySwapMax=256M
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/moduoduowriter
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
