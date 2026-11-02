@@ -1,7 +1,7 @@
 [Unit]
 Description=Moduoduo Writer production application
 After=network.target
-ConditionPathIsFile=/etc/moduoduowriter.env
+ConditionPathExists=/etc/moduoduowriter.env
 ConditionPathIsDirectory=/opt/moduoduowriter/current/dist
 
 [Service]

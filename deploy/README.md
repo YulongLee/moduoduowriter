@@ -21,7 +21,7 @@
 | 应用服务 | `moduoduowriter.service` |
 | 专属 Nginx 配置 | `/etc/nginx/sites-available/moduoduowriter.conf`，同名 enabled 软链 |
 
-Node 二进制独立安装于上述目录，不替换系统 Node、不修改其他服务的 PATH。版本制品包含 `dist/`、`server/`、运行所需 `src/*.js`、`package.json`、锁文件、此部署目录及由锁文件安装的生产依赖；不包含开发机 `.local`、`.env`、SSH 私钥、Git 目录或其他项目数据。发布目录应由 root 持有，应用用户只读，数据存放在版本目录之外。
+Node 二进制独立安装于上述目录，不替换系统 Node、不修改其他服务的 PATH。版本制品包含 `dist/`、`server/`、运行所需 `src/*.js`、管理员维护入口 `scripts/provision-admin.mjs`、`package.json`、锁文件、此部署目录及由锁文件安装的生产依赖；不包含开发机 `.local`、`.env`、SSH 私钥、Git 目录或其他项目数据。发布目录应由 root 持有，应用用户只读，数据存放在版本目录之外。
 
 应用通过 `server/http.mjs` 提供构建后的静态页面与 API，不使用 Vite 开发服务器或 `vite preview` 对外运行。生产入口固定只监听 IPv4 loopback，强制已初始化账号才能访问私人 API。管理员通过本地维护脚本从标准输入初始化，密码不写入代码、命令参数或站点配置。
 
@@ -31,6 +31,35 @@ Node 二进制独立安装于上述目录，不替换系统 Node、不修改其�
 2. 创建专属用户及上表目录，安装经过官方校验的独立 Node 24，把经过测试、构建并提交到 Git 的代码放入提交号目录。运行该 Node 自带的 npm 安装锁定的生产依赖，不对其他应用执行 npm 操作。
 3. 将 `moduoduowriter.env.example` 复制为 `/etc/moduoduowriter.env`，保持 0600。它只包含运行参数；模型、OSS、登录服务密钥按项目原约定保存在专属数据目录内，不放入 Git 或前端构建。
 4. 在首次公开访问前初始化管理员。若需要迁移账号，必须同时迁移原 `studio.sqlite` 和 `auth-pepper`；原 JSON/OSS 文稿导出不包含账号，不能代替账号数据库。不要把开发机全部资料打包上传。新服务器数据目录及文件应归 `moduoduo`，目录 0700、私密文件 0600。
+
+   将下方 `<提交号>` 替换为已准备的版本目录名，在服务器交互终端执行。此方式需要 Python 3；邮箱在终端输入，密码与确认密码隐藏输入，初始化资料只通过管道送入标准输入，不写入命令参数、环境变量或临时文件。先完成 `sudo -v`，后续 `sudo -n` 不会从资料管道读取 sudo 密码。
+
+   ```sh
+   mdd_release='<提交号>'
+   sudo -v
+   python3 - <<'PY' | sudo -n -u moduoduo /opt/moduoduowriter/runtime/node/bin/node \
+     "/opt/moduoduowriter/releases/$mdd_release/scripts/provision-admin.mjs" \
+     --stdin --directory /var/lib/moduoduowriter
+   import getpass
+   import json
+   import sys
+
+   with open('/dev/tty', 'r+') as terminal:
+       terminal.write('管理员邮箱：')
+       terminal.flush()
+       username = terminal.readline().strip()
+       password = getpass.getpass('管理员密码：', stream=terminal)
+       confirmation = getpass.getpass('再次输入密码：', stream=terminal)
+       if not username or password != confirmation or not 8 <= len(password) <= 128:
+           terminal.write('资料未发送：请检查邮箱、密码长度及两次输入是否一致。\n')
+           sys.exit(1)
+   print(json.dumps({'username': username, 'password': password}), flush=True)
+   PY
+   unset mdd_release
+   ```
+
+   必须保留 `--stdin --directory /var/lib/moduoduowriter`，并使用专属 Node 及 `moduoduo` 用户。维护脚本不读取 `MDD_DATA_DIR`；省略 `--directory` 会写入当前目录的 `.local`，生产服务仍无法完成初始化。确认返回 `initialized: true`、`credentialsVerified: true` 后继续启动服务；输出不包含密码。已有业务数据时，先停止本应用，维护脚本会在专属数据目录内创建账号数据库快照。
+
 5. 将 `moduoduowriter.service` 安装到 `/etc/systemd/system/`，执行 `systemctl daemon-reload`。只启用并启动 `moduoduowriter.service`，使用下文健康检查确认后端和管理员初始化。
 6. 先把 `nginx-http.conf` 安装到专属站点文件并链接 enabled。此阶段域名只提供 ACME 验证及 503 维护响应，不通过明文 HTTP 提供登录。运行 `nginx -t` 成功后执行 `systemctl reload nginx`，不重启 Nginx，不改默认站点或其他站点文件。
 7. 解析与接入条件就绪后，以 webroot 模式仅为此站点申请证书。使用独立的证书、临时、日志目录，避免 Certbot 自动改写其他 Nginx 站点：

@@ -46,12 +46,18 @@ try{
  assert.equal((await call('/api/auth/status',{headers:{Origin:'https://attacker.example'}})).status,403);assert.equal(providerCalls,0);
  console.log('PASS raw/encoded traversal, hidden/source/config paths and symlink escape rejection, plus authenticated API/origin boundaries');
  await close();
- // The real CLI owns its signal handlers; bind a disposable port and read health.
- const probe=await createProductionServer({directory:data,distDirectory:dist,publicOrigin:origin,fetchImpl});await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
- const cli=new URL('../server/http.mjs',import.meta.url);child=spawn(process.execPath,[fileURLToPath(cli)],{env:{...process.env,PORT:String(port),MDD_DATA_DIR:data,MDD_DIST_DIR:dist,MDD_PUBLIC_ORIGIN:origin},stdio:['ignore','pipe','pipe']});
- let output='',error='';child.stdout.on('data',chunk=>output+=chunk);child.stderr.on('data',chunk=>error+=chunk);
- await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Production CLI did not start')),5000);const listen=chunk=>{if((output+String(chunk)).includes('"event":"listening"')){clearTimeout(timeout);child.stdout.off('data',listen);resolve();}};child.stdout.on('data',listen);child.once('exit',code=>{clearTimeout(timeout);reject(Error('CLI exited before ready: '+code+' '+error));});});
- const stopped=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('SIGTERM did not stop production CLI')),5000);child.once('exit',(code,signal)=>{clearTimeout(timeout);resolve({code,signal});});});child.kill('SIGTERM');assert.deepEqual(await stopped,{code:0,signal:null});child=null;
- assert.ok(!output.includes('fixture-owner-password'));assert.ok(!output.includes(data));
- console.log('PASS loopback-only production CLI startup and clean SIGTERM without configuration or credential logging');
+ // Exercise both a direct entry and the same whole-release symlink as systemd.
+ const cli=fileURLToPath(new URL('../server/http.mjs',import.meta.url)),current=join(directory,'current');
+ await symlink(fileURLToPath(new URL('../',import.meta.url)),current,'dir');
+ for(const [kind,entry] of [['direct',cli],['release-symlink',join(current,'server/http.mjs')]]){
+  const probe=await createProductionServer({directory:data,distDirectory:dist,publicOrigin:origin,fetchImpl});await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
+  child=spawn(process.execPath,[entry],{env:{...process.env,PORT:String(port),MDD_DATA_DIR:data,MDD_DIST_DIR:dist,MDD_PUBLIC_ORIGIN:origin},stdio:['ignore','pipe','pipe']});
+  let output='',error='';child.stdout.on('data',chunk=>output+=chunk);child.stderr.on('data',chunk=>error+=chunk);
+  await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error(kind+' production CLI did not start')),5000);const listen=chunk=>{if((output+String(chunk)).includes('"event":"listening"')){clearTimeout(timeout);child.stdout.off('data',listen);resolve();}};child.stdout.on('data',listen);child.once('exit',code=>{clearTimeout(timeout);reject(Error(kind+' CLI exited before ready: '+code+' '+error));});});
+  const health=await new Promise((resolve,reject)=>{const req=request({hostname:'127.0.0.1',port,path:'/healthz',headers:{Host:'writer.example.com'}},res=>{let text='';res.on('data',chunk=>text+=chunk);res.on('end',()=>resolve({status:res.statusCode,text}));});req.on('error',reject);req.end();});
+  assert.equal(health.status,200);assert.deepEqual(JSON.parse(health.text),{status:'ok'});
+  const stopped=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error(kind+' SIGTERM did not stop production CLI')),5000);child.once('exit',(code,signal)=>{clearTimeout(timeout);resolve({code,signal});});});child.kill('SIGTERM');assert.deepEqual(await stopped,{code:0,signal:null});child=null;
+  assert.ok(!output.includes('fixture-owner-password'));assert.ok(!output.includes(data));
+ }
+ console.log('PASS direct and whole-release-symlink loopback CLI startup, live health and clean SIGTERM without credential logging');
 }finally{if(child)child.kill('SIGKILL');await close();await rm(directory,{recursive:true,force:true});}

@@ -3,7 +3,7 @@ import {createReadStream} from 'node:fs';
 import {realpath,stat} from 'node:fs/promises';
 import {pipeline} from 'node:stream/promises';
 import {resolve,join,extname,sep} from 'node:path';
-import {fileURLToPath,pathToFileURL} from 'node:url';
+import {fileURLToPath} from 'node:url';
 import {createApi} from './api.mjs';
 
 const releaseRoot=fileURLToPath(new URL('../',import.meta.url));
@@ -77,7 +77,9 @@ export async function createProductionServer({directory,distDirectory=join(relea
  return server;
 }
 
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+// Releases are activated through a current/ symlink; compare real files.
+const entryPath=process.argv[1]?await realpath(resolve(process.argv[1])).catch(()=>null):null;
+if(entryPath&&entryPath===await realpath(fileURLToPath(import.meta.url))){
  try{
   const port=process.env.PORT===undefined?18731:Number(process.env.PORT);
   if(!Number.isInteger(port)||port<1024||port>65535)throw Error('PORT must be an unprivileged TCP port.');
