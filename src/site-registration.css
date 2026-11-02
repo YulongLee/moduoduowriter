@@ -1,0 +1,4 @@
+.site-registration { display:flex;flex:0 0 100%;align-items:center;justify-content:center;align-self:stretch;width:100%;min-width:0;margin:0;padding:4px 0;text-align:center;font-family:var(--sans,system-ui,sans-serif);font-size:12px;font-weight:400;line-height:1.8; }
+.site-registration>a { display:inline-flex;align-items:center;justify-content:center;min-height:28px;max-width:100%;padding:2px 4px;color:#596B62;text-decoration:none;overflow-wrap:anywhere; }
+.site-registration>a:hover { color:#245F4B;text-decoration:underline;text-underline-offset:3px; }
+.site-registration>a:focus-visible { outline:2px solid #245F4B;outline-offset:3px;border-radius:3px; }

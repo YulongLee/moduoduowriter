@@ -63,7 +63,14 @@ try{
  const publicWrapper=()=>renderer.root.findAll(node=>node.props['data-public-home']===true||node.props['data-public-home']==='true')[0];
  const publicMain=()=>renderer.root.findByProps({'aria-label':'公共首页'});
  const conversationSections=()=>renderer.root.findAll(node=>node.type==='section'&&node.props['aria-label']==='创作对话');
+ const assertRegistration=footer=>{
+  const links=footer.findAllByType('a').filter(node=>node.props.href==='https://beian.miit.gov.cn/');
+  assert.equal(links.length,1,'The visible footer must expose one official ICP query link');
+  assert.equal(text(links[0]),'浙ICP备2026052190号-6','Keep the exact website registration number and suffix');
+  assert.equal(links[0].props.target,'_blank');assert.match(links[0].props.rel,/noopener/);assert.match(links[0].props.rel,/noreferrer/);
+ };
  const assertUniqueNavigationIds=()=>{
+  assertRegistration(renderer.root.findByProps({className:'page-footer'}));
   const ids=renderer.root.findAll(node=>typeof node.type==='string'&&node.props.id).map(node=>node.props.id);
   assert.equal(new Set(ids).size,ids.length,'The landing and private workbench must not duplicate native DOM ids');
   assert.equal(renderer.root.findAll(node=>node.type==='aside').length,1,'Only the private workbench can mount a sidebar');
@@ -78,6 +85,7 @@ try{
  const assertPublic=label=>{
   assert.ok(publicWrapper(),`${label}: public shell should exist`);assert.ok(!publicWrapper().props.hidden,`${label}: public shell should remain visible`);
   assert.equal(renderer.root.findAllByType('aside').length,0,`${label}: the public marketing page must not mount a sidebar`);
+  assertRegistration(publicMain().findByProps({className:'public-landing-footer'}));
   assert.ok(publicMain().findAllByType('h1').length,`${label}: the public entry must keep its main heading`);
   assert.deepEqual(calls.filter(call=>call.url!=='/api/auth/status'),[],`${label}: homepage must only read account status`);
   assert.deepEqual(privateCalls(),[],`${label}: homepage must not initialize private providers`);

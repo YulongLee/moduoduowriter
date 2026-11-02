@@ -52,6 +52,7 @@ try{
   await mount({route});assertNoWorkspace(route+' guest');assert.deepEqual(calls.map(call=>call.url),['/api/auth/status']);assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length,'password login is reachable for backend guests');
   await mount({route,auth:account('author')});assertNoWorkspace(route+' author');assert.deepEqual(calls.map(call=>call.url),['/api/auth/status']);assert.ok(text(renderer.root).includes('没有后台权限'));
   await mount({route,auth:account('admin')});assertNoWorkspace(route+' administrator');assert.ok(renderer.root.findAllByProps({'data-admin-console':'true'}).length);
+  const registration=renderer.root.findByProps({className:'admin-footer'}).findAllByType('a').filter(node=>node.props.href==='https://beian.miit.gov.cn/');assert.equal(registration.length,1);assert.equal(text(registration[0]),'浙ICP备2026052190号-6');
   const expected=route==='#service-admin'?'/api/settings':route==='#admin/users'?'/api/admin/users?page=1&pageSize=20':'/api/admin/overview';assert.ok(calls.some(call=>call.url===expected),route+': expected safe administrator endpoint');
  }
  console.log('PASS full App admin routes and legacy service-admin alias isolate guest/author/admin views from workspace providers, cached manuscripts and billing');
