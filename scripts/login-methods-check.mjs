@@ -11,8 +11,8 @@ globalThis.window={addEventListener(){},removeEventListener(){}};
 globalThis.document={getElementById(){return null;}};
 globalThis.localStorage={getItem(){return null;},setItem(){}};
 const user={id:'fixture-author',username:'fixture-author',hasPassword:false},calls=[];
-let renderer,refreshes=0,successes=0,hold=null,holdPath='',wechatStatus='waiting',failedMethods=false,disabled=false,wrongBind=false;
-const methods=()=>({ownerConfigured:true,...Object.fromEntries(['phone','email','wechat'].map(key=>[key,{enabled:!disabled,available:!disabled,reason:'此登录方式尚未开通，请先使用账号密码登录。'}]))});
+let renderer,refreshes=0,successes=0,hold=null,holdPath='',wechatStatus='waiting',failedMethods=false,disabled=false,wrongBind=false,availableChannels=null;
+const methods=()=>({ownerConfigured:true,...Object.fromEntries(['phone','email','wechat'].map(key=>[key,{enabled:!disabled&&(!availableChannels||availableChannels.includes(key)),available:!disabled&&(!availableChannels||availableChannels.includes(key)),reason:'后台 AccessKey 或 SMTP 配置尚未完成。'}]))});
 const qr=()=>({requestId:'fixture-wechat-0001',pollToken:'fixture-poll-token',authorizationUrl:'https://open.weixin.qq.com/connect/qrconnect?appid=fixture-app&state=fixture-state',openUrl:'https://open.weixin.qq.com/connect/qrconnect?appid=fixture-app&state=fixture-state&self_redirect=false',expiresAt:new Date(Date.now()+300000).toISOString()});
 const reply=(url,body)=>{
  if(url==='/api/auth/methods')return failedMethods?Response.json({error:'登录方式暂不可用'},{status:503}):Response.json(methods());
@@ -43,18 +43,19 @@ try{
  const tab=label=>renderer.root.findAllByProps({role:'tab'}).find(node=>text(node).includes(label));
  const submit=async()=>{await act(async()=>{await renderer.root.findByType('form').props.onSubmit({preventDefault(){}});});};
  const unmount=async()=>{if(renderer)await act(async()=>renderer.unmount());renderer=null;};
- const mount=async props=>{await unmount();calls.length=0;refreshes=0;successes=0;hold=null;holdPath='';failedMethods=false;disabled=false;wrongBind=false;wechatStatus='waiting';await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account,onSuccess:()=>successes++,renderLegacy:()=>React.createElement('p',null,'legacy-credentials'),...props}));});};
+ const mount=async props=>{await unmount();calls.length=0;refreshes=0;successes=0;hold=null;holdPath='';failedMethods=false;disabled=false;wrongBind=false;availableChannels=null;wechatStatus='waiting';await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account,onSuccess:()=>successes++,renderLegacy:()=>React.createElement('p',null,'legacy-credentials'),...props}));});};
 
  await mount();assert.equal(calls.filter(call=>call.url==='/api/auth/methods').length,1);assert.equal(calls.length,1);assert.equal(renderer.root.findAllByType('iframe').length,0);
  await fill('登录手机号','bad');await click(byLabel('获取登录验证码'));assert.equal(calls.length,1);assert.ok(text(renderer.root).includes('有效的中国大陆手机号'));
  await fill('登录手机号','138 0013 8000');
  const send=byLabel('获取登录验证码');await act(async()=>{await Promise.all([send.props.onClick(),send.props.onClick()]);});
  assert.equal(calls.filter(call=>call.url==='/api/auth/code/send').length,1,'A repeated click must not send two codes');assert.equal(calls.at(-1).body.target,'+8613800138000');assert.equal(byLabel('获取登录验证码').props.disabled,true);
+ assert.ok(text(renderer.root).includes('+86 138 **** 8000'));assert.ok(text(renderer.root).includes('分钟内有效'));assert.ok(!text(renderer.root.findByProps({className:'login-delivery'})).includes('13800138000'));
  await fill('登录验证码','123456');const form=renderer.root.findByType('form');await act(async()=>{await Promise.all([form.props.onSubmit({preventDefault(){}}),form.props.onSubmit({preventDefault(){}})]);});
  assert.equal(calls.filter(call=>call.url==='/api/auth/code/login').length,1);assert.equal(successes,1);assert.equal(refreshes,1);
  console.log('PASS phone normalization, local validation, server countdown, duplicate guards and single confirmed-session handoff');
 
- await mount();await click(tab('邮箱'));await fill('登录邮箱','  Author@Example.com  ');await click(byLabel('获取登录验证码'));assert.equal(calls.at(-1).body.target,'author@example.com');
+ await mount();await click(tab('邮箱'));await fill('登录邮箱','  Author@Example.com  ');await click(byLabel('获取登录验证码'));assert.equal(calls.at(-1).body.target,'author@example.com');assert.ok(text(renderer.root.findByProps({className:'login-delivery'})).includes('au***@example.com'));
  await fill('登录验证码','123456');await fill('登录邮箱','new@example.com');assert.equal(byLabel('登录验证码').props.value,'');await submit();assert.equal(calls.filter(call=>call.url==='/api/auth/code/login').length,0);assert.ok(text(renderer.root).includes('先获取当前账号'));
  holdPath='/api/auth/code/send';let pending;await act(async()=>{pending=byLabel('获取登录验证码').props.onClick();await Promise.resolve();});assert.equal(typeof hold,'function');await click(tab('手机号'));const oldSignal=calls.at(-1).signal;hold();await act(async()=>pending);assert.equal(oldSignal.aborted,true);assert.equal(byLabel('登录手机号').props.value,'');assert.ok(!text(renderer.root).includes('验证码已发送'));
  console.log('PASS email normalization, changed-recipient invalidation and abandoned send responses cannot restore a stale challenge');
@@ -66,6 +67,11 @@ try{
  assert.equal(calls.filter(call=>call.url==='/api/auth/wechat/consume').length,1);assert.equal(successes,1);assert.equal(refreshes,1);
  console.log('PASS official WeChat iframe, new-window fallback, POST-only status tokens and one-time approval consumption');
 
+ await mount();await click(tab('微信扫码'));await click(byLabel('获取微信登录二维码'));wechatStatus='failed';await click(byLabel('检查微信扫码状态'));
+ assert.equal(renderer.root.findAllByType('iframe').length,0,'A terminal failed authorization cannot keep displaying an unusable QR iframe');assert.ok(text(renderer.root).includes('本次授权未完成'));assert.equal(renderer.root.findAllByProps({'aria-label':'检查微信扫码状态'}).length,0);assert.equal(renderer.root.findAllByType('a').length,0);assert.equal(calls.filter(call=>call.url==='/api/auth/wechat/consume').length,0);
+ wechatStatus='waiting';await click(byLabel('重新获取微信二维码'));assert.equal(renderer.root.findAllByType('iframe').length,1);assert.equal(calls.filter(call=>call.url==='/api/auth/wechat/start').length,2);
+ console.log('PASS failed WeChat authorization removes the old QR and offers an explicit fresh authorization');
+
  await mount();await click(tab('微信扫码'));await click(byLabel('获取微信登录二维码'));holdPath='/api/auth/wechat/status';wechatStatus='approved';
  await act(async()=>{pending=byLabel('检查微信扫码状态').props.onClick();await Promise.resolve();});await click(tab('邮箱'));hold();await act(async()=>pending);
  assert.equal(calls.filter(call=>call.url==='/api/auth/wechat/consume').length,0);assert.equal(calls.filter(call=>call.url==='/api/auth/wechat/cancel').length,1);assert.equal(refreshes,0);assert.equal(successes,0);
@@ -76,7 +82,11 @@ try{
  await mount({purpose:'bind'});wrongBind=true;await fill('登录手机号','13800138000');await click(byLabel('获取登录验证码'));await fill('登录验证码','123456');await submit();assert.equal(successes,0);assert.equal(refreshes,0);assert.ok(text(renderer.root).includes('绑定结果尚未确认'));
  console.log('PASS explicit identity-binding paths preserve the current account and reject a mismatched binding result');
 
- await unmount();disabled=true;calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account,renderLegacy:()=>React.createElement('p',null,'legacy-credentials')}));});assert.equal(renderer.root.findAllByType('iframe').length,0);assert.equal(renderer.root.findAllByProps({'aria-label':'获取登录验证码'}).length,0);await click(byLabel('账号密码登录'));assert.ok(text(renderer.root).includes('legacy-credentials'));await click(byLabel('返回其他登录方式'));assert.ok(text(renderer.root).includes('尚未开通'));
+ await unmount();disabled=true;calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account,renderLegacy:()=>React.createElement('p',null,'legacy-credentials')}));});assert.equal(renderer.root.findAllByType('iframe').length,0);assert.equal(renderer.root.findAllByProps({'aria-label':'获取登录验证码'}).length,0);assert.equal(renderer.root.findAllByProps({role:'tab'}).length,3);assert.equal(tab('手机号').props['aria-selected'],true);assert.ok(!text(renderer.root).includes('AccessKey'));assert.ok(!text(renderer.root).includes('SMTP'));await click(byLabel('账号密码登录'));assert.ok(text(renderer.root).includes('legacy-credentials'));await click(byLabel('返回其他登录方式'));assert.ok(text(renderer.root).includes('暂未开放'));
+ await unmount();disabled=false;availableChannels=['email'];calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account}));});assert.equal(tab('邮箱').props['aria-selected'],true);assert.ok(byLabel('登录邮箱'));assert.equal(calls.length,1,'Choosing a working default cannot automatically send a code');
+ await unmount();availableChannels=['wechat'];calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account}));});assert.equal(tab('微信扫码').props['aria-selected'],true);assert.equal(renderer.root.findAllByType('iframe').length,0);assert.ok(byLabel('获取微信登录二维码'));assert.equal(calls.length,1,'Choosing WeChat cannot start an authorization automatically');
+ await unmount();availableChannels=['email'];holdPath='/api/auth/methods';calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account}));});await click(tab('微信扫码'));hold();await act(async()=>{await Promise.resolve();});assert.equal(tab('微信扫码').props['aria-selected'],true,'A late methods response must preserve an explicit tab selection');assert.ok(text(renderer.root).includes('暂未开放'));holdPath='';availableChannels=null;
+ console.log('PASS working login methods become the initial selection, explicit selection is preserved and unavailable states hide infrastructure details');
  await unmount();failedMethods=true;disabled=false;await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginMethods,{account,renderLegacy:()=>React.createElement('p',null,'legacy-credentials')}));});await click(byLabel('账号密码登录'));assert.ok(text(renderer.root).includes('legacy-credentials'));
  await unmount();calls.length=0;await act(async()=>{renderer=TestRenderer.create(React.createElement(AccountContext.Provider,{value:{...account,configured:false,user:null,spaceId:'local'}},React.createElement(AccountForm,{modern:true})));});assert.ok(text(renderer.root).includes('设置首个创作账号'));assert.equal(calls.length,0);
  await unmount();await act(async()=>{renderer=TestRenderer.create(React.createElement(AccountContext.Provider,{value:account},React.createElement(AccountForm,{loginOnly:true})));});assert.ok(renderer.root.findByProps({'aria-label':'创作账号'}));assert.equal(calls.length,0);

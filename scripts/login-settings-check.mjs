@@ -30,6 +30,7 @@ globalThis.fetch=async(url,options={})=>{
  }
  if(url==='/api/auth/settings'&&method==='PUT'){
   if(saveBehavior==='failure')return Response.json({error:'配置保存未完成'},{status:503});
+  if(saveBehavior==='validation')return Response.json({error:'请核对填写的服务资料'},{status:400});
   settings=validateAuthConfig(body,settings);
   return Response.json(saveBehavior==='malformed'?{phone:{},email:{},wechat:{}}:publicAuthConfig(settings));
  }
@@ -54,7 +55,7 @@ try{
  const fill=async(label,value)=>{await act(async()=>byLabel(label).props.onChange({target:{value}}));};
  const checkByText=async(label,checked=true)=>{const node=renderer.root.findAllByType('label').find(node=>text(node)===label);assert.ok(node,'Expected explicit clear option');await act(async()=>node.findByType('input').props.onChange({target:{checked}}));};
  const unmount=async()=>{if(renderer)await act(async()=>renderer.unmount());renderer=null;};
- const mountSettings=async mode=>{await unmount();behavior=mode;saveBehavior='ready';calls.length=0;settings=fixture();await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginServiceSettings));});};
+ const mountSettings=async(mode,props={})=>{await unmount();behavior=mode;saveBehavior='ready';calls.length=0;settings=fixture();await act(async()=>{renderer=TestRenderer.create(React.createElement(LoginServiceSettings,props));});};
 
  for(const mode of ['failure','missing','wrong-type','secret-leak']){
   await mountSettings(mode);assert.equal(button('保存登录配置').props.disabled,true,mode+' must not enable saving');assert.ok(renderer.root.findAllByType('fieldset').every(node=>node.props.disabled));
@@ -82,6 +83,36 @@ try{
  behavior='failure';await click(button('重新载入登录配置'));assert.equal(button('保存登录配置').props.disabled,true);const before=calls.filter(call=>call.method==='PUT').length;await click(button('保存登录配置'));assert.equal(calls.filter(call=>call.method==='PUT').length,before);
  behavior='ready';await click(button('重新载入登录配置'));assert.equal(button('保存登录配置').props.disabled,false);saveBehavior='malformed';await click(button('保存登录配置'));assert.ok(!text(renderer.root).includes('登录配置已保存。'));assert.ok(text(renderer.root).includes('登录配置保存结果无法确认'));
  console.log('PASS reload failures revoke readiness and malformed save acknowledgements cannot claim configuration success');
+
+ await mountSettings('ready',{siteOrigin:'https://writer.example.com'});
+ assert.ok(text(byLabel('手机号登录配置状态')).includes('已启用'));
+ assert.ok(text(byLabel('微信扫码登录配置状态')).includes('待启用'));
+ await act(async()=>byLabel('启用微信扫码登录').props.onChange({target:{checked:true}}));
+ assert.ok(text(renderer.root).includes('有未保存的修改'));
+ assert.ok(text(byLabel('微信扫码登录配置状态')).includes('待启用'),'Draft switches cannot claim a saved channel is open');
+ await click(button('保存登录配置'));assert.equal(settings.wechat.enabled,true);
+ assert.ok(text(byLabel('微信扫码登录配置状态')).includes('已启用'));
+ await fill('微信授权回调地址','https://another.example.com/api/auth/wechat/callback');
+ assert.ok(text(byLabel('微信扫码登录配置状态')).includes('已启用'),'The status snapshot must describe the last save');
+ await click(button('保存登录配置'));assert.ok(text(byLabel('微信扫码登录配置状态')).includes('回调域名不匹配'));
+ const saves=calls.filter(call=>call.method==='PUT').length;
+ await click(byLabel('使用本站微信回调地址'));
+ assert.equal(byLabel('微信授权回调地址').props.value,'https://writer.example.com/api/auth/wechat/callback');
+ assert.equal(calls.filter(call=>call.method==='PUT').length,saves,'Filling the current callback must not save or start OAuth');
+ await click(button('保存登录配置'));assert.ok(text(byLabel('微信扫码登录配置状态')).includes('已启用'));
+ await checkByText('清除已保存的 SMTP 密码');await click(button('保存登录配置'));
+ assert.ok(text(byLabel('邮箱登录配置状态')).includes('配置不完整'));
+ assert.ok(text(byLabel('邮箱登录配置状态')).includes('SMTP 授权码'));
+ assert.ok(calls.every(call=>call.url==='/api/auth/settings'),'Setup guidance and status changes never contact delivery/OAuth endpoints');
+ saveBehavior='validation';await fill('发件名称','待修正的发件名称');await click(button('保存登录配置'));
+ assert.equal(button('保存登录配置').props.disabled,false,'Validation errors must allow correction without discarding draft credentials');
+ assert.equal(byLabel('发件名称').props.value,'待修正的发件名称');
+ saveBehavior='malformed';await click(button('保存登录配置'));
+ assert.equal(button('保存登录配置').props.disabled,true);
+ assert.ok(text(byLabel('微信扫码登录配置状态')).includes('状态未确认'));
+ await mountSettings('ready',{siteOrigin:'http://127.0.0.1:5173'});
+ assert.equal(renderer.root.findAllByProps({'aria-label':'使用本站微信回调地址'}).length,0,'Local HTTP cannot be suggested as a real callback');
+ console.log('PASS saved configuration status, unsaved switch isolation, callback-domain diagnosis and explicit secret clearing without fake activation or delivery');
 
  await unmount();behavior='ready';saveBehavior='ready';calls.length=0;refreshUser='alice';refreshes=0;identities=[{id:'fixture-email',provider:'email',masked:'a***@example.com'}];
  const account={ready:true,configured:true,spaceId:'alice',user:user('alice'),refresh:async()=>{refreshes++;return {configured:true,spaceId:refreshUser,user:user(refreshUser)};}};

@@ -28,6 +28,26 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
   return auth.user.id;
  };
  const callbackResponse=(res,ok)=>{res.writeHead(ok?200:400,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'self'"});res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>墨多多微信登录</title><body style="font-family:system-ui;padding:32px;color:#245f4b"><h2>${ok?'微信身份已确认':'微信登录未完成'}</h2><p>${ok?'请回到墨多多页面继续，当前窗口可以关闭。':'请回到打开二维码的浏览器重试；也可使用新窗口微信登录。'}</p></body></html>`);};
+ const callbackBridge=res=>{
+  // Lax cookies are absent on a cross-site iframe navigation. Once this first-
+  // party document has loaded, its same-origin POST can prove the browser nonce.
+  // OAuth parameters are read from location, never interpolated into executable HTML.
+  const nonce=randomBytes(24).toString('base64url');
+  res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Frame-Options':'SAMEORIGIN','Content-Security-Policy':`default-src 'none'; base-uri 'none'; form-action 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'self'; frame-ancestors 'self'`});
+  res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>墨多多微信登录</title><body style="font-family:system-ui;padding:32px;color:#245f4b"><h2 id="status">正在安全确认微信登录</h2><p id="detail">请稍候，身份确认后会自动返回创作页面。</p><noscript>请回到墨多多页面，使用新窗口微信登录。</noscript><script nonce="${nonce}">
+  (async()=>{
+   const params=new URLSearchParams(location.search),input={state:params.get('state'),code:params.get('code')};
+   try{history.replaceState(null,'',location.pathname);}catch{}
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+   try{
+    const response=await fetch('${callbackPath}',{method:'POST',credentials:'same-origin',redirect:'error',headers:{'Content-Type':'application/json','X-Mdd-Client':'workspace-v1'},body:JSON.stringify(input),signal:controller.signal});
+    if(!response.ok||(await response.json()).ok!==true)throw Error('unconfirmed');
+    document.getElementById('status').textContent='微信身份已确认';document.getElementById('detail').textContent='请回到墨多多页面继续，当前窗口可以关闭。';
+   }catch{document.getElementById('status').textContent='微信登录未完成';document.getElementById('detail').textContent='请回到打开二维码的浏览器重试；也可使用新窗口微信登录。';}
+   finally{clearTimeout(timer);}
+  })();
+  </script></body></html>`);
+ };
  return {
   async handle(req,res,{url,origin,secure=false,requester=req.socket?.remoteAddress||'local'}) {
    const path=url.pathname;
@@ -42,13 +62,17 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
    if(path==='/api/auth/identities'&&req.method==='GET'){const userId=authenticated(req,auth);sendJSON(res,200,{identities:database().identities(userId)});return true;}
    const config=await load(),methods=status(config,auth,origin);
    if(path==='/api/auth/methods'&&req.method==='GET'){sendJSON(res,200,methods);return true;}
-   if(path===callbackPath&&req.method==='GET'){
+   if(path===callbackPath&&['GET','POST'].includes(req.method)){
     let claim;
     try{
-     assertAvailable(methods,'wechat');claim=getFlows().claimCallback({state:url.searchParams.get('state'),browserToken:cookieValue(req,'mdd_login_browser'),appId:config.wechat.appId});
-     const code=url.searchParams.get('code');if(typeof code!=='string'||!code||code.length>1000)throw fail('微信授权已取消。');
-     const identity=await providers.exchangeWechatCode(config,code);getFlows().approve(claim.id,identity);callbackResponse(res,true);
-    }catch{if(claim)getFlows().fail(claim.id);callbackResponse(res,false);}return true;
+     assertAvailable(methods,'wechat');
+     const input=req.method==='GET'?{state:url.searchParams.get('state'),code:url.searchParams.get('code')}:await readBody(req,2000),browserToken=cookieValue(req,'mdd_login_browser');
+     if(req.method==='GET'&&!nonceValid(browserToken)&&typeof input?.state==='string'&&/^[A-Za-z0-9_-]{16,128}$/.test(input.state)){callbackBridge(res);return true;}
+     claim=getFlows().claimCallback({state:input?.state,browserToken,appId:config.wechat.appId});
+     const code=input?.code;if(typeof code!=='string'||!code||code.length>1000)throw fail('微信授权已取消。');
+     const identity=await providers.exchangeWechatCode(config,code);getFlows().approve(claim.id,identity);
+     if(req.method==='POST')sendJSON(res,200,{ok:true});else callbackResponse(res,true);
+    }catch{if(claim)getFlows().fail(claim.id);if(req.method==='POST')sendJSON(res,400,{ok:false,error:'微信登录未完成，请回到打开二维码的浏览器重试。'});else callbackResponse(res,false);}return true;
    }
    if(req.method!=='POST')throw fail('不支持的请求方式。',405);
    const body=await readBody(req,5000);
