@@ -1,0 +1,19 @@
+{
+  "release": "6181fc89d8ac489fbfe6cf8a9bba7a7dd2ea244d",
+  "page": "https://moduoduowriter.com/#create",
+  "validation": {
+    "fullTestSuite": "passed",
+    "finalCreationRegression": "passed",
+    "contrast": "Creation body, metadata, state chips and action text meet 4.5:1 on tested surfaces",
+    "publicPagesMatchingBuild": 14,
+    "assetsMatchingBuild": 2,
+    "anonymousPrivateDataStatus": 401,
+    "health": 200,
+    "templateImagesMatchingBuild": true,
+    "otherServicesUnchanged": true,
+    "nginxConfigurationUnchanged": true,
+    "authenticationConfigurationUnchanged": true,
+    "zeroPaidGenerationOrCodeDeliveryDuringTests": true
+  },
+  "visualVerification": "Not completed: saved browser permission blocks local preview; component/API checks do not substitute for visual inspection."
+}
