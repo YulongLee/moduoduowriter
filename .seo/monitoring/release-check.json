@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-11-03T10:12:53.158Z",
+  "runtimeRevision": "99f3e74d43c0d8b56c9be69c9fd29a23bd9fb111",
+  "publicPages": [
+    {
+      "path": "/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/ai-novel-writing/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-outline/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/character-design/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/text-polish/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/getting-started/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/about/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "h1Count": 1,
+      "canonical": true,
+      "csp": true
+    }
+  ],
+  "discoveryFilesReachable": true,
+  "builtAssetsExactMatch": true,
+  "canonicalRedirects": [
+    {
+      "path": "/about",
+      "status": 308,
+      "location": "/about/"
+    },
+    {
+      "path": "/about/index.html",
+      "status": 308,
+      "location": "/about/"
+    },
+    {
+      "path": "/index.html",
+      "status": 308,
+      "location": "/"
+    }
+  ],
+  "real404": true,
+  "privateDataRequiresLogin": true,
+  "phoneEmailAvailable": true,
+  "wechatUnavailable": true,
+  "isolation": {
+    "allServicesActive": true,
+    "otherChangedUnits": [],
+    "allVhostsUnchanged": true,
+    "accountStoreUnchanged": true
+  },
+  "indexNow": {
+    "status": "key-validation-pending",
+    "httpStatus": 202,
+    "urlCount": 7
+  },
+  "automatedTests": "npm test passed including SEO HTTP metadata hydration and IndexNow local checks",
+  "browserVisualAndCWV": "not measured",
+  "indexCoverageRankingAndAICitations": "unknown"
+}

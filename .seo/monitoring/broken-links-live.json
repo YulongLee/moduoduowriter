@@ -1,0 +1,18 @@
+{
+  "page_url": "https://moduoduowriter.com/",
+  "total_links": 6,
+  "checked": 6,
+  "broken": [],
+  "redirected": [],
+  "timeout": [],
+  "healthy": 6,
+  "summary": {
+    "total": 6,
+    "healthy": 6,
+    "broken": 0,
+    "redirected": 0,
+    "timeout": 0
+  },
+  "issues": [],
+  "error": null
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "userAgent": "Googlebot",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  },
+  {
+    "userAgent": "Baiduspider",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  },
+  {
+    "userAgent": "Bingbot",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  },
+  {
+    "userAgent": "OAI-SearchBot",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  },
+  {
+    "userAgent": "PerplexityBot",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  },
+  {
+    "userAgent": "Claude-SearchBot",
+    "status": 200,
+    "exactPublicBuildMatch": true
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "url": "https://moduoduowriter.com/",
+  "score": 100,
+  "https": true,
+  "headers_present": {
+    "HSTS (Strict-Transport-Security)": "max-age=604800",
+    "Content-Security-Policy (CSP)": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'sha256-JDqoQKggzI6DwOfMg4ZdsRY1dDd463vl2LsjO9C4Tl0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://open.weixin.qq.com; media-src 'self' blob:; worker-src 'self' blob:",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+  },
+  "headers_missing": {},
+  "header_values": {
+    "strict-transport-security": "max-age=604800",
+    "content-security-policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'sha256-JDqoQKggzI6DwOfMg4ZdsRY1dDd463vl2LsjO9C4Tl0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://open.weixin.qq.com; media-src 'self' blob:; worker-src 'self' blob:",
+    "x-frame-options": "SAMEORIGIN",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()"
+  },
+  "issues": [
+    "\u26a0\ufe0f HSTS max-age is 604800s \u2014 recommend at least 31536000 (1 year)",
+    "\u26a0\ufe0f HSTS missing includeSubDomains directive"
+  ],
+  "recommendations": [],
+  "error": null
+}

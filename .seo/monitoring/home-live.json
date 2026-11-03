@@ -1,0 +1,331 @@
+{
+  "title": "\u58a8\u591a\u591a\u5199\u4f5c\uff5cAI\u5c0f\u8bf4\u5199\u4f5c\u3001\u5c0f\u8bf4\u5927\u7eb2\u4e0e\u4eba\u7269\u8bbe\u5b9a",
+  "meta_description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+  "meta_robots": "index,follow,max-image-preview:large,max-snippet:-1",
+  "x_robots_tag": null,
+  "canonical": "https://moduoduowriter.com/",
+  "lang": "zh-CN",
+  "charset": "UTF-8",
+  "viewport": "width=device-width, initial-scale=1.0",
+  "favicon": "https://moduoduowriter.com/favicon.svg?v=3",
+  "h1": [
+    "\u4e00\u53e5\u8bdd\u7075\u611f\uff0c\u5199\u51fa\u4f60\u7684\u4e0b\u4e00\u90e8\u5c0f\u8bf4\u3002"
+  ],
+  "h2": [
+    "\u597d\u7684\u6545\u4e8b\uff0c\u6709\u4e00\u6b65\u6b65\u7684\u5f00\u59cb\u3002",
+    "\u4e0d\u6b62\u5e2e\u4f60\u5f00\u5934\uff0c\u66f4\u966a\u4f60\u628a\u6545\u4e8b\u5199\u4e0b\u53bb\u3002",
+    "\u5148\u770b\u770b\uff0c\u4e00\u4e2a\u6545\u4e8b\u5982\u4f55\u5f00\u59cb\u3002",
+    "\u628a\u7591\u95ee\u653e\u4e0b\uff0c\u628a\u6545\u4e8b\u5199\u4e0b\u3002",
+    "\u4f60\u7684\u6545\u4e8b\uff0c\u503c\u5f97\u6709\u4e00\u4e2a\u5f00\u59cb\u3002"
+  ],
+  "h3": [
+    "\u5199\u4e0b\u7075\u611f",
+    "\u642d\u5efa\u6545\u4e8b",
+    "\u843d\u7b14\u6210\u7bc7",
+    "\u6784\u601d\u4e0e\u89c4\u5212",
+    "\u6b63\u6587\u4e0e\u4fee\u6539"
+  ],
+  "h4": [],
+  "h5": [],
+  "h6": [],
+  "images": [
+    {
+      "src": "https://moduoduowriter.com/brand-mark.svg?v=3",
+      "alt": "",
+      "width": "36",
+      "height": "36",
+      "is_responsive_fill": false,
+      "loading": null
+    },
+    {
+      "src": "https://moduoduowriter.com/brand-mark.svg?v=3",
+      "alt": "",
+      "width": "36",
+      "height": "36",
+      "is_responsive_fill": false,
+      "loading": null
+    }
+  ],
+  "links": {
+    "internal": [
+      {
+        "href": "https://moduoduowriter.com/features/ai-novel-writing/",
+        "text": "AI \u5c0f\u8bf4\u5199\u4f5c",
+        "rel": []
+      },
+      {
+        "href": "https://moduoduowriter.com/features/novel-outline/",
+        "text": "\u5c0f\u8bf4\u5927\u7eb2\u89c4\u5212",
+        "rel": []
+      },
+      {
+        "href": "https://moduoduowriter.com/features/character-design/",
+        "text": "\u5c0f\u8bf4\u4eba\u7269\u8bbe\u5b9a",
+        "rel": []
+      },
+      {
+        "href": "https://moduoduowriter.com/features/text-polish/",
+        "text": "\u6b63\u6587\u6da6\u8272\u4e0e\u6539\u7a3f",
+        "rel": []
+      },
+      {
+        "href": "https://moduoduowriter.com/guides/getting-started/",
+        "text": "\u65b0\u624b\u5165\u95e8\u6307\u5357",
+        "rel": []
+      },
+      {
+        "href": "https://moduoduowriter.com/about/",
+        "text": "\u5173\u4e8e\u58a8\u591a\u591a",
+        "rel": []
+      }
+    ],
+    "external": [
+      {
+        "href": "https://beian.miit.gov.cn/",
+        "text": "\u6d59ICP\u59072026052190\u53f7-6",
+        "rel": [
+          "noopener",
+          "noreferrer"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "prev": null,
+    "next": null
+  },
+  "resource_hints": {
+    "preload": [
+      {
+        "href": "https://moduoduowriter.com/brand-mark.svg?v=3",
+        "as": "image",
+        "type": null,
+        "crossorigin": null
+      }
+    ],
+    "preconnect": [],
+    "dns-prefetch": [],
+    "prefetch": [],
+    "prerender": []
+  },
+  "schema": [
+    {
+      "@type": "Unknown",
+      "@types": [
+        "Unknown"
+      ],
+      "@id": null,
+      "@context": "https://schema.org",
+      "status": "active",
+      "note": "",
+      "has_context": true,
+      "has_type": false,
+      "from_graph": false,
+      "raw": {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://moduoduowriter.com/#organization",
+            "name": "\u58a8\u591a\u591a",
+            "alternateName": "\u58a8\u591a\u591a\u5199\u4f5c",
+            "url": "https://moduoduowriter.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://moduoduowriter.com/brand-mark.png",
+              "contentUrl": "https://moduoduowriter.com/brand-mark.png",
+              "width": 144,
+              "height": 144
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://moduoduowriter.com/#website",
+            "name": "\u58a8\u591a\u591a",
+            "alternateName": "\u58a8\u591a\u591a\u5199\u4f5c",
+            "url": "https://moduoduowriter.com/",
+            "inLanguage": "zh-CN",
+            "publisher": {
+              "@id": "https://moduoduowriter.com/#organization"
+            }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://moduoduowriter.com/#application",
+            "name": "\u58a8\u591a\u591a\u5199\u4f5c",
+            "url": "https://moduoduowriter.com/",
+            "description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+            "applicationCategory": "ProductivityApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "zh-CN",
+            "publisher": {
+              "@id": "https://moduoduowriter.com/#organization"
+            },
+            "featureList": [
+              "AI\u5c0f\u8bf4\u5199\u4f5c",
+              "\u6545\u4e8b\u7075\u611f\u751f\u6210",
+              "\u5c0f\u8bf4\u5927\u7eb2\u89c4\u5212",
+              "\u4eba\u7269\u8bbe\u5b9a",
+              "\u7ae0\u8282\u7eed\u5199",
+              "\u6587\u5b57\u6da6\u8272"
+            ]
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://moduoduowriter.com/#webpage",
+            "url": "https://moduoduowriter.com/",
+            "name": "\u58a8\u591a\u591a\u5199\u4f5c\uff5cAI\u5c0f\u8bf4\u5199\u4f5c\u3001\u5c0f\u8bf4\u5927\u7eb2\u4e0e\u4eba\u7269\u8bbe\u5b9a",
+            "description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+            "inLanguage": "zh-CN",
+            "isPartOf": {
+              "@id": "https://moduoduowriter.com/#website"
+            },
+            "publisher": {
+              "@id": "https://moduoduowriter.com/#organization"
+            },
+            "mainEntity": {
+              "@id": "https://moduoduowriter.com/#application"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "Organization",
+      "@types": [
+        "Organization"
+      ],
+      "@id": "https://moduoduowriter.com/#organization",
+      "@context": "https://schema.org",
+      "status": "active",
+      "note": "",
+      "has_context": true,
+      "has_type": true,
+      "from_graph": true,
+      "raw": {
+        "@type": "Organization",
+        "@id": "https://moduoduowriter.com/#organization",
+        "name": "\u58a8\u591a\u591a",
+        "alternateName": "\u58a8\u591a\u591a\u5199\u4f5c",
+        "url": "https://moduoduowriter.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://moduoduowriter.com/brand-mark.png",
+          "contentUrl": "https://moduoduowriter.com/brand-mark.png",
+          "width": 144,
+          "height": 144
+        }
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@types": [
+        "WebSite"
+      ],
+      "@id": "https://moduoduowriter.com/#website",
+      "@context": "https://schema.org",
+      "status": "active",
+      "note": "",
+      "has_context": true,
+      "has_type": true,
+      "from_graph": true,
+      "raw": {
+        "@type": "WebSite",
+        "@id": "https://moduoduowriter.com/#website",
+        "name": "\u58a8\u591a\u591a",
+        "alternateName": "\u58a8\u591a\u591a\u5199\u4f5c",
+        "url": "https://moduoduowriter.com/",
+        "inLanguage": "zh-CN",
+        "publisher": {
+          "@id": "https://moduoduowriter.com/#organization"
+        }
+      }
+    },
+    {
+      "@type": "WebApplication",
+      "@types": [
+        "WebApplication"
+      ],
+      "@id": "https://moduoduowriter.com/#application",
+      "@context": "https://schema.org",
+      "status": "active",
+      "note": "",
+      "has_context": true,
+      "has_type": true,
+      "from_graph": true,
+      "raw": {
+        "@type": "WebApplication",
+        "@id": "https://moduoduowriter.com/#application",
+        "name": "\u58a8\u591a\u591a\u5199\u4f5c",
+        "url": "https://moduoduowriter.com/",
+        "description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "zh-CN",
+        "publisher": {
+          "@id": "https://moduoduowriter.com/#organization"
+        },
+        "featureList": [
+          "AI\u5c0f\u8bf4\u5199\u4f5c",
+          "\u6545\u4e8b\u7075\u611f\u751f\u6210",
+          "\u5c0f\u8bf4\u5927\u7eb2\u89c4\u5212",
+          "\u4eba\u7269\u8bbe\u5b9a",
+          "\u7ae0\u8282\u7eed\u5199",
+          "\u6587\u5b57\u6da6\u8272"
+        ]
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@types": [
+        "WebPage"
+      ],
+      "@id": "https://moduoduowriter.com/#webpage",
+      "@context": "https://schema.org",
+      "status": "active",
+      "note": "",
+      "has_context": true,
+      "has_type": true,
+      "from_graph": true,
+      "raw": {
+        "@type": "WebPage",
+        "@id": "https://moduoduowriter.com/#webpage",
+        "url": "https://moduoduowriter.com/",
+        "name": "\u58a8\u591a\u591a\u5199\u4f5c\uff5cAI\u5c0f\u8bf4\u5199\u4f5c\u3001\u5c0f\u8bf4\u5927\u7eb2\u4e0e\u4eba\u7269\u8bbe\u5b9a",
+        "description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@id": "https://moduoduowriter.com/#website"
+        },
+        "publisher": {
+          "@id": "https://moduoduowriter.com/#organization"
+        },
+        "mainEntity": {
+          "@id": "https://moduoduowriter.com/#application"
+        }
+      }
+    }
+  ],
+  "open_graph": {
+    "og:type": "website",
+    "og:locale": "zh_CN",
+    "og:site_name": "\u58a8\u591a\u591a",
+    "og:title": "\u58a8\u591a\u591a\u5199\u4f5c\uff5cAI\u5c0f\u8bf4\u5199\u4f5c\u3001\u5c0f\u8bf4\u5927\u7eb2\u4e0e\u4eba\u7269\u8bbe\u5b9a",
+    "og:description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+    "og:url": "https://moduoduowriter.com/",
+    "og:image": "https://moduoduowriter.com/og-image.png",
+    "og:image:type": "image/png",
+    "og:image:width": "1200",
+    "og:image:height": "630",
+    "og:image:alt": "\u58a8\u591a\u591a\u5199\u4f5c\uff1aAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\uff0c\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u4e0e\u6587\u5b57\u6da6\u8272"
+  },
+  "twitter_card": {
+    "twitter:card": "summary_large_image",
+    "twitter:title": "\u58a8\u591a\u591a\u5199\u4f5c\uff5cAI\u5c0f\u8bf4\u5199\u4f5c\u3001\u5c0f\u8bf4\u5927\u7eb2\u4e0e\u4eba\u7269\u8bbe\u5b9a",
+    "twitter:description": "\u58a8\u591a\u591a\u662f\u4e00\u6b3eAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\u5de5\u5177\uff0c\u652f\u6301\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u3001\u7ae0\u8282\u7eed\u5199\u4e0e\u6587\u5b57\u6da6\u8272\uff0c\u5e2e\u52a9\u521b\u4f5c\u8005\u4ece\u60f3\u6cd5\u9010\u6b65\u5b8c\u6210\u4f5c\u54c1\u3002",
+    "twitter:image": "https://moduoduowriter.com/og-image.png",
+    "twitter:image:alt": "\u58a8\u591a\u591a\u5199\u4f5c\uff1aAI\u5c0f\u8bf4\u521b\u4f5c\u4e0e\u5185\u5bb9\u7f16\u8f91\uff0c\u6545\u4e8b\u7075\u611f\u3001\u5c0f\u8bf4\u5927\u7eb2\u3001\u4eba\u7269\u8bbe\u5b9a\u4e0e\u6587\u5b57\u6da6\u8272"
+  },
+  "word_count": 269,
+  "hreflang": []
+}

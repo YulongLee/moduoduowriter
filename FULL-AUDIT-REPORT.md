@@ -2,7 +2,7 @@
 
 ## A. 审计摘要
 
-范围：`full-site`，审计官网 https://moduoduowriter.com/ 与本次新增的 6 个公开产品说明页。日期：2026-11-03。技术基线已在生产构建及隔离 HTTP/DOM 环境验证；正式环境验收记录在上线后补充。本报告不以技术检查分数推断流量、排名、收录或 AI 引用。
+范围：`full-site`，审计官网 https://moduoduowriter.com/ 与本次新增的 6 个公开产品说明页。日期：2026-11-03。技术基线已在生产构建、隔离 HTTP/DOM 环境及正式 HTTPS 网站验证，并已部署上线。运行版本 `99f3e74d43c0d8b56c9be69c9fd29a23bd9fb111`。本报告不以技术检查分数推断流量、排名、收录或 AI 引用。
 
 修改前的主要问题是首屏 HTML 仅包含空的应用挂载点、没有站点地图，以及缺少规范地址和结构化产品信息。本次将实际公共页面预渲染为完整 HTML，补充 6 个独立说明页及相互链接，并保留账号文稿与后台的访问边界。
 
@@ -61,3 +61,18 @@
 - [Google：站点名称](https://developers.google.com/search/docs/appearance/site-names)、[组织结构化数据](https://developers.google.com/search/docs/appearance/structured-data/organization)。
 - [OpenAI 爬虫说明](https://developers.openai.com/api/docs/bots)、[Anthropic 爬虫说明](https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler)。
 - [Bing 站点地图](https://www.bing.com/webmasters/help/sitemaps-3b5cf6ed)、[IndexNow 协议与响应含义](https://www.indexnow.org/documentation)。
+
+## F. 正式环境验收
+
+2026-11-03 已部署并验证：
+
+- 首页与 6 页说明均为 HTTPS 200，正文、CSS、JS、分享图与本地构建逐字节一致。
+- robots、sitemap、llms 两文件、原品牌 PNG 和 IndexNow 校验文件可正常访问，文件类型正确。
+- 7 页自引用 canonical、逐页 JSON-LD CSP 哈希、规范 308 跳转及不存在地址的 404/noindex 通过。
+- Googlebot、Baiduspider、Bingbot、OAI-SearchBot、PerplexityBot、Claude-SearchBot 的请求均返回与普通页面相同的 HTML。这是 User-Agent 可访问性测试，不代表这些公司已经实际抓取或索引。
+- 线上内链脚本抓取 7 页、识别 43 条内链，无孤立候选页；首页 6 条公开内链无坏链、跳转或超时。
+- 手机号和邮箱方式可用、微信仍未开放；匿名私有数据请求 401，现有账号库校验值未改变。未发送测试短信或邮件。
+- 服务器上的其他服务均运行中，进程与 Nginx 配置校验值未改变。仅墨多多服务切换版本，未改系统 Node 或其他应用。
+- IndexNow 一次提交返回 **202**：已收到 7 个 URL，公开校验仍待处理；不能据此认定收录、排名或 AI 引用。
+
+线上证据在 `.seo/monitoring/*-live.json` 与 `release-check.json`。机器人规则检查器提示“未逐个声明 AI UA”，这是因为本次使用有效的单一通配组；不是禁止抓取。重定向工具将正常 HTTP→HTTPS 升级泛化标为 mixed protocol，实际无降级或循环。现有 HSTS 为 7 天，未擅自扩展子域策略；这不是本次搜索抓取的阻断项。中文内容未采用英文 Flesch 分数作为质量结论。

@@ -1,0 +1,62 @@
+{
+  "start_url": "https://moduoduowriter.com/",
+  "domain": "moduoduowriter.com",
+  "pages_crawled": 7,
+  "total_internal_links": 43,
+  "unique_pages_found": 7,
+  "max_depth_reached": 1,
+  "pages": {
+    "https://moduoduowriter.com/features/ai-novel-writing": {
+      "outgoing_links": 7,
+      "incoming_links": 7
+    },
+    "https://moduoduowriter.com/features/novel-outline": {
+      "outgoing_links": 5,
+      "incoming_links": 5
+    },
+    "https://moduoduowriter.com/guides/getting-started": {
+      "outgoing_links": 7,
+      "incoming_links": 7
+    },
+    "https://moduoduowriter.com/about": {
+      "outgoing_links": 7,
+      "incoming_links": 7
+    },
+    "https://moduoduowriter.com/": {
+      "outgoing_links": 6,
+      "incoming_links": 6
+    },
+    "https://moduoduowriter.com/features/character-design": {
+      "outgoing_links": 6,
+      "incoming_links": 6
+    },
+    "https://moduoduowriter.com/features/text-polish": {
+      "outgoing_links": 5,
+      "incoming_links": 5
+    }
+  },
+  "anchor_texts": {
+    "AI \u5c0f\u8bf4\u5199\u4f5c": 7,
+    "\u5173\u4e8e\u58a8\u591a\u591a": 6,
+    "\u58a8\u591a\u591a\u5199\u4f5c": 6,
+    "\u4f7f\u7528\u6307\u5357": 6,
+    "\u529f\u80fd\u8bf4\u660e \u00b7 \u4eba\u7269\u8bbe\u5b9a\u8ba9\u4eba\u7269\u6709\u81ea\u5df1\u7684\u7406\u7531\uff0c\u800c\u4e0d\u53ea\u662f\u4e00\u5f20\u6863\u6848\u7528\u58a8\u591a\u591a\u6574\u7406\u5c0f\u8bf4\u89d2\u8272\u7684\u76ee\u6807\u3001\u52a8\u673a\u3001\u7f3a\u70b9\u3001\u5173\u7cfb\u548c\u8bf4\u8bdd\u65b9\u5f0f\u3002\u63d0\u4f9b\u53ef\u7f16\u8f91\u4eba\u7269\u6863\u6848\u3001\u4eba\u7269\u51b2\u7a81\u793a\u4f8b\u53ca\u53ef\u590d\u5236\u7684\u8bbe\u5b9a": 5,
+    "\u529f\u80fd\u8bf4\u660e \u00b7 \u5c0f\u8bf4\u5927\u7eb2\u5148\u7406\u6e05\u6545\u4e8b\u4e3a\u4ec0\u4e48\u53d1\u751f\uff0c\u518d\u5b89\u6392\u6bcf\u4e00\u7ae0\u7528\u58a8\u591a\u591a\u628a\u6545\u4e8b\u6897\u6982\u62c6\u6210\u4e3b\u7ebf\u51b2\u7a81\u3001\u5173\u952e\u8f6c\u6298\u548c\u7ae0\u8282\u8ba1\u5212\u3002\u63d0\u4f9b\u5927\u7eb2\u68c0\u67e5\u6e05\u5355\u3001\u56e0\u679c\u7ed3\u6784\u793a\u4f8b\u4e0e\u53ef\u590d\u5236\u7684\u5c0f\u8bf4\u5927\u7eb2\u63d0\u793a": 4,
+    "\u529f\u80fd\u8bf4\u660e \u00b7 \u6587\u5b57\u6da6\u8272\u8ba9\u8868\u8fbe\u66f4\u51c6\u786e\uff0c\u8ba9\u4f60\u7684\u6587\u98ce\u7559\u4e0b\u6765\u4e86\u89e3\u5982\u4f55\u7528\u58a8\u591a\u591a\u6da6\u8272\u5c0f\u8bf4\u6bb5\u843d\uff0c\u6539\u5584\u53e5\u5b50\u3001\u5bf9\u8bdd\u548c\u573a\u666f\u8282\u594f\u3002\u63d0\u4f9b\u4fdd\u7559\u4e8b\u5b9e\u4e0e\u4f5c\u8005\u6587\u98ce\u7684\u63d0\u793a\u8bcd\uff0c\u4ee5\u53ca\u6da6\u8272\u524d\u540e\u5bf9\u7167\u793a\u4f8b": 4,
+    "\u5c0f\u8bf4\u5927\u7eb2\u89c4\u5212": 1,
+    "\u5c0f\u8bf4\u4eba\u7269\u8bbe\u5b9a": 1,
+    "\u6b63\u6587\u6da6\u8272\u4e0e\u6539\u7a3f": 1,
+    "\u65b0\u624b\u5165\u95e8\u6307\u5357": 1,
+    "\u5173\u4e8e\u4ea7\u54c1\u58a8\u591a\u591a\uff0c\u8ba9\u597d\u6545\u4e8b\u53d1\u751f\u8ba4\u8bc6\u58a8\u591a\u591a\u5199\u4f5c\uff1a\u4ee5\u4f5c\u8005\u7f16\u8f91\u4e0e\u786e\u8ba4\u4e3a\u4e2d\u5fc3\uff0c\u63d0\u4f9b\u5c0f\u8bf4\u7075\u611f\u3001\u5927\u7eb2\u3001\u4eba\u7269\u3001\u7eed\u5199\u3001\u6da6\u8272\u3001\u62c6\u4e66\u4e0e TXT \u6587\u7a3f\u7ba1\u7406\u3002\u4e86\u89e3\u5f53\u524d\u529f\u80fd\u4e0e\u4f7f\u7528\u8fb9\u754c\u3002\u2192": 1
+  },
+  "link_distribution": {
+    "min": 5,
+    "max": 7,
+    "avg": 6.1
+  },
+  "orphan_candidates": [],
+  "nofollow_links": [],
+  "issues": [],
+  "recommendations": [],
+  "error": null
+}
