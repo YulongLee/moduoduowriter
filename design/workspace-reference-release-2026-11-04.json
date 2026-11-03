@@ -1,0 +1,20 @@
+{
+  "release": "7ccbbc34527a6285d3a379e77bed3b7774b4882c",
+  "workspace": "https://moduoduowriter.com/#workspace",
+  "sourceRepository": "https://github.com/YulongLee/moduoduowriter",
+  "validation": {
+    "fullTestSuite": "passed",
+    "dashboardRegression": "passed",
+    "publicPagesMatchingBuild": 14,
+    "bundledAssetsMatchingBuild": 2,
+    "anonymousPrivateDataStatus": 401,
+    "phoneAndEmailAvailable": true,
+    "wechatDeferred": true,
+    "healthStatus": 200,
+    "originalLogoRetained": true,
+    "otherServicesUnchanged": true,
+    "nginxConfigurationUnchanged": true,
+    "authenticationConfigurationUnchanged": true
+  },
+  "visualVerification": "Not completed: saved browser permission denied local preview access. Component and HTTP verification do not substitute for visual inspection."
+}
