@@ -129,7 +129,7 @@ export function beginConversationTurn(session,{userText,request,requestId=reques
  validateConversationRequest(request,{userText:question,requestId,workId:session.workId});
  const createdAt=now(),turn={id:newId(),requestId,userText:question,assistantText:'',status:'sending',source:'',error:'',createdAt,updatedAt:createdAt,request:clone(request),usage:null};
  const turns=session.turns.map(previous=>{if(previous.request===undefined)return previous;const {request:discarded,...kept}=previous;return kept;});
- return touch(session,{title:session.turns.length?session.title:Array.from(question.replace(/\s+/g,' ')).slice(0,28).join(''),draft:'',turns:[...turns,turn]});
+ return touch(session,{title:session.turns.length||session.title!=='新的创作对话'?session.title:Array.from(question.replace(/\s+/g,' ')).slice(0,28).join(''),draft:'',turns:[...turns,turn]});
 }
 
 export function completeConversationTurn(session,turnId,result) {

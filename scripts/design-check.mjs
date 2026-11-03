@@ -129,3 +129,24 @@ for(const [label,foreground,background] of [
  assert.ok(ratio>=4.5,`${label}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
  console.log(`PASS ${label} ${ratio.toFixed(2)}:1`);
 }
+const studioCss=readFileSync(new URL('../src/studio-conversation.css',import.meta.url),'utf8')+'\n'+readFileSync(new URL('../src/studio-conversation-tools.css',import.meta.url),'utf8');
+const studioTokens=Object.fromEntries([...studioCss.match(/\.studio-conversation\s*\{([^}]+)\}/)[1].matchAll(/(--[\w-]+)\s*:\s*(#[\da-f]{6})\s*;/gi)].map(match=>[match[1],match[2]]));
+const studioColor=selector=>{
+ const values=[...studioCss.matchAll(/([^{}]+)\{([^{}]+)\}/g)].filter(match=>match[1].split(',').map(value=>value.trim()).includes(selector)).map(match=>match[2].match(/(?:^|;)\s*color\s*:\s*([^;]+)/)?.[1]?.trim()).filter(Boolean);
+ const value=values.at(-1),resolved=studioTokens[value?.match(/^var\((--[\w-]+)\)$/)?.[1]]||value;
+ assert.ok(resolved,`Missing studio contrast source: ${selector}`);
+ return /^#[\da-f]{3}$/i.test(resolved)?'#'+resolved.slice(1).split('').map(character=>character+character).join(''):resolved;
+};
+for(const [label,foreground,background] of [
+ ['对话正文',studioTokens['--studio-conversation-ink'],'#fcfdf9'],
+ ['对话辅助文字',studioTokens['--studio-conversation-muted'],'#f7f9f4'],
+ ['对话历史摘要',studioColor('.studio-conversation .studio-conversation-history-item small'),'#f7f9f4'],
+ ['用户消息',studioColor('.studio-conversation .home-chat-message.from-user p'),'#edf4e7'],
+ ['工具说明',studioColor('.studio-conversation .wc-studio-tool small'),'#ffffff'],
+ ['回复排版正文',studioColor('.studio-conversation .conversation-rich-text'),'#fcfdf9'],
+ ['发送对话按钮',studioColor('.studio-conversation .studio-conversation-send'),'#245b40']
+]){
+ const ratio=contrast(foreground,background);
+ assert.ok(ratio>=4.5,`${label}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
+ console.log(`PASS ${label} ${ratio.toFixed(2)}:1`);
+}

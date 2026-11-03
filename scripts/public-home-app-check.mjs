@@ -63,7 +63,7 @@ try{
  };
  const publicWrapper=()=>renderer.root.findAll(node=>node.props['data-public-home']===true||node.props['data-public-home']==='true')[0];
  const publicMain=()=>renderer.root.findByProps({'aria-label':'公共首页'});
- const conversationSections=()=>renderer.root.findAll(node=>node.type==='section'&&node.props['aria-label']==='创作对话');
+ const conversationSections=()=>renderer.root.findAll(node=>node.type==='section'&&['创作对话','创作对话工作台'].includes(node.props['aria-label']));
  const assertRegistration=footer=>{
   const links=footer.findAllByType('a').filter(node=>node.props.href==='https://beian.miit.gov.cn/');
   assert.equal(links.length,1,'The visible footer must expose one official ICP query link');

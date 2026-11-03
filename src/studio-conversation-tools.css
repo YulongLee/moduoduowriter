@@ -1,0 +1,45 @@
+.commercial.private-workbench .main-content.conversation-content { display:flex;flex-direction:column;max-width:none;height:calc(100dvh - 68px);min-height:0;padding:0; }
+.commercial.private-workbench .conversation-content>.private-conversation-page { display:flex;flex:1;min-width:0;min-height:0; }
+.commercial.private-workbench .conversation-content>.page-footer { flex:none;gap:8px;margin:0;padding:6px 22px;border-top:1px solid #e4e9e1;font-size:11px;line-height:1.8; }
+.studio-conversation .wc-studio-toolbox [role="tablist"] { display:flex;gap:3px;padding:3px;margin:0 0 18px;border:1px solid #e8ece5;border-radius:8px;background:#f6f8f4; }
+.studio-conversation .wc-studio-toolbox [role="tab"] { flex:1;min-width:0;padding:7px 2px;border:0;border-radius:5px;color:#5e6d64;background:transparent;font-size:12px;line-height:1.6;white-space:nowrap; }
+.studio-conversation .wc-studio-toolbox [role="tab"][aria-selected="true"] { color:#fff;background:#245b42;box-shadow:0 2px 5px #173c2912; }
+.studio-conversation .wc-studio-toolbox [role="tabpanel"] { display:grid;gap:11px; }
+.studio-conversation .wc-studio-tool { display:flex;align-items:center;gap:10px;width:100%;min-height:77px;padding:13px 10px;border:1px solid #e5eae3;border-radius:10px;color:#263d30;background:#fff;text-align:left; }
+.studio-conversation .wc-studio-tool:hover:not(:disabled) { border-color:#abc5b3;background:#fbfdf9; }
+.studio-conversation .wc-studio-tool-icon { display:grid;place-items:center;flex:none;width:32px;height:34px;border-radius:8px;color:#2e7052;background:#eef5ef; }
+.studio-conversation .wc-studio-tool-polish .wc-studio-tool-icon,.studio-conversation .wc-studio-tool-title .wc-studio-tool-icon { color:#796097;background:#f5f0f9; }
+.studio-conversation .wc-studio-tool-ideas .wc-studio-tool-icon { color:#916b2d;background:#fcf5e8; }
+.studio-conversation .wc-studio-tool-review .wc-studio-tool-icon { color:#426f95;background:#eff5fa; }
+.studio-conversation .wc-studio-tool>span:nth-child(2) { flex:1;min-width:0; }
+.studio-conversation .wc-studio-tool strong { display:block;color:#24372b;font-size:14px;font-weight:600;line-height:1.6; }
+.studio-conversation .wc-studio-tool small { display:block;margin-top:4px;color:#637367;font-size:12px;line-height:1.7; }
+.studio-conversation .wc-studio-tool>svg { flex:none;color:#6b7a6f; }
+.studio-conversation .wc-studio-draft-confirm { padding:12px 14px;border:1px solid #d8e3d4;border-radius:8px;background:#f6faf2; }
+.studio-conversation .wc-studio-draft-confirm strong { color:#31533b;font-size:13px; }
+.studio-conversation .wc-studio-draft-confirm p { max-height:90px;margin:6px 0 10px;overflow-y:auto;color:#536b59;font-size:13px;line-height:1.7; }
+.studio-conversation .wc-studio-draft-confirm>div { display:flex;flex-wrap:wrap;gap:14px; }
+.studio-conversation .wc-studio-draft-confirm button { border:0;color:#2c5d3b;background:transparent;font-size:13px;font-weight:550; }
+.studio-conversation .conversation-rich-text { color:#25362d;font-size:16px;line-height:1.95;overflow-wrap:anywhere; }
+.studio-conversation .conversation-rich-text .conversation-rich-paragraph { margin:0 0 13px;color:inherit;font-size:inherit;line-height:inherit;white-space:normal; }
+.studio-conversation .conversation-rich-heading { margin:22px 0 11px;color:#203c2c;font-weight:650;line-height:1.6; }
+.studio-conversation .conversation-rich-heading:first-child { margin-top:0; }
+.studio-conversation .conversation-rich-heading-1 { font-size:23px; }
+.studio-conversation .conversation-rich-heading-2 { padding-bottom:9px;border-bottom:1px solid #e5ece2;font-size:20px; }
+.studio-conversation .conversation-rich-heading-3 { font-size:17px; }
+.studio-conversation .conversation-rich-heading-4 { font-size:15px; }
+.studio-conversation .conversation-rich-list { margin:9px 0 16px;padding-left:23px; }
+.studio-conversation .conversation-rich-list li { margin:5px 0; }
+.studio-conversation .conversation-rich-quote { margin:14px 0;padding:11px 16px;border-left:3px solid #6e9a7e;border-radius:0 7px 7px 0;background:#f2f7ef;color:#425c49; }
+.studio-conversation .conversation-rich-quote>p:last-child { margin-bottom:0; }
+.studio-conversation .conversation-rich-inline-code { padding:2px 5px;border:1px solid #e2e8de;border-radius:4px;background:#f3f6ef;color:#375b40;font-size:.9em; }
+.studio-conversation .conversation-rich-code-block { max-width:100%;margin:14px 0;padding:15px 17px;overflow:auto;border:1px solid #e0e7dd;border-radius:8px;background:#f5f7f2;color:#2f4a37;white-space:pre;font-size:13px;line-height:1.8; }
+.studio-conversation .conversation-rich-rule { height:1px;margin:23px 0;border:0;background:#e2e9df; }
+.studio-conversation .conversation-rich-table-wrap { max-width:100%;margin:15px 0;overflow-x:auto; }
+.studio-conversation .conversation-rich-table { width:100%;min-width:300px;border-collapse:collapse;font-size:13px;line-height:1.8; }
+.studio-conversation .conversation-rich-table th,.studio-conversation .conversation-rich-table td { padding:9px 11px;border:1px solid #dce5d8;text-align:left;vertical-align:top; }
+.studio-conversation .conversation-rich-table th { color:#2d5138;background:#f0f6ed;font-weight:600; }
+.studio-conversation .conversation-rich-table tr:nth-child(even) td { background:#fafcf8; }
+@media(min-width:1251px) { .studio-conversation .studio-conversation-header { min-height:76px;padding:12px 24px; }.studio-conversation .studio-conversation-heading>p { display:none; } }
+@media(max-width:1024px) { .commercial.private-workbench .main-content.conversation-content { height:calc(100dvh - 62px); } }
+@media(max-width:680px) { .commercial.private-workbench .main-content.conversation-content { height:calc(100dvh - 58px); }.commercial.private-workbench .conversation-content>.page-footer { justify-content:center;padding:4px 12px;font-size:11px; }.commercial.private-workbench .conversation-content .site-footer-summary { display:none; }.studio-conversation .conversation-rich-text { font-size:15px; }.studio-conversation .conversation-rich-heading-1 { font-size:21px; }.studio-conversation .conversation-rich-heading-2 { font-size:18px; } }

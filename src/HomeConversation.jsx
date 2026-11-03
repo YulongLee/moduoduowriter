@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useId,useRef,useState} from 'react';
-import {ArrowRight,BookOpen,ChevronDown,Copy,Download,LoaderCircle,Plus,Send,Sparkles,Trash2,WandSparkles,X} from 'lucide-react';
+import {ArrowRight,BookOpen,ChevronDown,ChevronRight,Copy,Download,Feather,Globe2,Lightbulb,ListTree,LoaderCircle,MessagesSquare,Plus,ScanText,Send,Sparkles,Trash2,Type,UsersRound,WandSparkles,X} from 'lucide-react';
 import {Brand} from './Art';
 import {requestApi,useGeneration} from './Generation';
 import {TaskMeter,useTaskMeter} from './Billing.jsx';
@@ -10,7 +10,11 @@ import {buildStoryContext} from './storyMemory.js';
 import {tools} from './data';
 import {buildConversationHistory,beginConversationTurn,completeConversationTurn,conversationText,createConversation,failConversationTurn,recoverConversations,restartConversationTurn,saveConversation,updateConversation} from './conversation.js';
 import {conversationExamples,conversationDemoReply} from './conversationExamples.js';
+import StudioConversationView from './StudioConversationView.jsx';
+import ConversationRichText from './ConversationRichText.jsx';
+import {groupConversations,renameConversation} from './conversationPresentation.mjs';
 import './home-conversation.css';
+import './studio-conversation-tools.css';
 
 const makeId=()=>globalThis.crypto?.randomUUID?.()||`chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
 const stamp=()=>new Date().toISOString();
@@ -24,7 +28,7 @@ const latestFor=(records,workId)=>records.filter(item=>item.workId===workId).sor
 const errorText=error=>error?.message||'本轮没有完成，请稍后恢复结果或重试。';
 const quoteForRequest=request=>quoteTask({taskId:'chat',model:request.mode,inputChars:JSON.stringify({prompt:request.prompt||'',context:request.context||{},previous:{}}).length,outputChars:Math.min(4000,Math.max(300,Number(request.target)||1000))});
 
-export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appearance='default',initialPrompt=''}) {
+export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appearance='default',initialPrompt='',navigate}) {
  const [records,setRecords,saveError]=useCollection('conversations',[]),generation=useGeneration();
  const recordsRef=useRef(records),setterRef=useRef(setRecords),generationRef=useRef(generation),alive=useRef(true),running=useRef(null),restoring=useRef(null),viewToken=useRef(0),draftTimer=useRef(null),draftPending=useRef(null),inputRef=useRef(null),logRef=useRef(null),heroControlsRef=useRef(null);
  recordsRef.current=records;setterRef.current=setRecords;generationRef.current=generation;
@@ -36,14 +40,17 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
  const session=records.find(item=>item.id===activeId)||scratch;
  const associated=available.find(item=>item.id===session.workId)||null;
  const orphan=Boolean(session.workId&&!associated);
+ const orphanRef=useRef(orphan);orphanRef.current=orphan;
  const [input,setInput]=useState(()=>seed||latestFor(records,initialWorkId)?.draft||''),[referenceIds,setReferenceIds]=useState(()=>seed?defaultReferences(work):latestFor(records,initialWorkId)?.referenceIds||defaultReferences(work));
  const [busy,setBusy]=useState(false),[cancelling,setCancelling]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[deleteConfirm,setDeleteConfirm]=useState(false),[persistenceError,setPersistenceError]=useState(false),[checkedTask,setCheckedTask]=useState(null);
+ const [renameOpen,setRenameOpen]=useState(false),[renameTitle,setRenameTitle]=useState(''),[toolboxTab,setToolboxTab]=useState('assist'),[pendingPrompt,setPendingPrompt]=useState(null);
  const inputValue=useRef(input),sessionRef=useRef(session);inputValue.current=input;sessionRef.current=session;
  const contextId=useId(),meterId=useId();
  const history=buildConversationHistory(session,{maxTurns:8,budget:16000});
  const chapter=associated?.chapters?.find(value=>value.id===associated.lastEditedChapterId)||associated?.chapters?.[0];
  const references=associated?buildStoryContext(associated,{chapterId:chapter?.id,referenceIds,budget:12000}):{context:{},inputChars:0,notice:''};
- const preparedContext={...references.context,...(session.workId?{workId:session.workId,title:associated?.title||'',genre:associated?.genre||'',kind:associated?.kind||'',...(chapter?{chapterId:chapter.id}:{})}:{}),history:history.history};
+ const workContext=session.workId?{workId:session.workId,title:associated?.title||'',genre:associated?.genre||'',kind:associated?.kind||'',...(associated?.styles?.length?{stylePreferences:associated.styles}:{}),...(chapter?{chapterId:chapter.id}:{})}:{};
+ const preparedContext={...references.context,...workContext,history:history.history};
  const inputChars=JSON.stringify({prompt:input.trim(),context:preparedContext,previous:{}}).length;
  const meter=useTaskMeter('chat',{inputChars,outputChars:1000});
  const frozenRequest=running.current?.request||session.turns.find(turn=>turn.requestId===checkedTask?.requestId)?.request;
@@ -80,6 +87,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   const next=item||createConversation({workId:newWorkId||'',referenceIds:defaultReferences(selectedWork)});
   if(!item)setScratch(next);
   setScopeId(next.workId);inputValue.current=next.draft||'';setInput(next.draft||'');setReferenceIds(next.referenceIds||[]);setError('');setNotice('');setDeleteConfirm(false);setCheckedTask(null);
+  setRenameOpen(false);setPendingPrompt(null);
  };
  const stop=useCallback((status='cancelled',message='本次接收已停止。结果未知时，请先恢复上次结果。')=>{
   const checking=restoring.current;
@@ -89,6 +97,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   try{patch(task.sessionId,value=>failConversationTurn(value,task.turnId,{status,error:message}));}catch{}
   if(alive.current)setCancelling(true);
  },[patch]);
+ useEffect(()=>{if(orphan){stop('interrupted','关联作品已移除，本轮已停止接收。请选择其他作品或独立讨论。');setPendingPrompt(null);}},[orphan,stop]);
  const previousWork=useRef(initialWorkId);
  useEffect(()=>{
   if(previousWork.current===initialWorkId)return;
@@ -122,12 +131,13 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   setBusy(true);setCancelling(false);setError('');setNotice('');
   let started=false,completed=false;
   try{
+   setPendingPrompt(null);
    const producer=async()=>{
-    if(task.cancelled||running.current!==task||!alive.current)throw new Error('生成已取消');
+    if(task.cancelled||running.current!==task||!alive.current||orphanRef.current)throw new Error('生成已取消');
     started=true;
     try{
      const result=await generationRef.current.generate(turn.request,()=>({text:conversationDemoReply(turn.userText),source:'demo'}));
-     if(task.cancelled||running.current!==task||!alive.current)throw new Error('生成已取消');
+     if(task.cancelled||running.current!==task||!alive.current||orphanRef.current)throw new Error('生成已取消');
      applyResult(thread.id,turn.id,result);completed=true;
     }catch(value){
      if(!task.cancelled&&running.current===task&&alive.current){
@@ -146,7 +156,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   }
  };
  const send=async event=>{
-  event?.preventDefault?.();if(running.current||restoring.current||busy||orphan)return;
+  event?.preventDefault?.();if(running.current||restoring.current||busy||orphanRef.current)return;
   const prompt=inputValue.current.trim();if(!prompt){setError('先写下你想讨论的故事或问题。');inputRef.current?.focus();return;}
   if(prompt.length>4000){setError('每条消息最多 4,000 字符，请分次讨论。');return;}
   try{
@@ -155,7 +165,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
    const bundle=associated?buildStoryContext(associated,{chapterId:chapter?.id,referenceIds,budget:12000}):{context:{},notice:''};
    const prior=buildConversationHistory(base,{maxTurns:8,budget:16000});
    const requestId=makeId();
-   const request={task:'chat',prompt,context:{...bundle.context,...(base.workId?{workId:base.workId,title:associated?.title||'',genre:associated?.genre||'',kind:associated?.kind||'',...(chapter?{chapterId:chapter.id}:{})}:{}),history:prior.history},target:meter.outputChars,mode:meter.model,requestId};
+   const request={task:'chat',prompt,context:{...bundle.context,...workContext,history:prior.history},target:meter.outputChars,mode:meter.model,requestId};
    const next=beginConversationTurn({...base,referenceIds},{userText:prompt,request,requestId});
    const turn=next.turns.at(-1);
    if(!write(previous=>saveConversation(previous,next))){
@@ -168,7 +178,7 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   }catch(value){setError(errorText(value));}
  };
  const recover=async(turn,explicitContinue=false)=>{
-  if(running.current||restoring.current||busy||!turn.request)return;
+  if(running.current||restoring.current||busy||orphanRef.current||!turn.request)return;
   setBusy(true);setError('');setNotice('');
   const sessionId=session.id,operation={sessionId,token:viewToken.current,controller:new AbortController(),cancelled:false};
   restoring.current=operation;
@@ -226,14 +236,54 @@ export function HomeConversation({works=[],work=null,setModal,notify=()=>{},appe
   }catch(value){setError('未能导出，请先复制需要的回复内容。');}
  };
  const handoff=(turn,type)=>{
-  if(busy)return;
+  if(busy||orphan)return;
   const prompt=`讨论需求：${turn.userText}\n\n已确认用于下一步的讨论参考：\n${turn.assistantText}`.slice(0,12000);
   if(type==='plan')setModal({type:'quick-start',autoGenerate:false,idea:prompt,genre:associated?.genre||'悬疑',audience:'全频',perspective:'第三人称',kind:associated?.kind||'长篇小说',mode:'灵感共创'});
   else setModal({type:'tool',tool:tools.find(item=>item.id==='outline'),prompt,...(associated?{workId:associated.id,...(chapter?{chapterId:chapter.id}:{})}:{})});
  };
+ const startRename=()=>{if(busy)return;setRenameTitle(session.title);setRenameOpen(true);setError('');};
+ const saveRename=event=>{
+  event?.preventDefault?.();if(busy)return;
+  try{
+   if(!flushDraft())throw new Error('草稿尚未完整缓存，请先恢复保存后再修改名称。');
+   const current=recordsRef.current.find(item=>item.id===sessionRef.current.id)||{...sessionRef.current,draft:inputValue.current,referenceIds};
+   const renamed=renameConversation(current,renameTitle,{at:stamp()});
+   const cached=write(previous=>saveConversation(previous,renamed));
+   setActiveId(renamed.id);
+   if(!cached)throw new Error('新名称已保留在当前页面，请检查保存状态并导出重要内容。');
+   setRenameOpen(false);setError('');
+  }catch(value){setError(errorText(value));}
+ };
+ const fillPrompt=prompt=>{
+  if(busy||orphan)return;
+  if(inputValue.current.trim()&&inputValue.current!==prompt){setPendingPrompt(prompt);return;}
+  queueDraft(prompt);inputRef.current?.focus();
+ };
+ const openStudioTool=id=>{
+  if(busy||orphan)return;
+  if(id==='world'){fillPrompt('请帮我构思这部小说的世界观，包括时代背景、主要地点、规则、势力关系，以及它们如何推动人物和冲突。');return;}
+  try{
+   if(!flushDraft())throw new Error('当前输入尚未完整缓存，请先恢复保存后再打开工具。');
+   const tool=tools.find(item=>item.id===id);
+   if(tool)setModal({type:'tool',tool,...(inputValue.current.trim()?{prompt:inputValue.current.trim()}:{}),...(associated?{workId:associated.id,...(chapter?{chapterId:chapter.id}:{})}:{})});
+  }catch(value){setError(errorText(value));}
+ };
  const previousPending=session.turns.findLast?.(turn=>turn.request&&turn.status!=='completed');
  const historyOptions=[...records].sort((left,right)=>String(right.updatedAt).localeCompare(String(left.updatedAt)));
- const messageLog=<div className="home-chat-log" ref={logRef} role="log" aria-label="创作对话消息" aria-live="polite" aria-relevant="additions text">{session.turns.map(turn=><React.Fragment key={turn.id}><article className="home-chat-message from-user"><span className="home-chat-user-avatar" aria-hidden="true">你</span><div><strong>你</strong><p>{turn.userText}</p></div></article><article className={`home-chat-message from-assistant turn-${turn.status}`}><Brand small/><div><header><strong>墨多多</strong>{turn.status==='completed'&&<span>{turn.source==='ai'?'智能创作':'预置示例'}</span>}</header>{turn.status==='sending'?<p className="home-chat-working"><LoaderCircle size={15} className="spin"/>正在整理回复…</p>:turn.assistantText?<p>{turn.assistantText}</p>:<p className="home-chat-turn-error">{statuses[turn.status]}{turn.error?`：${turn.error}`:''}</p>}{turn.status==='completed'?<div className="home-chat-reply-actions"><button type="button" aria-label={`复制创作回复 ${turn.id}`} onClick={()=>copy(turn)}><Copy size={13}/>复制</button><button type="button" disabled={busy} aria-label={`用于故事规划 ${turn.id}`} onClick={()=>handoff(turn,'plan')}><BookOpen size={13}/>用于故事规划</button><button type="button" disabled={busy} aria-label={`交给写作工具 ${turn.id}`} onClick={()=>handoff(turn,'tool')}><WandSparkles size={13}/>交给写作工具</button></div>:turn.request&&turn.status!=='sending'?<button type="button" className="home-chat-recover" disabled={busy} aria-label={`${checkedTask?.requestId===turn.requestId?(checkedTask.status==='failed'?'重试创作消息':'继续本轮讨论'):'恢复创作回复'} ${turn.id}`} onClick={()=>recover(turn,checkedTask?.requestId===turn.requestId)}>{checkedTask?.requestId===turn.requestId?(checkedTask.status==='failed'?'重新生成此回复':'继续本轮讨论'):'恢复上次结果'}<ArrowRight size={13}/></button>:turn.status!=='sending'?<small className="home-chat-archived-notice">原消息已保留。可在<a href="#history">生成记录</a>中查找这次任务。</small>:null}</div></article></React.Fragment>)}</div>;
+ const messageLog=<div className="home-chat-log" ref={logRef} role="log" aria-label="创作对话消息" aria-live="polite" aria-relevant="additions text">{session.turns.map(turn=><React.Fragment key={turn.id}><article className="home-chat-message from-user"><span className="home-chat-user-avatar" aria-hidden="true">你</span><div><strong>你</strong><p>{turn.userText}</p></div></article><article className={`home-chat-message from-assistant turn-${turn.status}`}><Brand small/><div><header><strong>墨多多</strong>{turn.status==='completed'&&<span>{turn.source==='ai'?'智能创作':'预置示例'}</span>}</header>{turn.status==='sending'?<p className="home-chat-working"><LoaderCircle size={15} className="spin"/>正在整理回复…</p>:turn.assistantText?appearance==='studio'?<ConversationRichText text={turn.assistantText}/>:<p>{turn.assistantText}</p>:<p className="home-chat-turn-error">{statuses[turn.status]}{turn.error?`：${turn.error}`:''}</p>}{turn.status==='completed'?<div className="home-chat-reply-actions"><button type="button" aria-label={`复制创作回复 ${turn.id}`} onClick={()=>copy(turn)}><Copy size={13}/>复制</button><button type="button" disabled={busy||orphan} aria-label={`用于故事规划 ${turn.id}`} onClick={()=>handoff(turn,'plan')}><BookOpen size={13}/>用于故事规划</button><button type="button" disabled={busy||orphan} aria-label={`交给写作工具 ${turn.id}`} onClick={()=>handoff(turn,'tool')}><WandSparkles size={13}/>交给写作工具</button></div>:turn.request&&turn.status!=='sending'?<button type="button" className="home-chat-recover" disabled={busy||orphan} aria-label={`${checkedTask?.requestId===turn.requestId?(checkedTask.status==='failed'?'重试创作消息':'继续本轮讨论'):'恢复创作回复'} ${turn.id}`} onClick={()=>recover(turn,checkedTask?.requestId===turn.requestId)}>{checkedTask?.requestId===turn.requestId?(checkedTask.status==='failed'?'重新生成此回复':'继续本轮讨论'):'恢复上次结果'}<ArrowRight size={13}/></button>:turn.status!=='sending'?<small className="home-chat-archived-notice">原消息已保留。可在<a href="#history">生成记录</a>中查找这次任务。</small>:null}</div></article></React.Fragment>)}</div>;
+ if(appearance==='studio'){
+  const tabs=[{id:'assist',label:'创作辅助'},{id:'optimize',label:'内容优化'},{id:'inspire',label:'素材灵感'}];
+  const options={
+   assist:[['outline','生成小说大纲','梳理主线、分卷与章节',ListTree],['character','人物设定','塑造角色、动机与关系',UsersRound],['world','世界观设定','一起推敲背景与故事规则',Globe2],['continue','情节续写','承接已有内容，推进故事',Feather],['dialogue','对白打磨','让人物说出自己的声音',MessagesSquare]],
+   optimize:[['polish','润色修改','打磨叙述、节奏与表达',WandSparkles],['review','章节审稿','检查逻辑与人物行为',ScanText],['dialogue','对白打磨','推敲台词与情绪变化',MessagesSquare]],
+   inspire:[['ideas','故事灵感','从一个念头发现新故事',Lightbulb],['title','书名与简介','找到故事的第一种表达',Type]]
+  };
+  const toolbox=<div className="wc-studio-toolbox"><div role="tablist" aria-label="创作工具分类">{tabs.map(tab=><button type="button" key={tab.id} role="tab" id={`${contextId}-tool-${tab.id}`} aria-selected={toolboxTab===tab.id} tabIndex={toolboxTab===tab.id?0:-1} aria-controls={`${contextId}-tool-panel`} onClick={()=>setToolboxTab(tab.id)} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=tabs.findIndex(value=>value.id===tab.id);const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;setToolboxTab(tabs[next].id);event.currentTarget?.parentElement?.querySelectorAll('[role=tab]')?.[next]?.focus();}}>{tab.label}</button>)}</div><div role="tabpanel" id={`${contextId}-tool-panel`} aria-labelledby={`${contextId}-tool-${toolboxTab}`}>{options[toolboxTab].map(([id,title,description,Icon])=><button type="button" key={id} className={`wc-studio-tool wc-studio-tool-${id}`} aria-label={`打开${title}`} disabled={busy||orphan} onClick={()=>openStudioTool(id)}><span className="wc-studio-tool-icon"><Icon size={21} aria-hidden="true"/></span><span><strong>{title}</strong><small>{description}</small></span><ChevronRight size={16} aria-hidden="true"/></button>)}</div></div>;
+  const referencePanel=<fieldset id={contextId} disabled={busy||orphan}>{associated?<><ContextPicker work={associated} value={referenceIds} onChange={chooseReferences} chapterId={chapter?.id} prompt={input} budget={12000}/><p className="home-chat-reference-note">可移除不需要的引用；超出 12,000 字符时会采用摘要或明确标示的节选。</p></>:<p className="home-chat-reference-note">先选择关联作品，即可引用它的大纲、人物与章节；独立讨论不会读取其他作品。</p>}</fieldset>;
+  const settingsPanel=<fieldset id={meterId} disabled={busy||Boolean(frozenRequest)}><TaskMeter meter={displayedMeter} compact/>{frozenRequest&&<p className="home-chat-reference-note">继续本轮沿用原始问题、引用资料与创作设置。</p>}</fieldset>;
+  const draftPromptConfirmation=pendingPrompt?<div className="wc-studio-draft-confirm" role="alert"><strong>当前输入已有内容</strong><p>{pendingPrompt}</p><div><button type="button" disabled={busy} onClick={()=>{queueDraft(pendingPrompt);setPendingPrompt(null);inputRef.current?.focus();}}>替换当前输入</button><button type="button" disabled={busy} onClick={()=>setPendingPrompt(null)}>保留当前输入</button></div></div>:null;
+  return <StudioConversationView session={session} historyGroups={groupConversations(historyOptions,{now:stamp(),activeId:session.id,scratch:records.some(item=>item.id===session.id)?undefined:{...session,draft:input}})} available={available} scopeId={scopeId} associated={associated} orphan={orphan} input={input} busy={busy} cancelling={cancelling} mode={generation.mode} saveError={saveError||persistenceError} error={error} notice={notice} deleteConfirm={deleteConfirm} renameOpen={renameOpen} renameTitle={renameTitle} onRenameTitle={setRenameTitle} onRenameStart={startRename} onRenameSave={saveRename} onRenameCancel={()=>setRenameOpen(false)} onNew={newSession} onHistory={changeHistory} onScope={changeScope} onExport={exportText} onDeleteToggle={()=>setDeleteConfirm(value=>!value)} onDeleteConfirm={deleteSession} onDeleteCancel={()=>setDeleteConfirm(false)} onInput={value=>{setPendingPrompt(null);queueDraft(value);}} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&!event.nativeEvent?.isComposing&&event.keyCode!==229&&event.nativeEvent?.keyCode!==229){event.preventDefault();send();}}} onSend={send} onStop={()=>stop()} onExample={example=>fillPrompt(example.prompt)} examples={conversationExamples} messageLog={messageLog} inputRef={inputRef} contextId={contextId} meterId={meterId} referencePanel={referencePanel} settingsPanel={settingsPanel} historyNotice={history.truncated?history.notice:''} referenceNotice={references.notice} pendingNotice={previousPending&&input.trim()?'发送新问题后，上一轮未完成请求不再提供恢复按钮，原消息仍会保留。':''} toolbox={toolbox} draftPromptConfirmation={draftPromptConfirmation} onNavigate={navigate?destination=>{if(busy)return;try{if(!flushDraft())throw new Error('当前输入尚未完整缓存，请先恢复保存。');navigate(destination);}catch(value){setError(errorText(value));}}:undefined}/>;
+ }
  if(appearance==='hero')return <section className={`home-chat home-chat-hero ${session.turns.length?'has-messages':'is-empty'}`} aria-label="创作对话" onKeyDown={event=>{if(event.key==='Escape'){const details=event.target.closest?.('details[open]');if(details){event.preventDefault();event.stopPropagation();details.open=false;details.querySelector('summary')?.focus();}}}}>
   <div className="home-chat-hero-toolbar">
    <details className="home-chat-hero-session-manager" ref={heroControlsRef} name={contextId+'-panels'}>

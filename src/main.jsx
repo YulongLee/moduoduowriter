@@ -173,13 +173,13 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
   {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到本地服务，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
   {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
-    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content',route==='works'&&'library-content',route==='create'&&'creation-content')} key={`${route}-${workspaceRevision}`}>
+    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content',route==='works'&&'library-content',route==='create'&&'creation-content',route==='conversation'&&'conversation-content')} key={`${route}-${workspaceRevision}`}>
      {route === 'workspace' && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity} openWork={work=>navigate(`editor/${work.id}`)}/>}
      {route === 'create' && <CreateWorkPage draft={creationDraft} onDraftChange={setCreationDraft} onCreate={createWork} onCancel={()=>navigate(creationReturn.current)} onAI={startCreationAI}/>}
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
      {route === 'novels' && <NovelDesk {...common}/>}
-     {route === 'conversation' && <div className="private-conversation-page" aria-label="创作对话工作区"><HomeConversation works={works} work={null} initialPrompt={conversationIntent.current?.initialPrompt||''} setModal={setModal} notify={notify}/></div>}
+     {route === 'conversation' && <div className="private-conversation-page" aria-label="创作对话工作区"><HomeConversation appearance="studio" works={works} work={null} initialPrompt={conversationIntent.current?.initialPrompt||''} setModal={setModal} notify={notify} navigate={navigate}/></div>}
      {route === 'tools' && <ReferenceTools {...common}/>}
      {route === 'workflows' && <WorkflowsPage {...common}/>}
      {route === 'dismantle' && <DismantleDesk {...common}/>}
