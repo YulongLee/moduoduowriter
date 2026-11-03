@@ -1,0 +1,127 @@
+{
+  "date": "2026-11-04",
+  "checkedAtUTC": "2026-11-03T20:13:12.845Z",
+  "runtimeRevision": "ef4c1d0557ff469c2d85b5b69a3d697187f472eb",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/ai-novel-writing/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-outline/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/character-design/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/text-polish/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/getting-started/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/about/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/ai-novel-prompts/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/ai-long-novel/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/story-ideas/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-continuation/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-title-synopsis/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-analysis/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/script-writing/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    }
+  ],
+  "keywordCount": 20,
+  "clusterCount": 13,
+  "metricsStatus": "unknown",
+  "liveKeywordCoverage": 20,
+  "publicAssetsExactMatch": true,
+  "noAppScriptOnReadingPages": true,
+  "discoveryFiles": true,
+  "crawlerHttpTestsPassed": true,
+  "phoneEmailAvailable": true,
+  "privateDataStatus": 401,
+  "real404": true,
+  "isolation": {
+    "allServicesActive": true,
+    "vhostsUnchanged": true,
+    "accountStoreUnchanged": true,
+    "otherChangedUnits": []
+  },
+  "indexNow": {
+    "status": "received",
+    "httpStatus": 200,
+    "urlCount": 14
+  }
+}

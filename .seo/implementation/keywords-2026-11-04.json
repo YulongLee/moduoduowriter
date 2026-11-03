@@ -17,5 +17,12 @@
   "readingStylesheetBytes": 13730,
   "writingAppJavaScriptOnReadingPages": false,
   "rankingsAndAICitations": null,
-  "verification": "npm test passed including build, SEO, HTTP, hydration, login/account boundary and keyword mapping checks"
+  "verification": "npm test passed including build, SEO, HTTP, hydration, login/account boundary and keyword mapping checks",
+  "productionVerified": true,
+  "runtimeRevision": "ef4c1d0557ff469c2d85b5b69a3d697187f472eb",
+  "indexNow": {
+    "status": "received",
+    "httpStatus": 200,
+    "urlCount": 14
+  }
 }
