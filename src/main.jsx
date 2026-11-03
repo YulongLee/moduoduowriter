@@ -67,7 +67,7 @@ export function App() { return <AccountProvider allowPublic><SidebarPreferencePr
 
 export function ApplicationRouter() {
  const account=useAccount();
- const [route,setRoute]=useState(()=>location.hash.slice(1)||'home'),[launch,setLaunch]=useState(null);
+ const [route,setRoute]=useState(()=>globalThis.location?.hash?.slice(1)||'home'),[launch,setLaunch]=useState(null);
  useEffect(()=>{if(route==='home'&&launch&&account?.ready&&!canAccessPrivate(account))setLaunch(null);},[route,launch,account?.ready,account?.error,account?.user,account?.configured,account?.spaceId]);
  useEffect(()=>{const change=()=>{const next=location.hash.slice(1)||'home';setRoute(next);if(next==='home')setLaunch(null);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  const navigate=id=>{location.hash='#'+id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};

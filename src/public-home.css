@@ -35,7 +35,7 @@
 .public-landing-header button:focus-visible,.public-landing-footer button:focus-visible {outline:2px solid var(--public-green);outline-offset:4px;}
 .public-landing-main {width:100%;min-width:0;}
 .public-landing-footer {display:flex;flex-direction:column;width:100%;max-width:1352px;margin:0 auto;padding:56px 36px 22px;color:var(--public-muted);font-size:13px;}
-.public-landing-footer-main {display:grid;grid-template-columns:minmax(0,1fr) 170px 170px;gap:64px;min-width:0;padding-bottom:44px;}
+.public-landing-footer-main {display:grid;grid-template-columns:minmax(0,1fr) repeat(3,minmax(140px,170px));gap:40px;min-width:0;padding-bottom:44px;}
 .public-footer-wordmark {display:flex;align-items:center;gap:10px;}
 .public-footer-wordmark .brand-mark {width:31px;height:31px;}
 .public-footer-wordmark .brand-wordmark>strong {font-size:21px;}
@@ -44,8 +44,8 @@
 .public-footer-brand>span {color:#617166;font-size:14px;line-height:1.9;}
 .public-footer-links {display:flex;align-items:flex-start;flex-direction:column;gap:8px;}
 .public-footer-links>strong {margin:2px 0 10px;color:#344e3e;font-size:14px;font-weight:600;}
-.public-footer-links>button {display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:2px 0;color:#53675a;font-size:14px;line-height:1.7;}
-.public-footer-links>button:hover {color:var(--public-green);text-decoration:underline;text-underline-offset:4px;}
+.public-footer-links>button,.public-footer-links>a {display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:2px 0;color:#53675a;font-size:14px;line-height:1.7;text-decoration:none;}
+.public-footer-links>button:hover,.public-footer-links>a:hover {color:var(--public-green);text-decoration:underline;text-underline-offset:4px;}
 .public-footer-bottom {display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;min-width:0;padding-top:18px;border-top:1px solid var(--public-line);color:#617166;font-size:12px;line-height:1.8;}
 .public-footer-demo {color:#617166;}
 .public-footer-bottom>.site-registration {flex:0 1 auto;align-self:auto;width:auto;margin-left:auto;padding:0;font-size:12px;}
@@ -74,7 +74,7 @@
  .public-landing-header-inner>nav::-webkit-scrollbar {display:none;}
  .public-landing-header-inner>nav>button {min-height:38px;}
  .public-landing-footer {padding:42px 28px 22px;}
- .public-landing-footer-main {grid-template-columns:minmax(0,1fr) 135px 135px;gap:30px;}
+ .public-landing-footer-main {grid-template-columns:repeat(2,minmax(0,1fr));gap:30px;}
  .public-footer-demo {order:3;flex-basis:100%;}
 }
 @media(max-width:640px){

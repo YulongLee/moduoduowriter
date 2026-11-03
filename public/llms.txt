@@ -1,0 +1,28 @@
+# 墨多多 · 写作
+
+> 墨多多是中文 AI 小说写作辅助平台，帮助作者从故事想法整理大纲、人物设定和章节草稿，并在作品编辑过程中续写、润色与修改文字。
+
+官方名称为「墨多多」，「写作」是品牌副标。官网为 https://moduoduowriter.com/ 。生成内容是可编辑的创作候选，需由作者阅读、核对和修改后决定是否采用；平台不保证作品质量、出版、签约或收益。
+
+## 产品与功能
+
+- [墨多多首页](https://moduoduowriter.com/): 产品介绍、创作入口和原创预写示例。
+- [AI 小说写作](https://moduoduowriter.com/features/ai-novel-writing/): 从故事设想逐步准备设定、大纲和正文草稿。
+- [小说大纲规划](https://moduoduowriter.com/features/novel-outline/): 梳理故事主线、冲突、阶段与章节目标。
+- [人物设定](https://moduoduowriter.com/features/character-design/): 整理人物身份、动机、关系与成长变化。
+- [文字润色](https://moduoduowriter.com/features/text-polish/): 在作者要求和原文基础上调整表达、对话和叙述。
+
+## 使用说明
+
+- [新手入门](https://moduoduowriter.com/guides/getting-started/): 登录、说明故事需求、预览草稿、确认采用及继续编辑。
+- [关于墨多多](https://moduoduowriter.com/about/): 产品定位、能力与使用边界。
+- [公开产品说明全文](https://moduoduowriter.com/llms-full.txt): 便于阅读的产品摘要和功能说明。
+
+## 当前服务边界
+
+- 手机号验证码登录和邮箱验证码登录可用；微信扫码登录暂未开放。
+- 作品与章节属于账户工作区内容，不作为公开案例供搜索抓取。
+- 官网创作示例为原创预写示例，不是实际用户作品或现场生成结果。
+- 会员与墨点页面当前为演示方案，不代表已开通真实支付或对外承诺的权益。
+- 当前服务以文字创作为主，未提供视频生成服务。
+- 本文件是公开网页的补充摘要，不替代网页中的实时产品说明，也不构成搜索收录、排名或 AI 引用承诺。

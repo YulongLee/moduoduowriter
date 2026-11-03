@@ -1,0 +1,21 @@
+# Public product pages and their assets may be crawled.
+# Googlebot, Baiduspider, Bingbot, OAI-SearchBot, ChatGPT-User,
+# PerplexityBot, Claude-SearchBot and Claude-User use the same rules below.
+# No separate model-training crawler policy is set by this file.
+User-agent: *
+Disallow: /api
+Disallow: /admin
+Disallow: /service-admin
+Disallow: /app
+Disallow: /works
+Disallow: /workspace
+Disallow: /editor
+Disallow: /account
+Disallow: /settings
+Disallow: /login
+Disallow: /auth
+Disallow: /history
+Disallow: /conversation
+Allow: /
+
+Sitemap: https://moduoduowriter.com/sitemap.xml

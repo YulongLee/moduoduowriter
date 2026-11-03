@@ -1,10 +1,11 @@
 import {createServer} from 'node:http';
 import {createReadStream} from 'node:fs';
-import {realpath,stat} from 'node:fs/promises';
+import {realpath,stat,readFile} from 'node:fs/promises';
 import {pipeline} from 'node:stream/promises';
 import {resolve,join,extname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createApi} from './api.mjs';
+import {publicPaths,seoScriptHashes} from './seo.mjs';
 
 const releaseRoot=fileURLToPath(new URL('../',import.meta.url));
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.gif':'image/gif','.ico':'image/x-icon','.woff':'font/woff','.woff2':'font/woff2','.ttf':'font/ttf','.otf':'font/otf','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8','.webmanifest':'application/manifest+json'};
@@ -31,6 +32,8 @@ export async function createProductionServer({directory,distDirectory=join(relea
  if(!inside(root,index)||!(await stat(index)).isFile())throw Error('The production build is incomplete.');
  const api=createApi({directory:resolve(directory),publicOrigin,fetchImpl,mailTransport,requireAccount:true,trustLoopbackProxy});
  const allowedPublicHost=new URL(publicOrigin).host;
+ const publicRouteSet=new Set(publicPaths);
+ const htmlPolicies=new Map();
  const findFile=async pathname=>{
   const candidate=join(root,pathname);
   if(!inside(root,candidate))return null;
@@ -45,29 +48,49 @@ export async function createProductionServer({directory,distDirectory=join(relea
   const pathname=pathnameOf(req.url);
   if(!pathname)return respond(res,400,{error:'请求路径不正确。'},head);
   if(pathname==='/healthz'){
+   res.setHeader('X-Robots-Tag','noindex, nofollow');
    if(!['GET','HEAD'].includes(req.method)){res.setHeader('Allow','GET, HEAD');return respond(res,405,{error:'不支持的请求方式。'},head);}
    return respond(res,200,{status:'ok'},head);
   }
   if(pathname==='/api'||pathname.startsWith('/api/')){
+   res.setHeader('X-Robots-Tag','noindex, nofollow, nosnippet');
    if(pathname==='/api')return respond(res,404,{error:'接口不存在。'},head);
    return api(req,res);
   }
   if(/^\/(?:src|server|scripts|deploy|node_modules)(?:\/|$)/.test(pathname))return respond(res,404,{error:'文件不存在。'},head);
   if(!['GET','HEAD'].includes(req.method)){res.setHeader('Allow','GET, HEAD');return respond(res,405,{error:'不支持的请求方式。'},head);}
+  if(pathname==='/index.html'||(pathname.endsWith('/index.html')&&publicRouteSet.has(pathname.slice(0,-10)))){
+   res.writeHead(308,{Location:pathname==='/index.html'?'/':pathname.slice(0,-10),'Cache-Control':'no-store'});return res.end();
+  }
+  if(!pathname.endsWith('/')&&publicRouteSet.has(pathname+'/')){
+   const query=String(req.url).includes('?')?'?'+String(req.url).split('?').slice(1).join('?'):'';
+   res.writeHead(308,{Location:pathname+'/'+query,'Cache-Control':'no-store'});return res.end();
+  }
   const extension=extname(pathname).toLowerCase();
   if(extension&&!types[extension])return respond(res,404,{error:'文件不存在。'},head);
-  let target=await findFile(pathname==='/'?'index.html':pathname.slice(1));
+  let status=200;
+  let target=await findFile(publicRouteSet.has(pathname)?(pathname==='/'?'index.html':pathname.slice(1)+'index.html'):pathname.slice(1));
   if(!target){
-   const appNavigation=!extension&&!/^\/(?:assets|art|src|server|scripts|deploy|node_modules)(?:\/|$)/.test(pathname)&&String(req.headers.accept||'').split(',').some(value=>value.trim().split(';')[0]==='text/html');
-   if(!appNavigation)return respond(res,404,{error:'文件不存在。'},head);
-   target={file:index,info:await stat(index)};
+   // Unknown routes must not masquerade as a successful homepage (soft 404).
+   res.setHeader('X-Robots-Tag','noindex, nofollow');
+   const htmlNavigation=!extension&&String(req.headers.accept||'').includes('text/html');
+   target=htmlNavigation?await findFile('404.html'):null;status=404;
+   if(!target)return respond(res,404,{error:'文件不存在。'},head);
   }
   const contentType=types[extname(target.file).toLowerCase()];
   if(!contentType)return respond(res,404,{error:'文件不存在。'},head);
   const html=extname(target.file).toLowerCase()==='.html',immutable=/^\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$/.test(pathname),etag=`W/"${target.info.size.toString(16)}-${Math.trunc(target.info.mtimeMs).toString(16)}"`;
+  if(html){
+   if(!htmlPolicies.has(target.file)){
+    const hashes=seoScriptHashes(await readFile(target.file,'utf8'));
+    htmlPolicies.set(target.file,policy.replace("script-src 'self'",["script-src 'self'",...hashes].join(' ')));
+   }
+   res.setHeader('Content-Security-Policy',htmlPolicies.get(target.file));
+   if(!publicRouteSet.has(pathname)){res.setHeader('X-Robots-Tag','noindex, nofollow');if(pathname==='/404.html')status=404;}
+  }
   res.setHeader('Cache-Control',html?'no-store':immutable?'public, max-age=31536000, immutable':'public, max-age=3600');
   if(!html){res.setHeader('ETag',etag);if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}}
-  res.writeHead(200,{'Content-Type':contentType,'Content-Length':target.info.size});
+  res.writeHead(status,{'Content-Type':contentType,'Content-Length':target.info.size});
   if(head)return res.end();
   await pipeline(createReadStream(target.file),res);
  };

@@ -1,0 +1,20 @@
+{
+  "word_count": 1,
+  "sentence_count": 1,
+  "paragraph_count": 29,
+  "syllable_count": 1,
+  "avg_sentence_length": 1.0,
+  "avg_paragraph_length": 0.0,
+  "avg_syllables_per_word": 1.0,
+  "flesch_reading_ease": 100,
+  "flesch_kincaid_grade": 0,
+  "reading_level": "Easy (6th grade)",
+  "estimated_reading_time_min": 0.0,
+  "complex_words": 0,
+  "complex_word_pct": 0.0,
+  "issues": [
+    "\u26a0\ufe0f Thin content (1 words) \u2014 may rank poorly"
+  ],
+  "recommendations": [],
+  "sentence_rewrites": []
+}

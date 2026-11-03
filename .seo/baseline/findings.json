@@ -1,0 +1,56 @@
+[
+  {
+    "area": "Rendering",
+    "severity": "Warning",
+    "confidence": "Confirmed",
+    "finding": "Initial homepage HTML contained no H1 or public body copy before implementation.",
+    "evidence": ".seo/baseline/home-before.json: h1=[], links.internal=[], schema=[]; initial root was empty.",
+    "fix": "Build-time prerender the identical public React trees for visitors and crawlers.",
+    "status": "Implemented and locally verified"
+  },
+  {
+    "area": "Discovery",
+    "severity": "Warning",
+    "confidence": "Confirmed",
+    "finding": "robots sitemap and AI-readable summaries returned 404 before implementation.",
+    "evidence": "2026-11-03 HTTP baseline: /robots.txt /sitemap.xml /llms.txt /llms-full.txt returned 404 application/json.",
+    "fix": "Serve discovery files for seven canonical public pages.",
+    "status": "Implemented and locally verified"
+  },
+  {
+    "area": "Metadata",
+    "severity": "Warning",
+    "confidence": "Confirmed",
+    "finding": "Initial homepage had no canonical social metadata or JSON-LD.",
+    "evidence": ".seo/baseline/home-before.json: canonical=null, open_graph={}, twitter_card={}, schema=[].",
+    "fix": "Unique page titles/descriptions, canonical links, OG/Twitter and factual schemas.",
+    "status": "Implemented and locally verified"
+  },
+  {
+    "area": "Routing",
+    "severity": "Warning",
+    "confidence": "Confirmed",
+    "finding": "Unknown extensionless HTML navigations previously returned homepage 200.",
+    "evidence": "Previous server/http.mjs used unrestricted HTML SPA fallback; original production-http test explicitly expected /about 200.",
+    "fix": "Allowlist seven public routes with canonical redirects and real noindex 404 responses.",
+    "status": "Implemented and locally verified"
+  },
+  {
+    "area": "Performance",
+    "severity": "Info",
+    "confidence": "Confirmed",
+    "finding": "PageSpeed field and lab scores are unavailable in this audit.",
+    "evidence": ".seo/baseline/pagespeed-before.json contains Google API rate-limit error and null performance score.",
+    "fix": "Measure with PageSpeed/CrUX after quota is available; do not infer actual CWV from build size.",
+    "status": "Unknown metrics"
+  },
+  {
+    "area": "Visibility",
+    "severity": "Info",
+    "confidence": "Confirmed",
+    "finding": "Index coverage rankings and AI citations are unverified.",
+    "evidence": "No Search Console/Baidu/Bing verified account reports or AI referral analytics supplied.",
+    "fix": "Verify webmaster properties, submit sitemap, inspect URLs and observe real results.",
+    "status": "Follow-up"
+  }
+]

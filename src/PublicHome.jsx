@@ -63,6 +63,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
      <div className="public-footer-brand"><div className="public-footer-wordmark"><Brand/><BrandWordmark/></div><p>让好故事发生。</p><span>从灵感、大纲到正文，<br/>陪你把故事写成自己的作品。</span></div>
      <nav className="public-footer-links" aria-label="页脚产品导航"><strong>探索墨多多</strong><button type="button" onClick={()=>scrollTo('创作能力','landing-features')}>创作能力</button><button type="button" onClick={()=>scrollTo('作品示例','landing-examples')}>作品示例</button><button type="button" onClick={()=>scrollTo('写作工具','landing-tools')}>写作工具</button></nav>
      <nav className="public-footer-links" aria-label="页脚帮助导航"><strong>使用与支持</strong><button type="button" onClick={()=>scrollTo('常见问题','landing-faq')}>常见问题</button><button type="button" onClick={()=>setDialog('help')}>使用帮助</button><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={13}/></button></nav>
+     <nav className="public-footer-links" aria-label="写作功能与指南"><strong>写作功能与指南</strong><a href="/features/ai-novel-writing/">AI 小说写作</a><a href="/features/novel-outline/">小说大纲规划</a><a href="/features/character-design/">小说人物设定</a><a href="/features/text-polish/">正文润色与改稿</a><a href="/guides/getting-started/">新手入门指南</a><a href="/about/">关于墨多多</a></nav>
     </div>
     <div className="public-footer-bottom"><span>© {new Date().getFullYear()} 墨多多 · 写作</span><span className="public-footer-demo">会员与墨点为方案演示，暂不提供在线付费。</span><SiteRegistration/></div>
    </footer>

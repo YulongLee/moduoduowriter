@@ -30,14 +30,16 @@ try{
  await close();const store=createStore(data),owner=await store.register('fixture_owner','fixture-owner-password');store.close();await start();
  value=await call('/');assert.equal(value.status,200);assert.match(value.text,/Fixture homepage/);assert.match(value.headers['content-type'],/^text\/html/);assert.match(value.headers['cache-control'],/no-store/);
  assert.match(value.headers['content-security-policy'],/frame-src 'self' https:\/\/open\.weixin\.qq\.com/);assert.match(value.headers['content-security-policy'],/object-src 'none'/);assert.equal(value.headers['x-content-type-options'],'nosniff');assert.equal(value.headers['x-frame-options'],'SAMEORIGIN');
- const head=await call('/index.html',{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.text,'');assert.equal(head.headers['content-length'],String(Buffer.byteLength(value.text)));
+ const head=await call('/',{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.text,'');assert.equal(head.headers['content-length'],String(Buffer.byteLength(value.text)));
+ assert.equal((await call('/index.html')).status,308);assert.equal((await call('/index.html')).headers.location,'/');
  value=await call('/assets/index-a1b2c3d4.js');assert.equal(value.status,200);assert.match(value.headers['content-type'],/^text\/javascript/);assert.match(value.headers['cache-control'],/immutable/);
  assert.equal((await call('/assets/index-a1b2c3d4.js',{headers:{'If-None-Match':value.headers.etag}})).status,304);
  value=await call('/assets/plain.js');assert.match(value.headers['cache-control'],/max-age=3600/);assert.ok(!value.headers['cache-control'].includes('immutable'));
  assert.equal((await call('/art/cover.svg?v=3')).headers['content-type'],'image/svg+xml');
- assert.equal((await call('/about',{headers:{Accept:'text/html'}})).status,200);assert.equal((await call('/about',{headers:{Accept:'application/json'}})).status,404);
+ assert.equal((await call('/about',{headers:{Accept:'text/html'}})).status,308);assert.equal((await call('/about')).headers.location,'/about/');
+ assert.equal((await call('/unknown-page',{headers:{Accept:'text/html'}})).status,404);assert.equal((await call('/unknown-page',{headers:{Accept:'application/json'}})).status,404);
  assert.equal((await call('/assets/missing.js',{headers:{Accept:'text/html'}})).status,404);assert.equal((await call('/art/missing',{headers:{Accept:'text/html'}})).status,404);
- console.log('PASS built HTML/assets, HEAD, conditional cache and HTML-only navigation fallback without disguising missing resources');
+ console.log('PASS built HTML/assets, HEAD, conditional cache, canonical redirects and real 404s for unknown routes');
  for(const path of ['/../outside.txt','/%2e%2e/outside.txt','/%252e%252e/outside.txt','/%2eenv','/.env','/.git/config','/assets/../private.json','/assets/%2e%2e/private.json','/assets%5c..%5cprivate.json','/assets/%00file.js','/private.json','/src/leak.js','/%73rc/leak.js','/server/api.mjs','/scripts/check.mjs','/node_modules/react/index.js','/assets/index-a1b2c3d4.js.map','/symlink.txt','/%61pi/auth/status','/%invalid']){
   value=await call(path,{headers:{Accept:'text/html'}});assert.ok([400,404].includes(value.status),`${path} must be blocked`);assert.ok(!value.text.includes('PRIVATE_'));
  }

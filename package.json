@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "check": "node scripts/check.mjs",
     "check:design": "node scripts/design-check.mjs",
     "preview": "vite preview --host 127.0.0.1",
@@ -15,7 +15,7 @@
     "test:api": "node scripts/api-check.mjs",
     "test:functions": "node scripts/functionality-check.mjs",
     "test:generation": "node scripts/generation-check.mjs",
-    "test": "npm run check && npm run test:interactions && npm run test:navigation && npm run test:billing && npm run test:api && npm run test:functions && npm run test:generation && npm run test:cloud && npm run test:workspace && npm run test:pipeline && npm run check:design && npm run test:upgrades",
+    "test": "npm run check && npm run test:interactions && npm run test:navigation && npm run test:billing && npm run test:api && npm run test:functions && npm run test:generation && npm run test:cloud && npm run test:workspace && npm run test:pipeline && npm run check:design && npm run test:upgrades && npm run test:seo",
     "test:cloud": "node scripts/cloud-check.mjs",
     "test:workspace": "node scripts/workspace-check.mjs",
     "test:pipeline": "node scripts/pipeline-check.mjs",
@@ -48,7 +48,9 @@
     "test:admin-boundary": "node scripts/admin-boundary-check.mjs",
     "start": "node server/http.mjs",
     "test:production-http": "node scripts/production-http-check.mjs",
-    "test:production-boundary": "node scripts/production-boundary-check.mjs"
+    "test:production-boundary": "node scripts/production-boundary-check.mjs",
+    "test:seo": "npm run build && node scripts/seo-head-check.mjs && node scripts/seo-check.mjs && node scripts/seo-hydration-check.mjs && node scripts/indexnow-check.mjs",
+    "search:submit": "node scripts/submit-indexnow.mjs --submit"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",
@@ -58,6 +60,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "react-test-renderer": "^19.3.1",
     "vite": "^6.1.0"
   },
