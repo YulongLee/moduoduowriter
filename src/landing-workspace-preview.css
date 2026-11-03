@@ -1,0 +1,105 @@
+.landing-workspace-preview {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  color: #273b32;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 1.6;
+  text-align: left;
+}
+.landing-workspace-preview *, .landing-workspace-preview *::before, .landing-workspace-preview *::after { box-sizing: border-box; }
+.landing-workspace-preview p, .landing-workspace-preview h3, .landing-workspace-preview ul { margin: 0; }
+.landing-workspace-preview svg { display: block; flex: none; }
+.landing-workspace-preview .lwp-window { width: 100%; min-width: 0; overflow: hidden; border: 1px solid #dce5de; border-radius: 14px; background: #fff; box-shadow: 0 22px 65px -25px #234c3b29, 0 4px 12px #21463008; }
+.landing-workspace-preview .lwp-window-bar { display: flex; align-items: center; gap: 18px; min-width: 0; min-height: 49px; padding: 10px 16px; border-bottom: 1px solid #e6ebe7; background: #f7f9f7; }
+.landing-workspace-preview .lwp-window-brand { display: flex; align-items: center; gap: 8px; color: #2e4538; font-size: 13px; font-weight: 650; white-space: nowrap; }
+.landing-workspace-preview .lwp-window-brand img { display: block; width: 23px; height: 23px; border-radius: 6px; }
+.landing-workspace-preview .lwp-work-name { display: flex; align-items: center; gap: 6px; min-width: 0; padding-left: 18px; border-left: 1px solid #dde5de; color: #6d7b70; font-size: 13px; }
+.landing-workspace-preview .lwp-work-name > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.landing-workspace-preview .lwp-example-label { flex: none; margin-left: auto; color: #839084; font-size: 11px; white-space: nowrap; }
+.landing-workspace-preview .lwp-canvas { display: grid; grid-template-columns: 112px minmax(0, 1fr) 124px; min-width: 0; min-height: 339px; }
+.landing-workspace-preview .lwp-sidebar { min-width: 0; padding: 18px 10px; border-right: 1px solid #e8ede8; background: #fafbf9; }
+.landing-workspace-preview .lwp-sidebar-heading { display: flex; align-items: center; gap: 6px; color: #49604f; font-size: 13px; font-weight: 650; white-space: nowrap; }
+.landing-workspace-preview .lwp-sidebar-heading svg { color: #6c8d76; }
+.landing-workspace-preview .lwp-sidebar-work { padding: 15px 0 17px; color: #30493a; font-size: 14px; font-weight: 650; line-height: 1.6; }
+.landing-workspace-preview .lwp-sidebar-work > span { display: block; margin-top: 3px; color: #879384; font-size: 11px; font-weight: 450; }
+.landing-workspace-preview .lwp-section-label { color: #81907f; font-size: 11px; font-weight: 550; letter-spacing: .5px; }
+.landing-workspace-preview .lwp-chapter-list { display: grid; gap: 5px; padding: 8px 0 0; list-style: none; }
+.landing-workspace-preview .lwp-chapter-list > li { display: flex; align-items: flex-start; gap: 7px; min-width: 0; padding: 8px 7px; border-radius: 6px; color: #738172; font-size: 13px; font-weight: 500; line-height: 1.55; }
+.landing-workspace-preview .lwp-chapter-list > li > svg { margin-top: 3px; color: #95a08f; }
+.landing-workspace-preview .lwp-chapter-list > li > span { min-width: 0; }
+.landing-workspace-preview .lwp-chapter-list small { display: block; margin-bottom: 1px; color: #899483; font-size: 11px; font-weight: 450; }
+.landing-workspace-preview .lwp-chapter-list > .lwp-chapter-selected { color: #19543e; background: #e9f2e9; font-weight: 650; }
+.landing-workspace-preview .lwp-chapter-selected > svg, .landing-workspace-preview .lwp-chapter-selected small { color: #5e8b68; }
+.landing-workspace-preview .lwp-story-settings { display: grid; gap: 11px; padding-top: 18px; margin-top: 18px; border-top: 1px solid #e7ece4; }
+.landing-workspace-preview .lwp-story-settings > span { display: flex; align-items: center; gap: 7px; color: #74836f; font-size: 12px; }
+.landing-workspace-preview .lwp-story-settings > span svg { color: #98a38f; }
+.landing-workspace-preview .lwp-editor { min-width: 0; background: #fff; }
+.landing-workspace-preview .lwp-editor-toolbar { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 39px; padding: 10px 17px; overflow: hidden; border-bottom: 1px solid #edf0ec; color: #738073; background: #fff; }
+.landing-workspace-preview .lwp-toolbar-divider { align-self: center; flex: none; width: 1px; height: 13px; background: #e3e8e0; }
+.landing-workspace-preview .lwp-text-style { display: inline-flex; align-items: center; gap: 7px; color: #6b796b; font-size: 12px; white-space: nowrap; }
+.landing-workspace-preview .lwp-font-size { color: #60735f; font-size: 12px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.landing-workspace-preview .lwp-manuscript { padding: 23px 25px 28px; }
+.landing-workspace-preview .lwp-manuscript-kicker { margin-bottom: 8px; color: #96a18f; font-size: 11px; letter-spacing: 1px; }
+.landing-workspace-preview .lwp-manuscript h3 { margin-bottom: 19px; color: #293f32; font-family: inherit; font-size: 18px; font-weight: 700; line-height: 1.6; }
+.landing-workspace-preview .lwp-manuscript > p:not(.lwp-manuscript-kicker) { margin-bottom: 13px; color: #60705f; font-size: 13px; font-weight: 450; line-height: 1.95; overflow-wrap: anywhere; }
+.landing-workspace-preview .lwp-manuscript > p:last-child { margin-bottom: 0; }
+.landing-workspace-preview .lwp-assistant { min-width: 0; padding: 20px 12px 16px; border-left: 1px solid #e8ede8; background: #fcfdfa; }
+.landing-workspace-preview .lwp-assistant-heading { display: flex; align-items: center; gap: 7px; color: #285840; font-size: 13px; font-weight: 650; white-space: nowrap; }
+.landing-workspace-preview .lwp-assistant-heading svg { color: #588b68; }
+.landing-workspace-preview .lwp-assistant-description { margin-top: 7px; color: #96a08c; font-size: 11px; white-space: nowrap; }
+.landing-workspace-preview .lwp-assistant-tools { display: grid; gap: 13px; padding: 21px 0 0; list-style: none; }
+.landing-workspace-preview .lwp-assistant-tools > li { display: flex; align-items: center; gap: 7px; color: #53694f; font-size: 13px; font-weight: 550; line-height: 1.5; white-space: nowrap; }
+.landing-workspace-preview .lwp-tool-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 25px; height: 27px; border-radius: 7px; }
+.landing-workspace-preview .lwp-tone-green { color: #49856a; background: #ebf4eb; }
+.landing-workspace-preview .lwp-tone-purple { color: #8970a6; background: #f3eef8; }
+.landing-workspace-preview .lwp-tone-blue { color: #5a86a7; background: #edf4f8; }
+.landing-workspace-preview .lwp-tone-amber { color: #ad8c54; background: #f9f3e7; }
+.landing-workspace-preview .lwp-tone-rose { color: #a9797a; background: #f9eff0; }
+.landing-workspace-preview .lwp-assistant-note { padding-top: 23px; margin-top: 22px; border-top: 1px solid #e8ede3; }
+.landing-workspace-preview .lwp-assistant-note > span { display: block; height: 23px; color: #becdb1; font-family: Georgia, serif; font-size: 40px; line-height: 1; }
+.landing-workspace-preview .lwp-assistant-note > p { color: #8a9a7c; font-size: 12px; line-height: 1.9; }
+.landing-workspace-preview .lwp-window-status { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 14px; border-top: 1px solid #e8ede6; color: #9ba593; background: #fcfdfa; font-size: 10px; line-height: 1.5; }
+.landing-workspace-preview .lwp-window-status > span:first-child { display: flex; align-items: center; gap: 6px; }
+.landing-workspace-preview .lwp-status-dot { width: 4px; height: 4px; border-radius: 50%; background: #8baa7c; }
+.landing-workspace-preview figcaption { padding-top: 10px; color: #8b9987; font-size: 11px; text-align: right; }
+@media (max-width: 700px) {
+  .landing-workspace-preview .lwp-canvas { grid-template-columns: 94px minmax(0, 1fr); min-height: 300px; }
+  .landing-workspace-preview .lwp-assistant { display: none; }
+  .landing-workspace-preview .lwp-sidebar { padding: 16px 8px; }
+  .landing-workspace-preview .lwp-sidebar-heading { gap: 5px; font-size: 12px; }
+  .landing-workspace-preview .lwp-sidebar-heading svg { width: 13px; height: 13px; }
+  .landing-workspace-preview .lwp-sidebar-work { font-size: 13px; }
+  .landing-workspace-preview .lwp-chapter-list > li { gap: 5px; padding: 7px 5px; font-size: 12px; }
+  .landing-workspace-preview .lwp-chapter-list > li > svg { width: 11px; height: 11px; }
+  .landing-workspace-preview .lwp-story-settings > span { gap: 5px; font-size: 11px; }
+  .landing-workspace-preview .lwp-manuscript { padding: 20px 19px 25px; }
+  .landing-workspace-preview .lwp-editor-toolbar { gap: 10px; padding: 10px 15px; }
+  .landing-workspace-preview .lwp-optional-tool { display: none; }
+  .landing-workspace-preview .lwp-window-bar { gap: 12px; padding: 10px 13px; }
+  .landing-workspace-preview .lwp-work-name { padding-left: 12px; }
+}
+@media (max-width: 420px) {
+  .landing-workspace-preview .lwp-canvas { grid-template-columns: 83px minmax(0, 1fr); }
+  .landing-workspace-preview .lwp-window { border-radius: 11px; }
+  .landing-workspace-preview .lwp-window-bar { gap: 8px; padding: 10px; }
+  .landing-workspace-preview .lwp-window-brand { gap: 7px; font-size: 12px; }
+  .landing-workspace-preview .lwp-work-name { display: none; }
+  .landing-workspace-preview .lwp-example-label { font-size: 10px; }
+  .landing-workspace-preview .lwp-sidebar { padding: 16px 6px; }
+  .landing-workspace-preview .lwp-sidebar-heading { font-size: 11px; }
+  .landing-workspace-preview .lwp-sidebar-work > span { font-size: 10px; }
+  .landing-workspace-preview .lwp-chapter-list > li { gap: 4px; padding: 7px 4px; font-size: 12px; }
+  .landing-workspace-preview .lwp-chapter-list > li > svg { display: none; }
+  .landing-workspace-preview .lwp-story-settings { gap: 10px; margin-top: 13px; padding-top: 14px; }
+  .landing-workspace-preview .lwp-story-settings > span { font-size: 11px; }
+  .landing-workspace-preview .lwp-story-settings > span svg { width: 12px; height: 12px; }
+  .landing-workspace-preview .lwp-editor-toolbar { gap: 9px; padding: 10px; }
+  .landing-workspace-preview .lwp-text-style { gap: 7px; font-size: 11px; }
+  .landing-workspace-preview .lwp-manuscript { padding: 19px 13px 24px; }
+  .landing-workspace-preview .lwp-manuscript h3 { margin-bottom: 15px; font-size: 16px; }
+  .landing-workspace-preview .lwp-manuscript > p:not(.lwp-manuscript-kicker) { font-size: 13px; line-height: 1.9; }
+  .landing-workspace-preview .lwp-window-status { padding: 8px 10px; font-size: 9px; }
+}

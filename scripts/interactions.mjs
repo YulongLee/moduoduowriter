@@ -119,7 +119,7 @@ try {
   assert.match(textOf(renderer.root.findByType('h1')),/故事|创作|小说|灵感/);assert.ok(renderer.root.findByProps({'aria-label':'首页创作入口'}));
   const genericHomeText=textOf(renderer.root);
   for(const label of ['我的作品','继续创作','创作数据','当前作品','对话关联作品','新故事创作内容'])assert.equal(renderer.root.findAllByProps({'aria-label':label}).length,0);
-  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);assert.equal(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').length,5);
+  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className?.includes('home-tool-card')).length,8);assert.equal(renderer.root.findByProps({'aria-label':'创作快捷入口'}).findAllByType('button').length,6);
   const afterAccount=async()=>{const callback=homeGates.pop();assert.equal(typeof callback,'function');await act(async()=>callback());};
   await act(async()=>renderer.root.findByProps({id:'landing-tools'}).props.onToggle({currentTarget:{open:true}}));
   modal=undefined;await click(renderer.root.findByProps({'aria-label':'使用故事灵感发生器'}));assert.equal(homeGates.length,1);assert.equal(modal,undefined);await afterAccount();assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'ideas');assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);

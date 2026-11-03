@@ -112,3 +112,37 @@
 .public-resource-directory a:focus-visible {outline:2px solid var(--public-green);outline-offset:3px;border-radius:3px;}
 @media(max-width:760px){.public-resource-directory {grid-template-columns:1fr;gap:24px;}.public-resource-directory section>div {grid-template-columns:repeat(2,minmax(0,1fr));}.public-resource-directory section:last-child>div {grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:380px){.public-resource-directory section>div,.public-resource-directory section:last-child>div {grid-template-columns:1fr;}}
+/* Reference homepage: quiet navigation and readable public demo dialogs. */
+.public-landing{background:#fff}
+.public-landing-header{border-bottom-color:#eceeeb;background:#ffffffed}
+.public-landing-header-inner{max-width:1360px;height:68px;padding-left:44px;padding-right:44px;gap:30px}
+.public-landing-header-inner>nav{gap:28px}
+.public-landing-header-inner>nav>button{color:#33483b;font-size:15px;font-weight:550}
+.public-landing-header-actions>.public-landing-login{min-width:69px;border-color:#d1d8d2;border-radius:8px;background:#ffffff80;color:#354a3d}
+.public-landing-header-actions>.public-landing-start{padding-left:20px;padding-right:20px;background:#1b5140}
+.public-dialog-backdrop .product-demo-modal,.public-dialog-backdrop .public-plans-modal{width:min(960px,calc(100vw - 40px));max-width:960px;max-height:90vh;overflow:auto;padding:32px;background:#fff;border:1px solid #dfe6df;border-radius:15px}
+.public-dialog-eyebrow{display:block;margin-bottom:9px;color:#4f795b;font-size:12px;font-weight:600;letter-spacing:.4px}
+.product-demo-modal>h2,.public-plans-modal>h2{margin:0 28px 10px 0;color:#203b2b;font-size:27px;line-height:1.5}
+.product-demo-modal .modal-desc,.public-plans-modal .modal-desc{margin-bottom:20px;color:#69776b;font-size:14px;line-height:1.85}
+.product-demo-workspace .landing-workspace-preview{margin:0}
+.product-demo-workspace .lwp-canvas{min-height:260px}
+.product-demo-workspace .lwp-assistant-note{display:none}
+.product-demo-tabs{display:flex;gap:7px;margin:14px 0 0;padding-bottom:10px;border-bottom:1px solid #e4eae3}
+.product-demo-tabs>button{min-height:36px;padding:7px 16px;border:1px solid transparent;border-radius:7px;color:#657661;font-size:14px}
+.product-demo-tabs>button[aria-selected=true]{border-color:#cdddcf;background:#eef5ed;color:#285936;font-weight:600}
+.product-demo-panel{padding:16px 4px 0;color:#5f725c;font-size:14px;line-height:1.9}
+.product-demo-panel[hidden]{display:none!important}
+.product-demo-panel>h3{margin:0 0 9px;color:#345537;font-size:17px;font-weight:650}
+.product-demo-panel>p{margin:6px 0}
+.product-demo-panel>ol{margin:5px 0 0;padding-left:20px}
+.public-dialog-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px;margin-top:22px;padding-top:17px;border-top:1px solid #e2e9e0}
+.public-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}
+.public-plan-card{padding:22px 20px;border:1px solid #dee7d9;border-radius:10px;background:#fafcf7}
+.public-plan-card>span{color:#819572;font-size:12px}
+.public-plan-card>h3{margin:10px 0;color:#325532;font-size:19px;line-height:1.6}
+.public-plan-card>p,.public-plans-note{color:#6e7e65;font-size:13px;line-height:1.85}
+.public-plans-note{padding:13px 16px;border-radius:7px;background:#f3f6ee}
+@media(max-width:1180px){.public-landing-header-inner{gap:22px;padding-left:30px;padding-right:30px}.public-landing-header-inner>nav{gap:20px}.public-landing-header-actions{gap:6px}}
+@media(max-width:960px){.public-landing-header-inner{height:auto;min-height:68px;padding:13px 24px 0}.public-landing-header-inner>nav{margin-top:8px;padding-bottom:9px}}
+@media(max-width:640px){.public-landing-header-inner{padding:11px 18px 0;gap:0 7px}.public-landing .brand-wordmark>strong{font-size:18px}.public-landing .brand-writing{font-size:10px}.public-landing-header-actions>.public-landing-login{min-width:46px;padding:7px 9px}.public-landing-header-actions>.public-landing-start{padding:7px 11px;font-size:12px}.public-landing-header-inner>nav{gap:23px}.public-landing-header-inner>nav>button{font-size:13px}.public-dialog-backdrop .product-demo-modal,.public-dialog-backdrop .public-plans-modal{width:calc(100vw - 24px);max-height:92vh;padding:27px 18px 20px}.product-demo-modal>h2,.public-plans-modal>h2{font-size:23px}.public-plan-grid{grid-template-columns:1fr;gap:10px;margin:15px 0}.public-plan-card{padding:17px}.public-plan-card>h3{font-size:17px;margin:6px 0}.product-demo-workspace .lwp-canvas{min-height:240px}.product-demo-tabs>button{padding:6px 12px;font-size:13px}.public-dialog-actions{gap:9px}.public-dialog-actions>.button{font-size:13px}.public-dialog-actions>.button.primary{flex:1}}
+@media(max-width:640px){.product-demo-workspace{display:none}.product-demo-tabs{margin-top:18px}.product-demo-panel{padding-top:15px}}

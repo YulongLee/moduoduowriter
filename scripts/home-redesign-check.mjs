@@ -7,9 +7,9 @@ import {createChapterQueue,prepareQueueJob,completeQueueJob} from '../src/chapte
 
 // Controlled data, memory rendering and a request trap; no browser or paid generation.
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
-const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+const server=await createServer({configFile:false,optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false},appType:'custom'});
 const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
-const click=async node=>{assert.ok(node,'Expected a reachable control');await act(async()=>node.props.onClick());};
+const click=async node=>{assert.ok(node,'Expected a reachable control');await act(async()=>node.props.onClick({currentTarget:{closest:()=>null}}));};
 const button=(root,label)=>root.findAllByType('button').find(node=>text(node).trim()===label);
 const originalFetch=globalThis.fetch,originalDocument=globalThis.document,originalStorage=globalThis.localStorage;
 const networkRequests=[],storageReads=[],storageWrites=[],listeners=new Map(),menuNodes=new Map();
@@ -46,7 +46,7 @@ try{
  const more=tool=>byLabel(`${tool.title}更多操作`);
  const submit=async()=>act(async()=>renderer.root.findByProps({className:'home-composer-form'}).props.onSubmit({preventDefault(){}}));
  const continueAfterAccount=async action=>{assert.equal(typeof action,'function','Private actions must be passed as deferred callbacks');await act(async()=>action());};
- const gated=async action=>{modal=undefined;const before=pendingActions.length;await action();assert.equal(pendingActions.length,before+1,'A private action must first request account access');assert.equal(modal,undefined,'A private dialog cannot open before the account callback executes');const deferred=pendingActions.pop();await continueAfterAccount(deferred);};
+ const gated=async action=>{modal=undefined;const before=pendingActions.length,beforeRoute=route;await action();assert.equal(pendingActions.length,before+1,'A private action must first request account access');assert.equal(modal,undefined,'A private dialog cannot open before the account callback executes');assert.equal(route,beforeRoute,'Private navigation must also wait for the account callback');const deferred=pendingActions.pop();await continueAfterAccount(deferred);};
  const normalizedTree=()=>JSON.stringify(renderer.toJSON(),(key,value)=>['id','htmlFor','form','aria-controls','aria-labelledby'].includes(key)?undefined:value);
  const privateLabels=['我的作品','继续创作','创作数据','当前作品','对话关联作品','对话记录'];
  await mountHome();
@@ -62,13 +62,30 @@ try{
  const chatInput=byLabel('故事灵感输入'),chatForm=(()=>{let node=chatInput.parent;while(node&&node.type!=='form')node=node.parent;return node;})();assert.ok(chatForm);
  const beforeBlank=pendingActions.length;await act(async()=>chatForm.props.onSubmit({preventDefault(){}}));assert.equal(pendingActions.length,beforeBlank);assert.equal(byLabel('故事灵感输入').props['aria-invalid'],true);assert.ok(text(renderer.root.findByProps({role:'alert'})).includes('先写下'));assert.equal(document.activeElement.label,'故事灵感输入');
  const firstPending=pendingActions.length;
- for(const label of ['聊聊故事灵感','设计一个角色','讨论下一章']){await click(button(renderer.root,label));assert.ok(byLabel('故事灵感输入').props.value.trim());assert.equal(pendingActions.length,firstPending);}
+ const suggestions=renderer.root.findByProps({className:'home-public-suggestions'}),suggestionLabels=['帮我构思一个小说创意','生成详细的大纲','设计主要人物设定','写第一章正文','润色已有章节'];
+ assert.deepEqual(suggestions.findAllByType('button').map(text),suggestionLabels);
+ const suggestionDrafts=[];
+ for(const label of suggestionLabels){modal=undefined;await click(button(suggestions,label));const draft=byLabel('故事灵感输入').props.value;assert.ok(draft.trim());suggestionDrafts.push(draft);assert.equal(pendingActions.length,firstPending);assert.equal(modal,undefined);assert.equal(networkRequests.length,0,'A suggestion must only prepare a draft');}
+ assert.equal(new Set(suggestionDrafts).size,5,'Each suggestion prepares its own meaningful draft');
+ const templates=renderer.root.findByProps({className:'mdd-prompt-menu'});assert.equal(templates.type,'details');
+ for(const [index,label]of suggestionLabels.entries()){
+  const details={open:true};await act(async()=>button(templates,label).props.onClick({currentTarget:{closest:()=>details}}));
+  assert.equal(details.open,false,'Selecting a template closes its native disclosure');assert.equal(byLabel('故事灵感输入').props.value,suggestionDrafts[index]);assert.equal(document.activeElement.label,'故事灵感输入');assert.equal(pendingActions.length,firstPending);
+ }
  const inputKey=async extra=>act(async()=>byLabel('故事灵感输入').props.onKeyDown?.({key:'Enter',shiftKey:false,isComposing:false,nativeEvent:{isComposing:false},preventDefault(){},...extra}));
  await inputKey({shiftKey:true});await inputKey({isComposing:true});await inputKey({nativeEvent:{isComposing:true}});assert.equal(pendingActions.length,firstPending);
  await change(byLabel('故事灵感输入'),'  一位修复师收到来自未来的信  ');
  await gated(()=>act(async()=>chatForm.props.onSubmit({preventDefault(){}})));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'一位修复师收到来自未来的信');assert.equal(modal.workId,undefined);
+ const modes=byLabel('创作模式').findAllByType('option').map(text);assert.deepEqual(modes,['智能创作','大纲规划','人物设计','正文续写','文字润色']);
+ assert.ok(!/DeepSeek|Qwen|通义|百炼|DashScope|OpenAI|模型供应商/i.test(text(renderer.root)),'The public page must not expose implementation providers');
+ for(const mode of modes.slice(1)){
+  modal=undefined;const beforeMode=pendingActions.length;await change(byLabel('创作模式'),mode);assert.equal(pendingActions.length,beforeMode);assert.equal(modal,undefined);assert.equal(networkRequests.length,0,'Changing a creative mode must never run generation');
+  await gated(()=>act(async()=>chatForm.props.onSubmit({preventDefault(){}})));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,`请围绕「${mode}」与我讨论以下创作需求：\n一位修复师收到来自未来的信`);assert.equal(modal.workId,undefined);
+ }
+ await change(byLabel('创作模式'),'智能创作');
+ const beforeDemo=pendingActions.length;modal=undefined;await click(button(renderer.root,'查看产品演示'));assert.deepEqual(modal,{type:'product-demo'});assert.equal(pendingActions.length,beforeDemo,'Authored product demonstration must remain public');assert.equal(networkRequests.length,0);
  assert.equal(networkRequests.length,0,'A public chat prompt must never automatically call a model');
- console.log('PASS public example chips only fill the draft, input methods do not submit and discussion enters an account-gated private dialog');
+ console.log('PASS five suggestions/templates only fill drafts, mode selection changes the deferred prompt, product demo remains public and no provider is exposed or called');
 
  const toolbox=renderer.root.findByProps({id:'landing-tools'});assert.equal(toolbox.type,'details');assert.equal(toolbox.props.open,false);await act(async()=>toolbox.props.onToggle({currentTarget:{open:true}}));assert.equal(renderer.root.findByProps({id:'landing-tools'}).props.open,true,'Readers explicitly expand the retained full tool library');
  const iconClasses={ideas:'lucide-lightbulb',outline:'lucide-list-tree',character:'lucide-users-round',polish:'lucide-wand-sparkles',continue:'lucide-feather',dialogue:'lucide-messages-square',review:'lucide-scan-text',title:'lucide-type'};
@@ -81,8 +98,14 @@ try{
   await gated(()=>click(guide.findByProps({'aria-label':`使用${tool.title}示例`})));assert.deepEqual(modal.tool,tool);assert.equal(modal.prompt,toolGuides[tool.id].prompt);assert.equal(modal.workId,undefined);assert.equal(modal.chapterId,undefined);
  }
  await click(byLabel('收起工具使用指南'));
- const entries=byLabel('创作快捷入口');assert.equal(entries.findAllByType('button').length,5);
- for(const [label,id]of [['灵感生成','ideas'],['故事大纲','outline'],['人物设定','character'],['剧情续写','continue'],['文字润色','polish']]){await gated(()=>click(byLabel('体验'+label)));assert.equal(modal.tool.id,id);assert.equal(modal.workId,undefined);}
+ const entries=byLabel('创作快捷入口');assert.equal(entries.findAllByType('button').length,6);
+ for(const [label,id]of [['故事大纲','outline'],['人物设定','character'],['正文创作','continue'],['文字润色','polish']]){const entry=byLabel('体验'+label);assert.ok(entry.findByType('svg').props.className.includes(iconClasses[id]),`${label}: preserve the existing SVG glyph`);await gated(()=>click(entry));assert.equal(modal.tool.id,id);assert.equal(modal.workId,undefined);}
+ await gated(()=>click(byLabel('体验世界观设定')));assert.equal(modal.type,'home-conversation');assert.match(modal.initialPrompt,/世界观.*题材.*规则/);assert.equal(modal.workId,undefined);
+ route=undefined;await gated(()=>click(byLabel('体验创作管理')));assert.equal(route,'works');
+ const scenes=byLabel('三种常用创作场景');assert.equal(scenes.findAllByType('button').length,3);
+ await gated(()=>click(byLabel('从零创作小说')));assert.equal(modal.type,'quick-start');assert.notEqual(modal.autoGenerate,true,'Opening a scene must not opt into automatic generation');
+ await gated(()=>click(byLabel('续写已有小说')));assert.equal(modal.type,'home-conversation');assert.match(modal.initialPrompt,/前情.*本章目标/);assert.equal(modal.workId,undefined);
+ await gated(()=>click(byLabel('修改润色小说')));assert.equal(modal.type,'tool');assert.equal(modal.tool.id,'polish');assert.equal(modal.workId,undefined);
  const firstTool=tools.find(tool=>tool.id==='ideas');await act(async()=>more(firstTool).props.onKeyDown({key:'ArrowUp',preventDefault(){}}));
  const menu=byLabel(`${firstTool.title}操作`),menuKey=async key=>act(async()=>menu.props.onKeyDown({key,preventDefault(){}}));
  assert.equal(document.activeElement,menuNodes.get(`${firstTool.title}操作`).items[1]);await menuKey('ArrowDown');assert.equal(document.activeElement.name,'guide');await menuKey('End');assert.equal(document.activeElement.name,'favorite');await menuKey('Home');assert.equal(document.activeElement.name,'guide');
@@ -90,22 +113,24 @@ try{
  await click(more(firstTool));await act(async()=>emit('pointerdown',{target:{}}));assert.equal(more(firstTool).props['aria-expanded'],false);
  await click(more(firstTool));route=undefined;await gated(()=>click(byLabel('收藏故事灵感发生器')));assert.equal(route,'tools');assert.equal(favoriteActions.length,0,'The public page cannot mutate or display private favorites');
  assert.equal(networkRequests.length,0);assert.equal(storageReads.length,0);assert.equal(storageWrites.length,0);
- console.log('PASS eight retained tools/icons, five feature cards, public authored guides and explicit account gating for tool use and favorites');
+ console.log('PASS eight retained tools/icons/menus, six feature entries, three scenes and authored guides with explicit account gating');
 
  assert.equal(renderer.root.findAllByProps({'aria-label':'一句话故事灵感'}).length,0,'Public home must not mount the private generation form');
- const beforeExample=pendingActions.length;await click(button(renderer.root,'查看生成示例'));assert.match(text(byLabel('预写创作示例')),/原创预写|预先编写/);assert.equal(pendingActions.length,beforeExample);
+ const beforeExample=pendingActions.length;await click(button(renderer.root,'查看完整预写示例'));assert.match(text(byLabel('预写创作示例')),/原创预写|预先编写/);assert.equal(pendingActions.length,beforeExample);
  const exampleButtons=()=>byLabel('预写创作示例').findAllByType('button').filter(node=>node.props['aria-label']?.startsWith('查看预写示例：'));
- assert.equal(exampleButtons().length,3);assert.equal(byLabel('预写创作示例').findAll(node=>node.props.className?.startsWith('book-cover ')).length,3,'Only the three authored public examples should have covers');
+ assert.equal(exampleButtons().length,4);assert.equal(byLabel('预写创作示例').findAllByType('img').filter(node=>node.props.className?.startsWith('mdd-example-cover ')).length,4,'Only the four authored public examples should have covers');
  const exampleDrafts=[];
- for(const [title,needle]of [['雨夜来信','明天'],['风来的那一天','旧屋'],['沉默的第七颗月亮','行星']]){
+ for(const [title,needle]of [['雨夜来信','明天'],['风来的那一天','旧屋'],['沉默的第七颗月亮','行星'],['云海问归','云海']]){
   await change(byLabel('故事灵感输入'),'用来判断是否填入了新示例的草稿');modal=undefined;await click(byLabel('查看预写示例：'+title));assert.equal(modal,undefined);assert.equal(pendingActions.length,beforeExample);
   const preview=byLabel('预写创作示例').findByProps({className:'home-public-example'});assert.equal(text(preview.findByType('h2')),title);
   await click(button(renderer.root,'填入示例灵感'));const filled=byLabel('故事灵感输入').props.value;assert.ok(filled.includes(needle));assert.notEqual(filled,'用来判断是否填入了新示例的草稿');exampleDrafts.push(filled);assert.equal(pendingActions.length,beforeExample);
  }
- assert.equal(new Set(exampleDrafts).size,3,'Each selected authored example must fill its own story idea');
- await click(button(byLabel('示例题材'),'科幻'));assert.equal(exampleButtons().length,1);assert.equal(exampleButtons()[0].props['aria-label'],'查看预写示例：沉默的第七颗月亮');await click(button(byLabel('示例题材'),'全部'));assert.equal(exampleButtons().length,3);
+ assert.equal(new Set(exampleDrafts).size,4,'Each selected authored example must fill its own story idea');
+ for(const [genre,title]of [['悬疑','雨夜来信'],['言情','风来的那一天'],['科幻','沉默的第七颗月亮'],['玄幻','云海问归']]){await click(button(byLabel('示例题材'),genre));assert.equal(exampleButtons().length,1);assert.equal(exampleButtons()[0].props['aria-label'],'查看预写示例：'+title);assert.equal(button(byLabel('示例题材'),genre).props['aria-pressed'],true);}await click(button(byLabel('示例题材'),'全部'));assert.equal(exampleButtons().length,4);
+ const gallery=renderer.root.findByProps({id:'landing-inspiration'});assert.equal(gallery.type,'details');assert.equal(gallery.findAllByType('button').length,6);
+ for(const entry of gallery.findAllByType('button')){await click(entry);assert.equal(byLabel('故事灵感输入').props.value,text(entry.findByType('strong')));assert.equal(document.activeElement.label,'故事灵感输入');assert.equal(pendingActions.length,beforeExample);assert.equal(networkRequests.length,0,'Public inspiration gallery only fills a draft');}
  await change(byLabel('故事灵感输入'),'');
- await gated(()=>click(button(renderer.root,'添加参考资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
+ await gated(()=>click(byLabel('添加参考资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
  for(const [label,expected]of [['小说写作','novels'],['剧本创作','scripts'],['小说拆书','dismantle'],['投稿中心','submit']]){route=undefined;await gated(()=>click(button(renderer.root,label)));assert.equal(route,expected);}
  route=undefined;await gated(()=>click(button(renderer.root,'进入工具库')));assert.equal(route,'tools');route=undefined;await gated(()=>click(byLabel('进入创作空间').findByType('button')));assert.equal(route,'works');await gated(()=>click(button(renderer.root,'查看创作方案')));assert.equal(route,'membership');
  assert.equal(imports,0,'Supplying a private import callback must not cause the public page to inspect or import documents');

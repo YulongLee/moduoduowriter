@@ -47,7 +47,7 @@ globalThis.fetch=async(url,options={})=>{
  if(String(url).startsWith('/api/data/')&&options.method==='PUT')return Response.json({spaceId:options.headers?.['X-Mdd-Space']||'local',revision:2});
  throw Error(`Unexpected public-home fixture request: ${url}`);
 };
-const nodeMock=()=>({focus(){},contains(){return false;},querySelector(){return null;},querySelectorAll(){return [];},addEventListener(){},removeEventListener(){},scrollTo(){},scrollIntoView(){},getBoundingClientRect(){return {left:0,top:0,width:1280,height:800};},style:{}});
+const nodeMock=element=>({id:element.props.id,label:element.props['aria-label'],isConnected:true,focus(){document.activeElement=this;},contains(){return false;},querySelector(){return null;},querySelectorAll(){return [];},addEventListener(){},removeEventListener(){},scrollTo(){},scrollIntoView(){},getBoundingClientRect(){return {left:0,top:0,width:1280,height:800};},style:{}});
 const vite=await createServer({configFile:false,optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {App,ApplicationRouter}=await vite.ssrLoadModule('/src/main.jsx');
@@ -95,7 +95,7 @@ try{
  };
  const go=async route=>act(async()=>{location.hash=`#${route}`;for(const handler of listeners.get('hashchange')||[])handler();await sleep(20);});
  const change=async(node,value)=>act(async()=>node.props.onChange({target:{value,checked:value}}));
- const click=async node=>{assert.ok(node,'Expected a reachable public-home control');await act(async()=>{await node.props.onClick();await sleep(10);});};
+ const click=async node=>{assert.ok(node,'Expected a reachable public-home control');await act(async()=>{await node.props.onClick({currentTarget:{closest:()=>null}});await sleep(10);});};
  const submitPublic=async()=>act(async()=>{await publicMain().findByProps({'aria-label':'公开创作入口'}).findByType('form').props.onSubmit({preventDefault(){}});await sleep(10);});
  const submitAccount=async()=>{
   const form=renderer.root.findAllByType('form').find(node=>node.findAllByProps({'aria-label':'创作账号'}).length);assert.ok(form);
@@ -127,6 +127,42 @@ try{
  assert.equal(canAccessPrivate({...member('alice'),ready:true}),true);
  assert.equal(canAccessPrivate({...member('alice'),spaceId:'bob',ready:true}),false,'a mismatched identity cannot open another cached space');
  assert.equal(canAccessPrivate({ready:true,configured:true,user:{id:123},spaceId:123}),false,'malformed identity values must not authorize a private cache');
+
+ // Public navigation and demonstrations may inspect authored material only.
+ await mount();
+ const publicButton=(scope,label)=>scope.findAllByType('button').find(node=>text(node).trim()===label);
+ const mainNav=renderer.root.findByProps({'aria-label':'网站主导航'});
+ assert.deepEqual(mainNav.findAllByType('button').map(text),['首页','创作工具','灵感广场','作品示例','创作方案']);
+ assert.equal(text(renderer.root.findByProps({'aria-label':'免费使用'})),'免费开始写作');
+ const originalGetElementById=document.getElementById,originalScrollTo=window.scrollTo,scrolled=[];
+ const inspirationTarget={tagName:'DETAILS',open:false,scrollIntoView(){scrolled.push('landing-inspiration');}};
+ document.getElementById=id=>id==='landing-inspiration'?inspirationTarget:{tagName:'SECTION',scrollIntoView(){scrolled.push(id);}};
+ window.scrollTo=()=>scrolled.push('top');
+ try{for(const label of ['首页','创作工具','灵感广场','作品示例'])await click(publicButton(mainNav,label));assert.deepEqual(scrolled,['top','landing-features','landing-inspiration','landing-examples']);assert.equal(inspirationTarget.open,true,'Navigation expands the native inspiration disclosure before scrolling');}
+ finally{document.getElementById=originalGetElementById;window.scrollTo=originalScrollTo;}
+ const demoDraft='公开演示前写下的故事草稿';await change(publicMain().findByProps({'aria-label':'故事灵感输入'}),demoDraft);
+ await click(publicButton(publicMain(),'查看产品演示'));
+ const demo=()=>renderer.root.findByProps({role:'dialog','aria-label':'产品功能演示'});
+ assert.match(demo().props.className,/product-demo-modal/);assert.match(text(demo()),/原创预写/);assert.match(text(demo()),/不是实时生成/);assert.equal(demo().findAllByProps({'aria-label':'创作工作台功能示意'}).length,1);
+ const tabs=()=>demo().findAllByProps({role:'tab'}),panels=()=>demo().findAllByProps({role:'tabpanel'});
+ assert.deepEqual(tabs().map(text),['大纲','人物','开篇']);
+ for(let index=0;index<3;index++){
+  await click(tabs()[index]);assert.equal(tabs().filter(tab=>tab.props['aria-selected']).length,1);assert.equal(tabs()[index].props.tabIndex,0);
+  assert.ok(tabs().filter((_,other)=>other!==index).every(tab=>tab.props.tabIndex===-1));
+  const visible=panels().filter(panel=>!panel.props.hidden);assert.equal(visible.length,1);assert.equal(visible[0].props.id,tabs()[index].props['aria-controls']);assert.equal(visible[0].props['aria-labelledby'],tabs()[index].props.id);assert.ok(text(visible[0]).includes(index===0?'沈砚':index===1?'青伞客':'石阶'));
+  assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);assert.deepEqual(writes,[]);
+ }
+ for(const [from,key,to]of [[2,'ArrowRight',0],[0,'ArrowLeft',2],[2,'Home',0],[0,'End',2]]){
+  await act(async()=>tabs()[from].props.onKeyDown({key,preventDefault(){}}));assert.equal(tabs()[to].props['aria-selected'],true);assert.equal(document.activeElement.id,tabs()[to].props.id,'Keyboard tab navigation also moves focus');
+ }
+ await act(async()=>{for(const handler of listeners.get('keydown')||[])handler({key:'Escape',preventDefault(){}});});assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,0);
+ assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,demoDraft,'Closing an authored preview preserves the public draft');
+ await click(publicButton(publicMain(),'查看产品演示'));assert.equal(tabs()[0].props['aria-selected'],true,'Reopening the demo starts with its authored outline');
+ await click(renderer.root.findByProps({'aria-label':'关闭公共首页弹窗'}));
+ await click(publicButton(mainNav,'创作方案'));
+ const plans=renderer.root.findByProps({role:'dialog','aria-label':'创作方案演示'});assert.match(plans.props.className,/public-plans-modal/);assert.match(text(plans),/会员与墨点.*功能演示/);assert.match(text(plans),/未接入真实支付/);assert.ok(!/[¥￥]\s*\d/.test(text(plans)),'Public plans must not invent a checkout price');assert.equal(plans.findAllByType('form').length,0);
+ await click(renderer.root.findByProps({'aria-label':'关闭公共首页弹窗'}));assertPublic('public-demo-and-plans');assert.ok(!calls.some(call=>call.url==='/api/generate'));
+ console.log('PASS five public navigation targets, inspiration disclosure, authored keyboard-accessible demo tabs and no-price public plans with no private calls or draft loss');
 
  await mount();
  await click(renderer.root.findByProps({'aria-label':'登录'}));
@@ -183,10 +219,28 @@ try{
  assert.equal(renderer.root.findAllByType('aside').length,0,'returning to the marketing page must remove the private sidebar');
  console.log('PASS queued/cancelled intents, header login into works, one-time login handoff into conversation and return home with the original public input');
 
- for(const [label,destination]of [['查看创作方案','membership'],['进入工具库','tools']]){
+ await mount();
+ const modeDraft='我想讨论一位守护灯塔的角色。',mode='人物设计';
+ await change(publicMain().findByProps({'aria-label':'故事灵感输入'}),modeDraft);
+ await change(publicMain().findByProps({'aria-label':'创作模式'}),mode);
+ assertPublic('mode-selection-only');assert.ok(!/DeepSeek|Qwen|通义|百炼|DashScope|OpenAI|模型供应商/i.test(text(publicMain())),'Mode names describe creative tasks rather than providers');
+ await submitPublic();assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
+ await fillAccount();await submitAccount();assert.equal(location.hash,'#conversation');
+ assert.equal(renderer.root.findByProps({'aria-label':'创作对话输入'}).props.value,`请围绕「${mode}」与我讨论以下创作需求：\n${modeDraft}`,'The chosen creative task survives the real login handoff as an editable prompt');
+ assert.ok(!calls.some(call=>call.url==='/api/generate'));assert.equal(calls.filter(call=>call.url==='/api/data').length,1);
+ await click(renderer.root.findByProps({'data-nav':'home'}));assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,modeDraft);assert.equal(publicMain().findByProps({'aria-label':'创作模式'}).props.value,mode);assert.ok(!calls.some(call=>call.url==='/api/generate'));
+ console.log('PASS mode selection is local, survives the one-time login handoff and only prefills an editable private conversation without generation');
+
+ for(const [label,destination]of [['查看创作方案','membership'],['进入工具库','tools'],['公开方案演示','membership'],['演示后开始创作','works']]){
   await mount();
   if(destination==='tools')await act(async()=>publicMain().findByProps({id:'landing-tools'}).props.onToggle({currentTarget:{open:true}}));
-  const action=publicMain().findAllByType('button').find(node=>text(node).trim()===label);await click(action);
+  let action;
+  if(label==='公开方案演示'){
+   await click(publicButton(renderer.root.findByProps({'aria-label':'网站主导航'}),'创作方案'));assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);action=publicButton(renderer.root.findByProps({role:'dialog'}),'登录查看方案演示');
+  }else if(label==='演示后开始创作'){
+   await click(publicButton(publicMain(),'查看产品演示'));assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);action=publicButton(renderer.root.findByProps({role:'dialog'}),'开始自己的故事');
+  }else action=publicMain().findAllByType('button').find(node=>text(node).trim()===label);
+  await click(action);
   assert.equal(location.hash,'#home');assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
   await fillAccount();await submitAccount();
   assert.equal(location.hash,`#${destination}`,`${label} keeps the original destination through login`);
