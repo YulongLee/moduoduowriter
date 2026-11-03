@@ -91,6 +91,16 @@ try {
     assert.equal(result.templateId, template.id); assert.equal(result.genre, template.genre); assert.deepEqual(result.styles, template.styles);
     assert.equal(result.outline, template.outline); assert.equal(result.characters, template.characters); assert.equal(result.notes, template.notes); assert.equal(result.text, '');
   }
+  await mount({ seed: {title:'整理带入的旧资料',notes:'旧'.repeat(100001)} });
+  const beforeOversized=created.length;await submit();assert.equal(created.length,beforeOversized);
+  assert.equal(renderer.root.findByType('details').props.open,true,'Oversized imported material must expose an editable recovery path');
+  assert.equal(byLabel('创建页创作备注').props.value.length,100001,'Do not silently discard the original material');
+  await change(byLabel('创建页创作备注'),'作者整理后的完整备注');
+  await change(byLabel('创建页作品大纲'),'作者在创建前确认的大纲');
+  await change(byLabel('创建页人物设定'),'作者在创建前确认的人物');
+  await submit();assert.equal(created.length,beforeOversized+1);
+  assert.equal(created.at(-1).notes,'作者整理后的完整备注');assert.equal(created.at(-1).outline,'作者在创建前确认的大纲');assert.equal(created.at(-1).characters,'作者在创建前确认的人物');
+  console.log('PASS prefilled planning is reviewable and editable, including explicit recovery from oversized legacy material without silent truncation');
   const personal = { title: '不许覆盖我的书名', description: '不许覆盖我的简介', kind: '短篇故事', genre: '现实', styles: ['轻松'], outline: '我确认的大纲', characters: '我确认的人物', notes: '我自己的笔记' };
   await mount({ seed: personal }); await click(byLabel(`使用${creationTemplates[0].name}`));
   for (const key of ['title', 'description', 'kind', 'outline', 'characters', 'notes']) assert.equal(draft[key], personal[key], `Template selection cannot overwrite a user-authored ${key}`);
