@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-03T23:21:48.020709+00:00",
+  "revision": "64112a92e134acf76334d1d704909409cf9402ee",
+  "url": "https://moduoduowriter.com/#conversation",
+  "archiveSha256": "b72fba60ca91e757cd6bc8678392ea74ea256a691085913dd83cf9f95f57eed9",
+  "checks": {
+    "fullTestSuite": true,
+    "studioConversationSuite": true,
+    "contrastCheck": true,
+    "productionBuild": true,
+    "publicPagesMatchingBuild": 14,
+    "assetsMatchingBuild": 2,
+    "anonymousPrivateDataStatus": 401,
+    "healthStatus": 200,
+    "loginMethods": {
+      "phone": true,
+      "email": true,
+      "wechat": false
+    },
+    "otherFiveServicesUnchanged": true,
+    "nginxConfigurationsUnchanged": true,
+    "authenticationConfigurationUnchanged": true,
+    "existingUserFilesUntouched": true
+  },
+  "limitations": [
+    "自动浏览器目测仍受已保存权限规则限制；未声称完成视觉验收。",
+    "本次未调用付费模型或向真实手机、邮箱发送验证码。"
+  ],
+  "rollback": "Previous release retained by the dedicated application activation script."
+}
