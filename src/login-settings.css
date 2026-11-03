@@ -12,6 +12,7 @@
 .login-service-settings .login-config-dirty {padding:10px 12px;border-left:3px solid #b7893e;background:#fff8eb;color:#845d26;font-size:13px;}
 .login-service-settings .login-config-guide {border:1px solid #e1e8e4;border-radius:8px;padding:13px 16px;margin:18px 0 24px;background:#f8faf9;color:#43594b;font-size:13px;line-height:1.8;}
 .login-service-settings .login-config-guide summary {font-weight:600;cursor:pointer;}
+.login-service-settings .login-config-future>fieldset {margin:16px 0 0;padding:16px;border:1px solid #dce5df;border-radius:8px;background:#fff;}
 .login-service-settings .login-config-guide ul {padding-left:20px;margin:12px 0 0;}
 .login-service-settings .login-config-guide li+li {margin-top:10px;}
 .login-service-settings .login-config-guide a {display:inline-flex;align-items:center;gap:3px;color:#21614e;margin-left:8px;}

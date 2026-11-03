@@ -4,6 +4,7 @@ import {requestApi} from './Generation.jsx';
 import './login.css';
 
 const methodLabels={phone:'手机号',email:'邮箱',wechat:'微信扫码'};
+const methodOrder=['phone','email','wechat'];
 const icons={phone:Smartphone,email:Mail,wechat:MessageCircle};
 const expires=value=>typeof value==='number'?value:Date.parse(value);
 const seconds=value=>Math.max(0,Math.ceil(value/1000));
@@ -54,9 +55,10 @@ export function LoginMethods({account,onSuccess,renderLegacy,purpose='login'}) {
    if(!result||!['phone','email','wechat'].every(key=>result[key]&&typeof result[key]==='object'&&typeof result[key].enabled==='boolean'&&typeof result[key].available==='boolean')||(result.ownerConfigured!==undefined&&typeof result.ownerConfigured!=='boolean'))throw new Error('登录方式暂未载入，请稍后重试。');
    if(alive.current&&!signal.aborted&&loading===loadSequence.current){
     setMethods(result);
-    if(!methodChosen.current&&!availableMethod(result,methodRef.current)){
-     const next=['phone','email','wechat'].find(value=>availableMethod(result,value));
-     if(next){methodRef.current=next;setMethod(next);}
+    const hiddenWechat=methodRef.current==='wechat'&&!availableMethod(result,'wechat');
+    if(hiddenWechat||(!methodChosen.current&&!availableMethod(result,methodRef.current))){
+     const next=methodOrder.find(value=>availableMethod(result,value))||'phone';
+     if(next!==methodRef.current){cancel();setQr(null);setChallenge(null);setCode('');setBusy('');setError('');setNotice('');setConfirmNeeded(false);methodRef.current=next;setMethod(next);}
     }
    }
   }catch(value){if(alive.current&&!signal.aborted&&loading===loadSequence.current)setLoadError(value.message||'登录方式暂未载入，请稍后重试。');}
@@ -159,12 +161,13 @@ export function LoginMethods({account,onSuccess,renderLegacy,purpose='login'}) {
  if(legacy)return <div className="login-legacy"><button type="button" className="login-back" aria-label="返回其他登录方式" onClick={()=>{cancel();setLegacy(false);setCompleted(false);delivered.current=false;}}><ArrowLeft size={15}/>返回其他登录方式</button>{renderLegacy?.()}</div>;
  const remaining=challenge?seconds(challenge.retryAt-now):0,codeExpired=challenge&&challenge.expiresAt<=now;
  const qrExpired=qr&&(qr.expiresAt<=now||qr.state==='expired'),qrFailed=qr?.state==='failed';
+ const visibleMethods=methodOrder.filter(value=>value!=='wechat'||availableMethod(methods,value));
  const reason=methods?.ownerConfigured===false?'登录服务正在准备中':`${methodLabels[method]}${binding?'绑定':'登录'}暂未开放`;
- const otherAvailable=['phone','email','wechat'].some(value=>value!==method&&availableMethod(methods,value));
+ const otherAvailable=visibleMethods.some(value=>value!==method&&availableMethod(methods,value));
  const unavailableHelp=binding?'开通后，你可以在这里绑定到当前账号，继续使用同一份文稿和创作记录。':otherAvailable?'请切换到其他登录方式，或使用下方的账号密码入口。':'已有账号可以通过下方的账号密码入口登录。';
  return <section className="login-methods" aria-label={binding?'绑定登录方式':'选择登录方式'}>
-  <header><span className="login-welcome">{binding?'安全管理你的账号':'让好故事发生'}</span><h2>{binding?'绑定登录方式':<>登录墨多多<span className="login-product-subtitle">写作</span></>}</h2><p>{binding?'验证后绑定到当前创作账号，文稿与记录保持在同一空间。':'选择一种方式，进入你的创作空间。'}</p></header>
-  <div className="login-tabs" role="tablist" aria-label="登录方式">{['phone','email','wechat'].map(value=>{const Icon=icons[value];return <button type="button" id={instanceId+'-'+value} role="tab" aria-selected={method===value} aria-controls={instanceId+'-panel'} tabIndex={method===value?0:-1} key={value} disabled={completed} onClick={()=>changeMethod(value)} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const values=['phone','email','wechat'],index=values.indexOf(method),next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:2))%3;changeMethod(values[next]);document.getElementById(instanceId+'-'+values[next])?.focus();}}><Icon size={17}/>{methodLabels[value]}</button>;})}</div>
+  <header><span className="login-welcome">{binding?'安全管理你的账号':'让好故事发生'}</span><h2>{binding?'绑定登录方式':<>登录墨多多<span className="login-product-subtitle">写作</span></>}</h2><p>{binding?'验证后绑定到当前创作账号，文稿与记录保持在同一空间。':visibleMethods.length===2?'使用手机号或邮箱，进入你的创作空间。':'选择一种方式，进入你的创作空间。'}</p></header>
+  <div className="login-tabs" role="tablist" aria-label="登录方式">{visibleMethods.map(value=>{const Icon=icons[value];return <button type="button" id={instanceId+'-'+value} role="tab" aria-selected={method===value} aria-controls={instanceId+'-panel'} tabIndex={method===value?0:-1} key={value} disabled={completed} onClick={()=>changeMethod(value)} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const values=visibleMethods,index=values.indexOf(method),next=event.key==='Home'?0:event.key==='End'?values.length-1:(index+(event.key==='ArrowRight'?1:values.length-1))%values.length;changeMethod(values[next]);document.getElementById(instanceId+'-'+values[next])?.focus();}}><Icon size={17}/>{methodLabels[value]}{!binding&&value!=='wechat'?'登录':''}</button>;})}</div>
   <div id={instanceId+'-panel'} role="tabpanel" aria-labelledby={instanceId+'-'+method} className="login-panel">
    {!methods&&!loadError?<p className="login-status" role="status"><LoaderCircle size={16} className="spin"/>正在载入登录方式…</p>:loadError?<div className="login-availability" role="status"><p>{loadError}</p><button type="button" className="login-text-button" onClick={()=>load()}><RefreshCw size={14}/>重新载入</button></div>:!enabled?<div className="login-availability" role="status"><span className="login-availability-icon">{React.createElement(icons[method],{size:24})}</span><p>{reason}</p><small>{unavailableHelp}</small></div>:method==='wechat'?<div className="login-wechat">
     {!qr?<><div className="login-wechat-empty"><MessageCircle size={35}/><strong>用微信安全扫码登录</strong><p>获取二维码后，用手机微信扫描并确认授权。</p></div><button type="button" className="button primary full" aria-label="获取微信登录二维码" disabled={Boolean(busy)||completed} onClick={startWechat}>{busy==='qr'?<LoaderCircle size={16} className="spin"/>:<MessageCircle size={16}/>}获取登录二维码</button></>:<><div className="login-wechat-frame">{qrExpired?<div className="login-qr-overlay"><strong>二维码已过期</strong><span>请重新获取二维码。</span></div>:qrFailed?<div className="login-qr-overlay login-qr-failed" role="status"><CircleAlert size={27}/><strong>本次授权未完成</strong><span>重新获取二维码，再用微信扫码确认。</span></div>:qr.state==='approved'?<div className="login-qr-overlay"><Check size={27}/><strong>微信已确认授权</strong><span>{completed?'登录成功':'正在确认登录状态…'}</span></div>:<iframe title="微信官方登录二维码" src={qr.authorizationUrl} referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"/>}</div><p className="login-qr-state" role="status">{qrExpired?'当前二维码已失效':qr.state==='scanned'?'已扫码，请在微信中确认授权':qr.state==='failed'?'授权未完成':qr.state==='approved'?'正在完成登录':`请使用微信扫码 · ${seconds(qr.expiresAt-now)} 秒内有效`}</p><div className="login-qr-actions"><button type="button" className="login-text-button" aria-label="重新获取微信二维码" disabled={Boolean(busy)||completed} onClick={startWechat}><RefreshCw size={14}/>重新获取</button>{!qrExpired&&['waiting','scanned'].includes(qr.state)&&<button type="button" className="login-text-button" aria-label="检查微信扫码状态" disabled={Boolean(busy)||completed} onClick={()=>checkWechat(qr)}>检查扫码状态</button>}</div>{!qrExpired&&['waiting','scanned'].includes(qr.state)&&<a className="login-wechat-new-window" href={qr.openUrl} target="_blank" rel="noopener noreferrer">无法显示二维码？在新窗口授权<ArrowRight size={13}/></a>}</>}
