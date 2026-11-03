@@ -1,12 +1,20 @@
 import { newId } from './works.js';
 import {validateWritingEvaluation} from './writingEvaluation.js';
 import {validateConversations} from './conversation.js';
-export const backupKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1',conversations:'mdd-conversations-v1'};
+export const backupKeys={works:'mdd-works-v1',favorites:'mdd-favorites-v1',submissions:'mdd-submissions-v1',reading:'mdd-reading-v1',workflows:'mdd-workflows-v1',video:'mdd-video-v1',planningDrafts:'mdd-planningDrafts-v1',evaluations:'mdd-evaluations-v1',conversations:'mdd-conversations-v1',workspaceTasks:'mdd-workspaceTasks-v1',workspaceActivity:'mdd-workspaceActivity-v1'};
 const array=(v,label)=>{if(!Array.isArray(v))throw new Error(`${label}格式不正确`);return v;};
 const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const string=(value,max=1500000)=>typeof value==='string'&&value.length<=max;
 const id=value=>string(value,500)&&value.length>0;
 const time=value=>string(value,64)&&Number.isFinite(Date.parse(value));
+const isoTime=value=>{
+ if(!string(value,64))return false;
+ const parts=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(value);
+ if(!parts||!time(value))return false;
+ const [year,month,day,hour,minute,second,offsetHour,offsetMinute]=parts.slice(1).map(part=>Number(part||0));
+ const days=new Date(0);days.setUTCFullYear(year,month,0);
+ return month>=1&&month<=12&&day>=1&&day<=days.getUTCDate()&&hour<=23&&minute<=59&&second<=59&&offsetHour<=23&&offsetMinute<=59;
+};
 const unique=rows=>new Set(rows.map(row=>row?.id)).size===rows.length;
 const strings=(value,max=1000)=>Array.isArray(value)&&value.length<=max&&value.every(item=>string(item,1000));
 const memoryTypes=['character','relationship','location','setting','timeline','foreshadow'];
@@ -41,6 +49,10 @@ function validatePlanningDraft(record) {
  } else throw new Error('未知的创作草稿类型');
  if(JSON.stringify(record).length>10000000)throw new Error('单条创作草稿过大，请减少候选版本后重试');
 }
+function validateWorkspaceDashboard(tasks,activity) {
+ if(tasks.length>100||tasks.some(task=>!object(task)||!id(task.id)||!task.id.trim()||!string(task.text,120)||!task.text.trim()||typeof task.done!=='boolean'||!isoTime(task.createdAt)))throw new Error('工作台待办格式不正确：最多100条，任务需包含有效时间、文字与完成状态');
+ if(activity.length>3650||activity.some(entry=>!object(entry)||!id(entry.id)||!entry.id.trim()||!id(entry.workId)||!entry.workId.trim()||!isoTime(entry.at)||!['create','edit','import'].includes(entry.type)))throw new Error('工作台活动格式不正确：最多3650条，活动需关联作品、有效时间与操作类型');
+}
 export function validateWork(work) {
  if(!work||typeof work.id!=='string'||!work.id||typeof work.title!=='string'||!Array.isArray(work.chapters)||!work.chapters.length||work.chapters.some(ch=>!ch||typeof ch.id!=='string'||typeof ch.title!=='string'||typeof ch.text!=='string'||(ch.plan!==undefined&&typeof ch.plan!=='string'))||new Set(work.chapters.map(ch=>ch.id)).size!==work.chapters.length)throw new Error('备份中存在不完整的作品或章节');
  if(!id(work.id)||!string(work.title,500)||work.chapters.length>10000||work.chapters.some(ch=>!id(ch.id)||!string(ch.title,500)||!string(ch.text)||(ch.summary!==undefined&&!string(ch.summary,3000))||(ch.summaryUpdatedAt!==undefined&&!time(ch.summaryUpdatedAt))))throw new Error('作品章节或摘要格式不正确');
@@ -67,6 +79,7 @@ export function validateBackup(data) {
  if(result.evaluations.length>100)throw new Error('评估记录最多100份，请先导出归档');
  result.evaluations.forEach(validateWritingEvaluation);
  validateConversations(result.conversations);
+ validateWorkspaceDashboard(result.workspaceTasks,result.workspaceActivity);
  if(result.workflows.some(w=>!w||typeof w.id!=='string'||!Number.isInteger(w.step)||typeof w.idea!=='string'||typeof w.content!=='string'||!w.results||typeof w.results!=='object'||Object.values(w.results).some(v=>typeof v!=='string')))throw new Error('工作流草稿格式不正确');
  if(result.video.some(v=>!v||typeof v.id!=='string'||typeof v.script!=='string'||!Array.isArray(v.boards)||v.boards.some(b=>!b||typeof b.name!=='string'||typeof b.text!=='string')))throw new Error('分镜草稿格式不正确');
  return result;

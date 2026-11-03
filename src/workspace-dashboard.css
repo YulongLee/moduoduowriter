@@ -1,0 +1,196 @@
+.workspace-dashboard {
+  --workspace-dashboard-ink: #222b27;
+  --workspace-dashboard-green: #1c563e;
+  --workspace-dashboard-muted: #69736e;
+  --workspace-dashboard-line: #e4e9df;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 30px;
+  color: var(--workspace-dashboard-ink);
+  background: #f7f8f6;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.workspace-dashboard *, .workspace-dashboard *::before, .workspace-dashboard *::after { box-sizing: border-box; }
+.workspace-dashboard h1, .workspace-dashboard h2, .workspace-dashboard h3, .workspace-dashboard p { margin: 0; font-family: inherit; }
+.workspace-dashboard button, .workspace-dashboard select { font-family: inherit; }
+.workspace-dashboard button { cursor: pointer; }
+.workspace-dashboard button:focus-visible, .workspace-dashboard select:focus-visible { outline: 3px solid #7da585; outline-offset: 4px; }
+.workspace-dashboard button { -webkit-tap-highlight-color: transparent; }
+.workspace-dashboard button svg, .workspace-dashboard span > svg, .workspace-dashboard p > svg { flex: none; }
+.workspace-dashboard .workspace-dashboard-welcome { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 183px; padding: 29px 29px 35px; overflow: hidden; border-radius: 15px; background: #f7f8f6; }
+.workspace-dashboard .workspace-dashboard-welcome::before { position: absolute; z-index: -1; inset: 0 0 0 auto; width: min(65%, 680px); content: ''; opacity: .67; background-image: linear-gradient(90deg, #f7f8f6, #f7f8f61f 60%, #f7f8f608), linear-gradient(0deg, #f7f8f6 0%, #f7f8f600 42%), url('/art/hero-shanshui-v1.webp'); background-size: cover; background-position: center, center, center 49%; }
+.workspace-dashboard .workspace-dashboard-welcome-copy { min-width: 0; }
+.workspace-dashboard .workspace-dashboard-eyebrow { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; color: #63825e; font-size: 12px; font-weight: 600; }
+.workspace-dashboard .workspace-dashboard-welcome h1 { max-width: 720px; color: #222b27; font-size: clamp(26px, 2.4vw, 35px); font-weight: 700; line-height: 1.4; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.workspace-dashboard .workspace-dashboard-welcome-description { margin-top: 12px; color: #69736e; font-size: 14px; line-height: 1.8; }
+.workspace-dashboard .workspace-dashboard-import { display: inline-flex; align-items: center; justify-content: center; flex: none; gap: 8px; padding: 9px 15px; border: 1px solid #dbe4d7; border-radius: 7px; color: #4e6d50; background: #fffffff0; font-size: 12px; font-weight: 550; box-shadow: 0 2px 5px #38542c05; }
+.workspace-dashboard .workspace-dashboard-import:hover { border-color: #aabea3; background: #fff; }
+.workspace-dashboard .workspace-dashboard-quick-actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin: 3px 0 27px; }
+.workspace-dashboard .workspace-dashboard-quick-card { display: flex; align-items: flex-start; flex-direction: column; gap: 13px; min-width: 0; min-height: 151px; padding: 21px 17px; border: 1px solid #e4e8e0; border-radius: 11px; color: #222b27; background: #fff; text-align: left; box-shadow: 0 3px 8px #334c2c03; transition: border-color .16s, box-shadow .16s, transform .16s; }
+.workspace-dashboard .workspace-dashboard-quick-card:hover { transform: translateY(-2px); border-color: #b5c8ab; box-shadow: 0 5px 17px #2a4c3110; }
+.workspace-dashboard .workspace-dashboard-quick-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 43px; height: 44px; border-radius: 11px; }
+.workspace-dashboard .workspace-dashboard-quick-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.workspace-dashboard .workspace-dashboard-quick-copy strong { color: inherit; font-size: 15px; font-weight: 650; line-height: 1.5; }
+.workspace-dashboard .workspace-dashboard-quick-copy > span { color: #69736e; font-size: 12px; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-quick-arrow { display: none; margin-left: auto; color: #a1ad96; }
+.workspace-dashboard .workspace-dashboard-tone-primary { border-color: #1d573f; color: #fff; background: #205940; box-shadow: 0 4px 12px #245d3c19; }
+.workspace-dashboard .workspace-dashboard-tone-primary:hover { border-color: #154e34; background: #194e37; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-icon { color: #fff; background: #ffffff14; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-copy > span { color: #d3e3db; }
+.workspace-dashboard .workspace-dashboard-tone-blue .workspace-dashboard-quick-icon { color: #6a8eae; background: #eef4f9; }
+.workspace-dashboard .workspace-dashboard-tone-purple .workspace-dashboard-quick-icon { color: #9277af; background: #f3eff9; }
+.workspace-dashboard .workspace-dashboard-tone-amber .workspace-dashboard-quick-icon { color: #b59459; background: #faf4e8; }
+.workspace-dashboard .workspace-dashboard-tone-green .workspace-dashboard-quick-icon { color: #769476; background: #f0f5e9; }
+.workspace-dashboard .workspace-dashboard-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 24px; min-width: 0; }
+.workspace-dashboard .workspace-dashboard-main-column, .workspace-dashboard .workspace-dashboard-right-rail { min-width: 0; }
+.workspace-dashboard .workspace-dashboard-library { padding: 23px; border: 1px solid var(--workspace-dashboard-line); border-radius: 12px; background: #fff; box-shadow: 0 3px 10px #40543c03; }
+.workspace-dashboard .workspace-dashboard-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 21px; }
+.workspace-dashboard .workspace-dashboard-section-heading h2 { display: flex; align-items: center; gap: 10px; color: #222b27; font-size: 19px; font-weight: 650; line-height: 1.5; }
+.workspace-dashboard .workspace-dashboard-section-heading h2 > span { min-width: 23px; padding: 1px 7px; border-radius: 5px; color: #69736e; background: #f0f3f0; font-size: 11px; font-weight: 550; text-align: center; }
+.workspace-dashboard .workspace-dashboard-text-link { display: inline-flex; align-items: center; justify-content: center; flex: none; gap: 7px; padding: 0; border: 0; color: #486b58; background: transparent; font-size: 12px; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-text-link:hover { color: #2d613e; }
+.workspace-dashboard .workspace-dashboard-library-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; }
+.workspace-dashboard .workspace-dashboard-kind-tabs { display: flex; align-items: center; gap: 4px; padding: 3px; border-radius: 7px; background: #f4f6f3; }
+.workspace-dashboard .workspace-dashboard-kind-tabs > button { min-width: 47px; padding: 6px 10px; border: 0; border-radius: 5px; color: #69736e; background: transparent; font-size: 12px; font-weight: 500; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-kind-tabs > button:hover { color: #456e46; }
+.workspace-dashboard .workspace-dashboard-kind-tabs > .workspace-dashboard-kind-active { color: #1c563e; background: #fff; font-weight: 600; box-shadow: 0 1px 4px #5363490c; }
+.workspace-dashboard .workspace-dashboard-library-controls { display: flex; align-items: center; gap: 11px; }
+.workspace-dashboard .workspace-dashboard-sort select { max-width: 120px; padding: 6px 21px 6px 9px; border: 1px solid #e6ebe0; border-radius: 6px; color: #69736e; background-color: #fff; font-size: 12px; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-view-toggle { display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid #e7ebe3; border-radius: 6px; }
+.workspace-dashboard .workspace-dashboard-view-toggle > button { display: flex; align-items: center; justify-content: center; width: 27px; height: 27px; padding: 0; border: 0; border-radius: 4px; color: #9ba58e; background: transparent; }
+.workspace-dashboard .workspace-dashboard-view-toggle > button[aria-pressed='true'] { color: #5d7e55; background: #eef3e8; }
+.workspace-dashboard .workspace-dashboard-works-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.workspace-dashboard .workspace-dashboard-work { min-width: 0; padding: 12px 14px 0; overflow: hidden; border: 1px solid #e7ebe2; border-radius: 9px; background: #fff; transition: border-color .16s, box-shadow .16s; }
+.workspace-dashboard .workspace-dashboard-work:hover { border-color: #bfceba; box-shadow: 0 5px 15px #2e542c08; }
+.workspace-dashboard .workspace-dashboard-work-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 23px; margin-bottom: 13px; }
+.workspace-dashboard .workspace-dashboard-work-top > span { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; color: #7e8882; font-size: 11px; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-work-top i { width: 2px; height: 2px; border-radius: 50%; background: #b8c1af; }
+.workspace-dashboard .workspace-dashboard-manage { display: flex; align-items: center; justify-content: center; flex: none; width: 25px; height: 23px; padding: 0; border: 0; border-radius: 4px; color: #939f96; background: transparent; }
+.workspace-dashboard .workspace-dashboard-manage:hover { color: #53754c; background: #f1f5ec; }
+.workspace-dashboard .workspace-dashboard-work-main { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; }
+.workspace-dashboard .workspace-dashboard-cover { display: block; flex: none; padding-bottom: 3px; }
+.workspace-dashboard .workspace-dashboard-cover .book-cover { width: 75px; height: 110px; border-radius: 2px 5px 5px 2px; box-shadow: 2px 4px 7px #263d321c; }
+.workspace-dashboard .workspace-dashboard-cover .book-cover strong { top: 30px; right: 8px; left: 12px; max-width: none; font-size: 16px; line-height: 1.5; letter-spacing: 1px; }
+.workspace-dashboard .workspace-dashboard-cover .cover-kicker { top: 8px; left: 10px; right: 5px; font-size: 3px; letter-spacing: .5px; }
+.workspace-dashboard .workspace-dashboard-cover .cover-subtitle { bottom: 7px; left: 10px; right: 6px; font-size: 3px; letter-spacing: .25px; }
+.workspace-dashboard .workspace-dashboard-cover .plain-ornament { font-size: 35px; }
+.workspace-dashboard .workspace-dashboard-work-copy { display: flex; flex-direction: column; flex: 1; gap: 8px; min-width: 0; padding-top: 2px; }
+.workspace-dashboard .workspace-dashboard-work-copy > strong { overflow: hidden; color: #222b27; font-size: 16px; font-weight: 650; line-height: 1.6; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-dashboard .workspace-dashboard-work-description { display: -webkit-box; overflow: hidden; color: #69736e; font-size: 12px; line-height: 1.8; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.workspace-dashboard .workspace-dashboard-work-numbers { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: auto; color: #69736e; font-size: 11px; line-height: 1.7; }
+.workspace-dashboard .workspace-dashboard-work-numbers > span { color: #b4bda8; }
+.workspace-dashboard .workspace-dashboard-work-bottom { display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 11px 0 12px; margin-top: 15px; border-top: 1px solid #edf0e8; }
+.workspace-dashboard .workspace-dashboard-work-bottom > span { display: flex; align-items: center; gap: 5px; min-width: 0; color: #89928c; font-size: 11px; line-height: 1.7; }
+.workspace-dashboard .workspace-dashboard-work-bottom > span svg { flex: none; }
+.workspace-dashboard .workspace-dashboard-work-bottom > button { display: inline-flex; align-items: center; flex: none; gap: 6px; padding: 0; border: 0; color: #315c44; background: transparent; font-size: 12px; font-weight: 550; line-height: 1.7; }
+.workspace-dashboard .workspace-dashboard-work-bottom > button:hover { color: #1c563e; }
+.workspace-dashboard .workspace-dashboard-progress { margin-top: 14px; }
+.workspace-dashboard .workspace-dashboard-progress > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #7c8880; font-size: 10px; }
+.workspace-dashboard .workspace-dashboard-progress > span { display: block; height: 4px; margin-top: 6px; overflow: hidden; border-radius: 4px; background: #edf2e7; }
+.workspace-dashboard .workspace-dashboard-progress > span > i { display: block; height: 100%; border-radius: inherit; background: #70957b; }
+.workspace-dashboard .workspace-dashboard-works-list { display: grid; gap: 10px; }
+.workspace-dashboard .workspace-dashboard-work-list { display: grid; grid-template-columns: 112px minmax(0, 1fr) 150px; align-items: center; gap: 17px; padding: 15px; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-top { margin: 0; align-self: stretch; flex-direction: column; align-items: flex-start; justify-content: center; gap: 9px; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-main { align-items: center; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-cover .book-cover { width: 40px; height: 57px; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-cover .book-cover strong { top: 17px; left: 7px; right: 5px; font-size: 9px; letter-spacing: .5px; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-cover .cover-kicker, .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-cover .cover-subtitle { display: none; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-copy { gap: 4px; padding: 0; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-description { -webkit-line-clamp: 1; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-bottom { align-items: flex-end; flex-direction: column; justify-content: center; gap: 8px; align-self: stretch; padding: 0 0 0 15px; margin: 0; border-top: 0; border-left: 1px solid #edf0e8; }
+.workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-progress { grid-column: 2 / -1; margin-top: -3px; }
+.workspace-dashboard .workspace-dashboard-more-works { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 19px; color: #89928c; font-size: 11px; }
+.workspace-dashboard .workspace-dashboard-empty { display: flex; align-items: center; flex-direction: column; justify-content: center; min-height: 275px; padding: 33px 20px 39px; border: 1px dashed #dfe6d7; border-radius: 9px; background: #fafbf9; text-align: center; }
+.workspace-dashboard .workspace-dashboard-empty-icon { display: flex; align-items: center; justify-content: center; width: 65px; height: 65px; margin-bottom: 17px; border: 1px solid #e2e9d9; border-radius: 20px; color: #8ca578; background: #f0f4ef; }
+.workspace-dashboard .workspace-dashboard-empty h3 { color: #374b3d; font-size: 17px; font-weight: 600; line-height: 1.6; }
+.workspace-dashboard .workspace-dashboard-empty p { max-width: 380px; margin-top: 9px; color: #69736e; font-size: 12px; line-height: 1.9; }
+.workspace-dashboard .workspace-dashboard-empty > div { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.workspace-dashboard .workspace-dashboard-primary-button, .workspace-dashboard .workspace-dashboard-secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 15px; border: 1px solid #205940; border-radius: 6px; color: #fff; background: #205940; font-size: 12px; font-weight: 550; }
+.workspace-dashboard .workspace-dashboard-primary-button:hover { background: #174c34; }
+.workspace-dashboard .workspace-dashboard-secondary-button { border-color: #dce3db; color: #58705e; background: #fff; }
+.workspace-dashboard .workspace-dashboard-secondary-button:hover { border-color: #b2c49e; }
+.workspace-dashboard .workspace-dashboard-inspiration { position: relative; isolation: isolate; min-height: 210px; padding: 28px 31px; margin-top: 23px; overflow: hidden; border: 1px solid #e1e6d8; border-radius: 11px; background: #f4f6f1; }
+.workspace-dashboard .workspace-dashboard-inspiration::before { position: absolute; z-index: -1; inset: 0; content: ''; background-image: linear-gradient(90deg, #f4f6f1 0%, #f4f6f1f7 39%, #f4f6f124 87%), url('/art/tool-writing-desk-v1.webp'); background-size: cover; background-position: center, center 51%; opacity: .85; }
+.workspace-dashboard .workspace-dashboard-inspiration > div { position: relative; max-width: 85%; }
+.workspace-dashboard .workspace-dashboard-inspiration-label { display: inline-flex; align-items: center; gap: 6px; color: #6d8870; font-size: 11px; }
+.workspace-dashboard .workspace-dashboard-inspiration h2 { margin: 8px 0 8px; color: #222b27; font-size: 21px; font-weight: 650; line-height: 1.5; }
+.workspace-dashboard .workspace-dashboard-inspiration p { color: #69736e; font-size: 12px; line-height: 1.8; }
+.workspace-dashboard .workspace-dashboard-inspiration button { display: inline-flex; align-items: center; gap: 16px; padding: 8px 14px; margin-top: 19px; border: 1px solid #d2dfc2; border-radius: 6px; color: #315c44; background: #ffffffc9; font-size: 12px; font-weight: 550; }
+.workspace-dashboard .workspace-dashboard-inspiration button:hover { border-color: #a8bd92; background: #fff; }
+.workspace-dashboard .workspace-dashboard-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 1440px) {
+  .workspace-dashboard .workspace-dashboard-quick-card { gap: 10px; padding: 18px 13px; }
+  .workspace-dashboard .workspace-dashboard-quick-icon { width: 38px; height: 41px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 15px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy > span { font-size: 12px; }
+  .workspace-dashboard .workspace-dashboard-library { padding: 21px; }
+  .workspace-dashboard .workspace-dashboard-works-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  .workspace-dashboard .workspace-dashboard-layout { grid-template-columns: minmax(0, 1fr); }
+  .workspace-dashboard .workspace-dashboard-right-rail { width: 100%; }
+  .workspace-dashboard .workspace-dashboard-quick-actions { gap: 10px; }
+  .workspace-dashboard .workspace-dashboard-quick-card { align-items: flex-start; flex-direction: column; min-height: 142px; padding: 17px 16px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy > span { font-size: 11px; }
+  .workspace-dashboard .workspace-dashboard-works-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .workspace-dashboard .workspace-dashboard-welcome { padding: 24px 23px 29px; }
+  .workspace-dashboard .workspace-dashboard-welcome h1 { font-size: 29px; }
+  .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .workspace-dashboard .workspace-dashboard-quick-card { flex-direction: column; align-items: flex-start; min-height: 142px; }
+  .workspace-dashboard .workspace-dashboard-works-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-dashboard .workspace-dashboard-work-list { grid-template-columns: 90px minmax(0, 1fr) 135px; gap: 12px; }
+}
+@media (max-width: 680px) {
+  .workspace-dashboard { padding-bottom: 20px; }
+  .workspace-dashboard .workspace-dashboard-welcome { align-items: flex-start; flex-direction: column; gap: 18px; min-height: 0; padding: 21px 18px 26px; }
+  .workspace-dashboard .workspace-dashboard-welcome::before { width: 100%; opacity: .38; }
+  .workspace-dashboard .workspace-dashboard-welcome h1 { font-size: 27px; }
+  .workspace-dashboard .workspace-dashboard-welcome-description { max-width: 300px; font-size: 12px; }
+  .workspace-dashboard .workspace-dashboard-import { padding: 8px 12px; font-size: 11px; }
+  .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: minmax(0, 1fr); gap: 9px; margin-top: 0; margin-bottom: 21px; }
+  .workspace-dashboard .workspace-dashboard-quick-card { flex-direction: row; align-items: center; min-height: 77px; gap: 14px; padding: 15px 17px; }
+  .workspace-dashboard .workspace-dashboard-quick-icon { width: 40px; height: 41px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy { gap: 2px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 15px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy > span { font-size: 11px; }
+  .workspace-dashboard .workspace-dashboard-quick-arrow { display: block; }
+  .workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-arrow { color: #b4cdae; }
+  .workspace-dashboard .workspace-dashboard-layout { gap: 20px; }
+  .workspace-dashboard .workspace-dashboard-library { padding: 18px 14px; }
+  .workspace-dashboard .workspace-dashboard-section-heading { margin-bottom: 17px; gap: 8px; }
+  .workspace-dashboard .workspace-dashboard-section-heading h2 { gap: 7px; font-size: 18px; }
+  .workspace-dashboard .workspace-dashboard-section-heading .workspace-dashboard-text-link { gap: 5px; font-size: 10px; }
+  .workspace-dashboard .workspace-dashboard-library-toolbar { gap: 11px; }
+  .workspace-dashboard .workspace-dashboard-kind-tabs { width: 100%; justify-content: space-between; }
+  .workspace-dashboard .workspace-dashboard-kind-tabs > button { flex: 1; min-width: 0; padding: 6px 10px; }
+  .workspace-dashboard .workspace-dashboard-library-controls { width: 100%; justify-content: flex-end; }
+  .workspace-dashboard .workspace-dashboard-works-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .workspace-dashboard .workspace-dashboard-work { padding-right: 16px; padding-left: 16px; }
+  .workspace-dashboard .workspace-dashboard-cover .book-cover { width: 75px; height: 110px; }
+  .workspace-dashboard .workspace-dashboard-work-copy { gap: 9px; padding-top: 5px; }
+  .workspace-dashboard .workspace-dashboard-work-copy > strong { font-size: 16px; }
+  .workspace-dashboard .workspace-dashboard-work-description { font-size: 12px; }
+  .workspace-dashboard .workspace-dashboard-work-numbers { font-size: 11px; }
+  .workspace-dashboard .workspace-dashboard-work-bottom > span { font-size: 10px; }
+  .workspace-dashboard .workspace-dashboard-work-bottom > button { font-size: 12px; }
+  .workspace-dashboard .workspace-dashboard-work-list { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-top { align-items: center; flex-direction: row; justify-content: space-between; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-main { gap: 12px; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-bottom { flex-direction: row; align-items: center; justify-content: space-between; padding: 10px 0 0; border-top: 1px solid #edf0e8; border-left: 0; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-progress { grid-column: auto; margin-top: 0; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-copy > strong { font-size: 14px; }
+  .workspace-dashboard .workspace-dashboard-work-list .workspace-dashboard-work-description { -webkit-line-clamp: 2; }
+  .workspace-dashboard .workspace-dashboard-empty { padding: 29px 16px 34px; }
+  .workspace-dashboard .workspace-dashboard-empty h3 { font-size: 16px; }
+  .workspace-dashboard .workspace-dashboard-empty p { font-size: 12px; }
+  .workspace-dashboard .workspace-dashboard-inspiration { min-height: 213px; padding: 24px 21px; margin-top: 18px; }
+  .workspace-dashboard .workspace-dashboard-inspiration::before { background-image: linear-gradient(90deg, #f4f6f1f5, #f4f6f1a3), url('/art/tool-writing-desk-v1.webp'); }
+  .workspace-dashboard .workspace-dashboard-inspiration > div { max-width: 100%; }
+  .workspace-dashboard .workspace-dashboard-inspiration h2 { font-size: 19px; }
+  .workspace-dashboard .workspace-dashboard-inspiration p { max-width: 270px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .workspace-dashboard .workspace-dashboard-quick-card, .workspace-dashboard .workspace-dashboard-work { transition: none; transform: none; } }

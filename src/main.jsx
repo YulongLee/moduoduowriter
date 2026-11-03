@@ -29,6 +29,8 @@ import { ChapterPlanner } from './ChapterPlanner';
 import {StoryMemoryPanel} from './StoryMemory.jsx';
 import {ChapterQueue} from './ChapterQueue.jsx';
 import {WritingEvaluation} from './WritingEvaluation.jsx';
+import WorkspaceDashboard from './WorkspaceDashboard.jsx';
+import {recordWorkspaceActivity} from './workspaceActivity.mjs';
 import { validateWork } from './backup';
 import { initialWorks, tools, workflows, wordCount, workWords } from './data';
 import './studio.css';
@@ -40,22 +42,27 @@ import './workbench.css';
 import './home.css';
 import './saas.css';
 import './editor.css';
+import './private-workbench.css';
 
 const iconMap = { BookOpen, Feather, Clapperboard, ScanText, Lightbulb, ListTree, UsersRound, WandSparkles, MessagesSquare, Type };
 const navItems = [
- { id:'home', label:'首页', icon:LayoutDashboard },
- { id:'works', label:'我的作品', icon:FolderOpen },
-  { id:'novels', label:'小说写作', icon:BookOpen, section:'创作功能', nested:true },
- { id:'conversation',label:'创作对话',icon:MessageCircle,nested:true },
- { id:'scripts', label:'剧本创作', icon:Clapperboard, nested:true },
+ { id:'workspace', label:'工作台', icon:LayoutDashboard },
+ { id:'works', label:'我的作品', icon:FolderOpen, section:'创作' },
+ { id:'conversation',label:'创作对话',icon:MessageCircle },
+ { id:'novels', label:'小说写作', icon:BookOpen, section:'创作工具' },
+ { id:'outline-tool',label:'大纲生成',icon:ListTree,action:{type:'tool',tool:tools.find(tool=>tool.id==='outline')} },
+ { id:'character-tool',label:'人物设定',icon:UsersRound,action:{type:'tool',tool:tools.find(tool=>tool.id==='character')} },
+ { id:'continue-tool',label:'情节扩写',icon:Feather,action:{type:'tool',tool:tools.find(tool=>tool.id==='continue')} },
+ { id:'polish-tool',label:'润色修改',icon:WandSparkles,action:{type:'tool',tool:tools.find(tool=>tool.id==='polish')} },
+ { id:'scripts', label:'剧本创作', icon:Clapperboard },
  ...(videoEnabled?[{ id:'video', label:'漫剧工坊', icon:Play, nested:true }]:[]),
- { id:'dismantle', label:'小说拆书', icon:BookMarked, nested:true },
- { id:'tools', label:'写作工具', icon:Sparkles, section:'创作辅助', nested:true },
- { id:'workflows', label:'创作工作流', icon:Workflow, nested:true },
- { id:'history',label:'生成记录',icon:Clock3,section:'创作记录' },
- { id:'submit', label:'投稿中心', icon:Send, section:'创作服务' },
+ { id:'tools', label:'灵感广场', icon:Sparkles, section:'资源与服务' },
+ { id:'dismantle', label:'小说拆书', icon:BookMarked },
+ { id:'workflows', label:'创作工作流', icon:Workflow },
+ { id:'history',label:'生成记录',icon:Clock3 },
+ { id:'submit', label:'投稿中心', icon:Send },
  { id:'learn', label:'写作课堂', icon:GraduationCap },
- { id:'membership', label:'会员与墨点', icon:Crown }
+ { id:'home', label:'官网首页', icon:ArrowUpRight }
 ];
 function useStored(key,fallback){return useCollection(key.replace(/^mdd-|-v1$/g,''),fallback);}
 const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`;
@@ -89,6 +96,8 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const trashWorks=allWorks.filter(work=>work.deletedAt);
  const [favorites, setFavorites] = useStored('mdd-favorites-v1', ['ideas', 'polish']);
  const [submissions, setSubmissions] = useStored('mdd-submissions-v1', []);
+ const [workspaceTasks,setWorkspaceTasks] = useStored('mdd-workspaceTasks-v1',[]);
+ const [workspaceActivity,setWorkspaceActivity] = useStored('mdd-workspaceActivity-v1',[]);
  const [modal, setModal] = useState(initialModal);const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
  const initialBillingNavigation=useRef(billing?.navigationKey);
  useEffect(()=>{if(initialBillingNavigation.current!==billing?.navigationKey){initialBillingNavigation.current=billing?.navigationKey;setModal(null);}},[billing?.navigationKey]);
@@ -117,11 +126,22 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const createWork = ({ title, kind, genre, idea = '', outline, characters = '', text = '' }) => {
   const id = uid();
   const work = { id, title, kind, genre, cover: genre === '言情' ? 'spring' : genre === '科幻' ? 'orbit' : 'plain', subtitle:'A NEW STORY BEGINS', description:idea || '每一个故事，都从第一句话开始。', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), updated:'刚刚', progress:0, chapters:[{id:uid(), title:kind === '剧本' ? '第一场 · 故事开始' : '第一章 · 故事开始', text}], outline:outline ?? idea, characters };
-  setWorks(prev => [work, ...prev]); setModal(null); navigate(`editor/${id}`); notify('新作品已创建，开始你的故事吧');
+  setWorks(prev => [work, ...prev]);
+  setWorkspaceActivity(previous=>recordWorkspaceActivity(previous,{workId:id,at:work.createdAt,type:'create'}));
+  setModal(null); navigate(`editor/${id}`); notify('新作品已创建，开始你的故事吧');
  };
- const updateWork = work => setWorks(prev => placeRecentlyEdited(prev,work));
+ const updateWork = work => {
+  const previous=worksRef.current.find(item=>item.id===work.id);
+  if(previous&&JSON.stringify(previous)===JSON.stringify(work))return;
+  const content=item=>JSON.stringify([item?.title,item?.description,item?.outline,item?.characters,item?.chapters?.map(chapter=>[chapter.id,chapter.title,chapter.text])]);
+  setWorks(prev=>placeRecentlyEdited(prev,work));
+  if(previous&&!work.deletedAt&&content(previous)!==content(work)){
+   const at=new Date().toISOString();
+   setWorkspaceActivity(items=>recordWorkspaceActivity(items,{workId:work.id,at,type:'edit'}));
+  }
+ };
  const toggleFavorite = id => { setFavorites(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev,id]); };
- const importFile = async event => {try{ const file = event.target.files?.[0]; if (!file) return; if (!/\.txt$/i.test(file.name)) { notify('请导入 TXT 格式的文稿'); return; } const text = await file.text(); if (text.length > 1500000) { notify('请导入小于 150 万字的文稿'); return; } const id = uid(); setWorks(prev => [{ id, title:file.name.replace(/\.txt$/i,''), kind:'长篇小说', genre:'其他', cover:'plain', subtitle:'YOUR OWN STORY', description:'从本地导入的作品', updated:'刚刚', progress:0, chapters:splitManuscript(text), outline:'', characters:'' }, ...prev]); navigate(`editor/${id}`); notify('文稿导入成功'); event.target.value = ''; }catch{notify('文稿读取失败，请检查文件后重试');}finally{event.target.value='';} };
+ const importFile = async event => {try{ const file = event.target.files?.[0]; if (!file) return; if (!/\.txt$/i.test(file.name)) { notify('请导入 TXT 格式的文稿'); return; } const text = await file.text(); if (text.length > 1500000) { notify('请导入小于 150 万字的文稿'); return; } const id = uid(),at=new Date().toISOString(); setWorks(prev => [{ id, title:file.name.replace(/\.txt$/i,''), kind:'长篇小说', genre:'其他', cover:'plain', subtitle:'YOUR OWN STORY', description:'从本地导入的作品', createdAt:at,updatedAt:at,updated:'刚刚', progress:0, chapters:splitManuscript(text), outline:'', characters:'' }, ...prev]); setWorkspaceActivity(items=>recordWorkspaceActivity(items,{workId:id,at,type:'import'}));navigate(`editor/${id}`); notify('文稿导入成功'); event.target.value = ''; }catch{notify('文稿读取失败，请检查文件后重试');}finally{event.target.value='';} };
  const openVideo=(work,chapter)=>{setVideoHandoff({workId:work.id,script:chapter?.text||work.chapters.map(c=>c.text).join('\n\n'),title:work.title});navigate('video');};
  const openSubmission=work=>{setSubmissionWorkId(work.id);navigate('submit');};
  const common = { works, navigate, setModal, notify, favorites, authenticated:true,onRequireAccount:action=>action(),openVideo,openSubmission, toggleFavorite, createWork, onImport:() => importRef.current.click(), trashWorks, onRestoreWork:work=>{updateWork({...work,deletedAt:undefined});notify('作品已恢复到书架');} };
@@ -131,7 +151,8 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
   {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到本地服务，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
   {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
-    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content")} key={`${route}-${workspaceRevision}`}>
+    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content')} key={`${route}-${workspaceRevision}`}>
+     {route === 'workspace' && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity} openWork={work=>navigate(`editor/${work.id}`)}/>}
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
      {route === 'novels' && <NovelDesk {...common}/>}
@@ -146,7 +167,7 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
      {route === 'history' && <GenerationHistory {...common} onChange={updateWork}/>}
      {route === 'membership' && <MembershipPage navigate={navigate}/>}
      {route === 'service-admin' && <ServiceAdmin/>}
-     {!navItems.some(item => item.id === route) && !['video','service-admin'].includes(route) && <ReferenceHome {...common}/>}
+     {!navItems.some(item => item.id === route) && !['video','service-admin','membership'].includes(route) && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity}/>}
      <footer className="page-footer"><div className="site-footer-summary"><span>墨多多</span><i/>让灵感落笔，让故事生长。</div><SiteRegistration/></footer>
     </main>
   </WorkbenchFrame>}

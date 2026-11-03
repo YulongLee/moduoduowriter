@@ -9,7 +9,7 @@ import {createAuthIdentityStore} from './auth-identity.mjs';
 import {createAdminStore} from './admin-store.mjs';
 const derive=promisify(scrypt),hash=value=>createHash('sha256').update(value).digest('hex');
 const fail=(message,status=400,code)=>Object.assign(new Error(message),{status,code});
-export const collections=['works','favorites','submissions','reading','workflows','video','planningDrafts','evaluations','conversations'];
+export const collections=['works','favorites','submissions','reading','workflows','video','planningDrafts','evaluations','conversations','workspaceTasks','workspaceActivity'];
 export function createStore(directory,{authNow=()=>Date.now()}={}) {
  mkdirSync(directory,{recursive:true,mode:0o700});const file=join(directory,'studio.sqlite');const db=new DatabaseSync(file);chmodSync(file,0o600);
  db.exec([

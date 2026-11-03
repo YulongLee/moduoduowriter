@@ -48,7 +48,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
   window.addEventListener('keydown',shortcut);return()=>window.removeEventListener('keydown',shortcut);
  },[visible]);
  const navigate=id=>onNavigate(id);
- const enterStudio=()=>requireAccount(()=>onNavigate('works'));
+ const enterStudio=()=>requireAccount(()=>onNavigate('workspace'));
  const scrollTo=(label,id)=>{setActiveSection(label);const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';if(id){const target=document.getElementById(id);if(target?.tagName==='DETAILS')target.open=true;target?.scrollIntoView?.({behavior,block:'start'});}else window.scrollTo?.({top:0,behavior});};
  const openPublicDialog=type=>{triggerRef.current=globalThis.document?.activeElement;if(type==='demo')setDemoTab('outline');setDialog(type);};
  const sections=[['首页',''],['创作工具','landing-features'],['灵感广场','landing-inspiration'],['作品示例','landing-examples'],['创作方案',null]];
@@ -62,7 +62,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
     <div className="public-landing-header-actions">
      <button type="button" className="public-landing-search" aria-label="搜索写作工具" title="搜索写作工具（⌘ / Ctrl K）" onClick={()=>{setQuery('');setDialog('search');}}><Search size={19}/></button>
      {!authenticated&&<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}
-     <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>免费开始写作<ArrowRight size={16}/></button>
+     <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'免费开始写作'}<ArrowRight size={16}/></button>
     </div>
    </div>
   </header>

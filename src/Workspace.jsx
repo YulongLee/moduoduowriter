@@ -10,7 +10,7 @@ const Context=createContext(null);
 export function WorkspaceProvider({children}) {
  const account=useAccount();const spaceId=account?.spaceId||'local';
  const [snapshot,setSnapshot]=useState({status:'loading',error:'',conflicts:0}),[,tick]=useState(0);
- const clientRef=useRef();if(!clientRef.current)clientRef.current=createWorkspaceClient({storage:globalThis.localStorage,request:requestApi,...(account?{spaceId}:{}),defaults:{works:initialWorks,favorites:['ideas','polish']},onChange:status=>{setSnapshot(status);tick(v=>v+1);}});
+ const clientRef=useRef();if(!clientRef.current)clientRef.current=createWorkspaceClient({storage:globalThis.localStorage,request:requestApi,...(account?{spaceId}:{}),defaults:{works:account?.user?[]:initialWorks,favorites:['ideas','polish']},onChange:status=>{setSnapshot(status);tick(v=>v+1);}});
  const client=clientRef.current;
  useEffect(()=>{client.initialize();const refresh=()=>client.refresh().catch(()=>{});const interval=setInterval(refresh,10000);window.addEventListener('focus',refresh);return()=>{clearInterval(interval);window.removeEventListener('focus',refresh);client.stop();};},[]);
  return <Context.Provider value={{client,spaceId,...snapshot}}>{snapshot.status==='loading'?<div className="account-gate"><p role="status">正在载入本机文稿…</p></div>:children}</Context.Provider>;

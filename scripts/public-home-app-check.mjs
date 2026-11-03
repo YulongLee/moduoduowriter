@@ -20,6 +20,7 @@ const mixedLegacy=()=>({...legacy(),user:{id:'local',username:'fixture-mixed-loc
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
 const workFor=id=>({id:`private-${id}`,title:`PRIVATE MANUSCRIPT ${id}`,kind:'长篇小说',genre:'悬疑',outline:'private outline',characters:'private characters',chapters:[{id:`c-${id}`,title:'first',text:`PRIVATE TEXT ${id}`} ]});
+const privateCollection=(name,space)=>name==='works'?[workFor(space)]:name==='workspaceTasks'?[{id:`PRIVATE_TASK_${space}`,text:`PRIVATE TASK ${space}`,done:false,createdAt:'2026-11-04T08:15:00.000Z'}]:name==='workspaceActivity'?[{id:`PRIVATE_ACTIVITY_${space}`,workId:`private-${space}`,at:'2026-11-04T08:15:00.000Z',type:'edit'}]:[];
 globalThis.localStorage={getItem(key){reads.push(key);return cache.get(key)??null;},setItem(key,value){writes.push(key);cache.set(key,value);},removeItem:key=>cache.delete(key)};
 let routeHash='#home';
 globalThis.location={get hash(){return routeHash;},set hash(value){const next=String(value).startsWith('#')?String(value):`#${value}`;if(next===routeHash)return;routeHash=next;queueMicrotask(()=>{for(const handler of listeners.get('hashchange')||[])handler();});}};
@@ -40,7 +41,7 @@ globalThis.fetch=async(url,options={})=>{
  if(url==='/api/auth/register'){auth=member(auth.configured?'new-author':'local');return Response.json({user:auth.user,recoveryCode:'fixture-first-account-recovery-code'});}
  if(url==='/api/data'){
   const space=options.headers?.['X-Mdd-Space']||'local';
-  return Response.json({spaceId:space,collections:Object.fromEntries(Object.keys(collectionKeys).map(name=>[name,{revision:1,data:name==='works'?[workFor(space)]:[]}]))});
+  return Response.json({spaceId:space,collections:Object.fromEntries(Object.keys(collectionKeys).map(name=>[name,{revision:1,data:privateCollection(name,space)}]))});
  }
  if(url==='/api/service/status')return Response.json({configured:false,defaultMode:'demo'});
  if(url==='/api/billing')return Response.json({account:newBillingAccount(),revision:1,mode:'server-demo',paymentConfigured:false});
@@ -55,7 +56,7 @@ try{
  const {setRequestSpace,getRequestSpace}=await vite.ssrLoadModule('/src/sessionScope.js');
  assert.equal(typeof ApplicationRouter,'function');
  const unmount=async()=>{if(renderer){await act(async()=>renderer.unmount());renderer=null;}statusPending=null;};
- const seedCache=()=>{cache.clear();for(const name of Object.keys(collectionKeys)){cache.set(collectionKeys[name],JSON.stringify(name==='works'?[workFor('LEGACY_SECRET')]:[]));cache.set(`mdd-space:alice:${collectionKeys[name]}`,JSON.stringify(name==='works'?[workFor('ALICE_SECRET')]:[]));}cache.set('mdd-billing-v1','{"private":"LEDGER_SECRET"}');};
+ const seedCache=()=>{cache.clear();for(const name of Object.keys(collectionKeys)){cache.set(collectionKeys[name],JSON.stringify(privateCollection(name,'LEGACY_SECRET')));cache.set(`mdd-space:alice:${collectionKeys[name]}`,JSON.stringify(privateCollection(name,'ALICE_SECRET')));}cache.set('mdd-billing-v1','{"private":"LEDGER_SECRET"}');};
  const mount=async({state=guest(),behavior='ready',hash='#home'}={})=>{
   await unmount();auth=state;statusBehavior=behavior;location.hash=hash;seedCache();reads.length=0;writes.length=0;calls.length=0;setRequestSpace(null);
   await act(async()=>{renderer=TestRenderer.create(React.createElement(App),{createNodeMock:nodeMock});await sleep(10);});
@@ -73,7 +74,7 @@ try{
   assertRegistration(renderer.root.findByProps({className:'page-footer'}));
   const ids=renderer.root.findAll(node=>typeof node.type==='string'&&node.props.id).map(node=>node.props.id);
   assert.equal(new Set(ids).size,ids.length,'The landing and private workbench must not duplicate native DOM ids');
-  assert.equal(renderer.root.findAll(node=>node.type==='aside').length,1,'Only the private workbench can mount a sidebar');
+  assert.equal(renderer.root.findAll(node=>node.type==='aside'&&String(node.props.className||'').split(/\s+/).includes('sidebar')).length,1,'The private workbench must mount one navigation sidebar, independently of dashboard side panels');
   assert.equal(renderer.root.findAll(node=>node.type==='aside'&&node.props.id==='public-main-sidebar').length,0);
   assert.equal(renderer.root.findAll(node=>node.type==='aside'&&node.props.id==='main-sidebar').length,1);
   assert.equal(renderer.root.findByProps({id:'main-sidebar'}).props['data-collapsed'],false,'the private desktop sidebar starts expanded');
@@ -81,7 +82,8 @@ try{
   assert.equal(controls.filter(node=>node.props['aria-controls']==='main-sidebar').length,2,'The one workbench associates its desktop and mobile navigation controls with its sidebar');
  };
  const privateCalls=()=>calls.filter(call=>!['/api/auth/status','/api/auth/methods'].includes(call.url));
- const privateReads=()=>reads.filter(key=>/mdd-(works|conversations|favorites|submissions|reading|workflows|video|planningDrafts|evaluations|billing|ai-mode)/.test(key));
+ const privateStorageKeys=[...Object.values(collectionKeys),'mdd-billing-v1','mdd-ai-mode','mdd-ai-mode-v1','mdd-sync-pending-v1'];
+ const privateReads=()=>reads.filter(key=>privateStorageKeys.some(privateKey=>key===privateKey||key.endsWith(':'+privateKey)));
  const assertPublic=label=>{
   assert.ok(publicWrapper(),`${label}: public shell should exist`);assert.ok(!publicWrapper().props.hidden,`${label}: public shell should remain visible`);
   assert.equal(renderer.root.findAllByType('aside').length,0,`${label}: the public marketing page must not mount a sidebar`);
@@ -91,7 +93,7 @@ try{
   assert.deepEqual(privateCalls(),[],`${label}: homepage must not initialize private providers`);
   assert.deepEqual(privateReads(),[],`${label}: homepage must not read private browser caches`);
   assert.deepEqual(writes,[],`${label}: simply opening the homepage must not create workspace records`);
-  assert.ok(!text(publicMain()).includes('PRIVATE MANUSCRIPT'));assert.ok(!text(publicMain()).includes('LEDGER_SECRET'));
+  assert.ok(!text(publicMain()).includes('PRIVATE MANUSCRIPT'));assert.ok(!text(publicMain()).includes('PRIVATE TASK'));assert.ok(!text(publicMain()).includes('PRIVATE_ACTIVITY'));assert.ok(!text(publicMain()).includes('LEDGER_SECRET'));
  };
  const go=async route=>act(async()=>{location.hash=`#${route}`;for(const handler of listeners.get('hashchange')||[])handler();await sleep(20);});
  const change=async(node,value)=>act(async()=>node.props.onChange({target:{value,checked:value}}));
@@ -168,15 +170,17 @@ try{
  await click(renderer.root.findByProps({'aria-label':'登录'}));
  assert.ok(publicWrapper()&&!publicWrapper().props.hidden,'the login action should open over the public marketing homepage');
  assert.ok(renderer.root.findAllByProps({'aria-label':'账号密码登录'}).length);await revealPassword();assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length);assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
- await mount();await go('works');
- assert.ok(renderer.root.findAllByProps({'aria-label':'账号密码登录'}).length,'a direct private URL must show the login methods');await revealPassword();assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length,'password login remains reachable');
- assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
- for(const behavior of ['failure','malformed','mixed-local']){
-  await mount({behavior,hash:'#works'});assert.deepEqual(privateCalls(),[],`${behavior}: private route must fail closed`);assert.deepEqual(privateReads(),[]);
-  assert.ok(!text(renderer.root).includes('PRIVATE MANUSCRIPT LEGACY_SECRET'));
+ for(const destination of ['works','workspace']){
+  await mount();await go(destination);
+  assert.ok(renderer.root.findAllByProps({'aria-label':'账号密码登录'}).length,`a direct #${destination} URL must show the login methods`);await revealPassword();assert.ok(renderer.root.findAllByProps({'aria-label':'创作账号'}).length,'password login remains reachable');
+  assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);assert.ok(publicWrapper().props.hidden);
+  for(const behavior of ['failure','malformed','mixed-local']){
+   await mount({behavior,hash:'#'+destination});assert.deepEqual(privateCalls(),[],`${behavior}: private #${destination} route must fail closed`);assert.deepEqual(privateReads(),[]);
+   assert.ok(!text(renderer.root).includes('PRIVATE MANUSCRIPT LEGACY_SECRET'));assert.ok(!text(renderer.root).includes('PRIVATE TASK'));
+  }
+  await mount({behavior:'pending',hash:'#'+destination});assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
+  await act(async()=>{statusPending();await sleep(10);});assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
  }
- await mount({behavior:'pending',hash:'#works'});assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
- await act(async()=>{statusPending();await sleep(10);});assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);
  console.log('PASS explicit guest navigation/login gate, direct private URLs, missing status fields and status failures never authorize local cache access');
 
  await mount({state:member('alice'),behavior:'pending'});
@@ -185,7 +189,7 @@ try{
  await act(async()=>{statusPending();await sleep(20);});
  assert.equal(calls.filter(call=>call.url==='/api/data').length,1,'a queued action executes once after the pending status confirms the account');
  assert.ok(privateCalls().every(call=>call.headers['X-Mdd-Space']==='alice'));
- assert.equal(location.hash,'#works');assertUniqueNavigationIds();
+ assert.equal(location.hash,'#workspace');assertUniqueNavigationIds();
 
  await mount({state:member('alice'),behavior:'pending'});
  const discarded='只在公共输入中保留的故事灵感';
@@ -195,7 +199,7 @@ try{
  assertPublic('cancelled-pending-action');assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,discarded);
 
  await mount();await click(renderer.root.findByProps({'aria-label':'登录'}));await fillAccount();await submitAccount();
- assert.equal(location.hash,'#works','a header login without another pending intent should enter the workbench');
+ assert.equal(location.hash,'#workspace','a header login without another pending intent should enter the workspace dashboard');
  assert.equal(calls.filter(call=>call.url==='/api/data').length,1);assertUniqueNavigationIds();
  assert.equal(conversationSections().length,0);
 
@@ -217,7 +221,7 @@ try{
  assert.ok(!publicWrapper().props.hidden);assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,idea);
  assert.equal(conversationSections().length,0);assert.ok(!calls.some(call=>call.url==='/api/generate'));
  assert.equal(renderer.root.findAllByType('aside').length,0,'returning to the marketing page must remove the private sidebar');
- console.log('PASS queued/cancelled intents, header login into works, one-time login handoff into conversation and return home with the original public input');
+ console.log('PASS queued/cancelled intents, header login into workspace, one-time login handoff into conversation and return home with the original public input');
 
  await mount();
  const modeDraft='我想讨论一位守护灯塔的角色。',mode='人物设计';
@@ -231,7 +235,7 @@ try{
  await click(renderer.root.findByProps({'data-nav':'home'}));assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,modeDraft);assert.equal(publicMain().findByProps({'aria-label':'创作模式'}).props.value,mode);assert.ok(!calls.some(call=>call.url==='/api/generate'));
  console.log('PASS mode selection is local, survives the one-time login handoff and only prefills an editable private conversation without generation');
 
- for(const [label,destination]of [['查看创作方案','membership'],['进入工具库','tools'],['公开方案演示','membership'],['演示后开始创作','works']]){
+ for(const [label,destination]of [['查看创作方案','membership'],['进入工具库','tools'],['公开方案演示','membership'],['演示后开始创作','workspace']]){
   await mount();
   if(destination==='tools')await act(async()=>publicMain().findByProps({id:'landing-tools'}).props.onToggle({currentTarget:{open:true}}));
   let action;
@@ -273,7 +277,7 @@ try{
 
  for(const state of [member('alice')]){
   await mount({state});assertPublic(state.spaceId);await click(renderer.root.findByProps({'aria-label':'进入创作台'}));
-  assert.equal(location.hash,'#works');assert.ok(calls.some(call=>call.url==='/api/data'),'an explicit signed-in navigation should initialize the workspace');
+  assert.equal(location.hash,'#workspace');assert.ok(calls.some(call=>call.url==='/api/data'),'an explicit signed-in navigation should initialize the workspace');
   assert.ok(calls.some(call=>call.url==='/api/billing'));assert.ok(calls.some(call=>call.url==='/api/service/status'));
   assertUniqueNavigationIds();
   assert.ok(privateCalls().every(call=>call.headers['X-Mdd-Space']===state.spaceId),'all private requests must use the authorized space');
