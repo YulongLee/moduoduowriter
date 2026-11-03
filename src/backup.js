@@ -63,6 +63,8 @@ export function validateWork(work) {
  if(work.versions!==undefined&&(!Array.isArray(work.versions)||work.versions.some(v=>!v||typeof v.id!=='string'||typeof v.chapterId!=='string'||typeof v.title!=='string'||typeof v.text!=='string'||typeof v.savedAt!=='string')))throw new Error('作品版本记录格式不正确');
  if(work.status!==undefined&&!['draft','writing','serializing','completed'].includes(work.status))throw new Error('作品创作状态格式不正确');
  if(work.targetWords!==undefined&&(!Number.isInteger(work.targetWords)||work.targetWords<=0||work.targetWords>100000000))throw new Error('作品目标字数需为不超过1亿的正整数');
+ if(work.styles!==undefined&&(!Array.isArray(work.styles)||work.styles.length>3||new Set(work.styles).size!==work.styles.length||work.styles.some(style=>!['热血','轻松','爽文','正剧','脑洞','群像','成长','治愈','悬疑','浪漫','黑暗','其他'].includes(style))))throw new Error('作品风格需为最多3个不重复的可用选项');
+ if(work.templateId!==undefined&&!['xianxia','urban','future','history'].includes(work.templateId))throw new Error('作品创作模板格式不正确');
  for(const key of ['outline','characters','notes','description','deletedAt','genre','kind'])if(work[key]!==undefined&&typeof work[key]!=='string')throw new Error('作品资料格式不正确');
  return {...work,kind:work.kind||'长篇小说',genre:work.genre||'其他',outline:work.outline||'',characters:work.characters||''};
 }

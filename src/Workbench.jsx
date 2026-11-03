@@ -7,13 +7,13 @@ import {revisionFingerprint} from './Revision';
 import './revision.css';
 export { ReferenceHome, ReferenceTools, MarketCard, ToolPoster } from './Dashboard';
 
-export function QuickStartDialog({ initial, createWork }) {
+export function QuickStartDialog({ initial, initialPlanning, createWork }) {
   const defaultNames={玄幻:'万象之外',都市:'长街来客',言情:'心动有回音',悬疑:'雨夜第七人',科幻:'第七次日落',仙侠:'山海问道',历史:'故城旧事',奇幻:'昨日来信',武侠:'风起时',末世:'黎明之前',游戏:'最后的玩家',现实:'人间小事',青春:'那年夏天',治愈:'等风来的日子'};
   const [drafts,setDrafts]=useCollection('planningDrafts',[]);
-  const draftId=`planning:${revisionFingerprint(JSON.stringify([initial.idea,initial.genre,initial.audience,initial.perspective,initial.kind,initial.mode]))}`;
+  const draftId=`planning:${revisionFingerprint(JSON.stringify([initial.idea,initial.genre,initial.audience,initial.perspective,initial.kind,initial.mode,...(initialPlanning?[initialPlanning]:[])]))}`;
   const saved=drafts.find(item=>item.id===draftId&&item.type==='quick-start');
   const [restored]=useState(Boolean(saved));
-  const [planning,setPlanning]=useState(()=>saved?.planning||{title:defaultNames[initial.genre]||'新的故事',outline:`最初的灵感\n${initial.idea}\n\n创作方向\n${initial.genre} · ${initial.audience} · ${initial.perspective} · ${initial.kind}\n\n故事起点\n让主角遇见一个打破日常的意外。从一个具体的场景切入，将灵感中的人物与冲突放进故事。\n\n中段推进\n主角主动寻找答案，逐步发现事件的另一面。每一条线索都带来新的选择，也让他付出代价。\n\n收束方向\n让主角面对最难的选择，回应最初的悬念，为故事留下有余韵的结尾。`,characters:'',text:''});
+  const [planning,setPlanning]=useState(()=>saved?.planning||{title:initialPlanning?.title?.trim()||defaultNames[initial.genre]||'新的故事',outline:initialPlanning?.outline||`最初的灵感\n${initial.idea}\n\n创作方向\n${initial.genre} · ${initial.audience} · ${initial.perspective} · ${initial.kind}\n\n故事起点\n让主角遇见一个打破日常的意外。从一个具体的场景切入，将灵感中的人物与冲突放进故事。\n\n中段推进\n主角主动寻找答案，逐步发现事件的另一面。每一条线索都带来新的选择，也让他付出代价。\n\n收束方向\n让主角面对最难的选择，回应最初的悬念，为故事留下有余韵的结尾。`,characters:initialPlanning?.characters||'',text:initialPlanning?.text||''});
   const [scope,setScope]=useState(saved?.scope||'all'),[candidate,setCandidate]=useState(saved?.candidate||null),[chosen,setChosen]=useState(saved?.chosen||[]),[requirement,setRequirement]=useState(saved?.requirement||''),[hasGenerated,setHasGenerated]=useState(saved?.hasGenerated||false),[busy,setBusy]=useState(false),[saveError,setSaveError]=useState(false);
   const dirty=useRef(Boolean(saved));const current=useRef(planning);current.current=planning;
   const autoStarted=useRef(Boolean(saved));

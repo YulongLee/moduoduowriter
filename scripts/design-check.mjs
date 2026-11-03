@@ -106,3 +106,26 @@ for(const [label,foreground,background] of libraryPairs){
  assert.ok(ratio>=4.5,`${label}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
  console.log(`PASS ${label} ${ratio.toFixed(2)}:1`);
 }
+const createCss=readFileSync(new URL('../src/create-work-page.css',import.meta.url),'utf8');
+const createTokens=Object.fromEntries([...createCss.match(/\.create-work-page\s*\{([^}]+)\}/)[1].matchAll(/(--[\w-]+)\s*:\s*(#[\da-f]{6})\s*;/gi)].map(match=>[match[1],match[2]]));
+const createColor=selector=>{
+ const escaped=selector.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const values=[...createCss.matchAll(new RegExp(escaped+'\\s*\\{([^}]+)\\}','g'))].map(match=>match[1].match(/(?:^|;)\s*color\s*:\s*([^;]+)/)?.[1]?.trim()).filter(Boolean);
+ const value=values.at(-1);
+ assert.ok(value,`Missing creation contrast source: ${selector}`);
+ const resolved=createTokens[value?.match(/^var\((--[\w-]+)\)$/)?.[1]]||value;
+ return /^#[\da-f]{3}$/i.test(resolved)?'#'+resolved.slice(1).split('').map(character=>character+character).join(''):resolved;
+};
+for(const [label,foreground,background] of [
+ ['新建作品正文',createTokens['--create-work-ink'],'#ffffff'],
+ ['新建作品说明',createTokens['--create-work-muted'],'#f7f8f6'],
+ ['名称与简介计数',createColor('.create-work-page .create-work-label-row > span'),'#ffffff'],
+ ['选中题材与风格',createColor('.create-work-page .create-work-chip-selected'),'#f1f7eb'],
+ ['模板说明',createColor('.create-work-page .create-work-template-description'),'#ffffff'],
+ ['模板标签',createColor('.create-work-page .create-work-template-tags > span'),'#f0f4ec'],
+ ['创建作品按钮',createColor('.create-work-page .create-work-submit'),'#245b40']
+]){
+ const ratio=contrast(foreground,background);
+ assert.ok(ratio>=4.5,`${label}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
+ console.log(`PASS ${label} ${ratio.toFixed(2)}:1`);
+}

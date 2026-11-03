@@ -13,7 +13,7 @@ try {
   const { BillingProvider } = await server.ssrLoadModule('/src/Billing.jsx');
   const startup=renderToString(React.createElement(App));assert.ok(startup.includes('aria-label="首页创作入口"'),'The public homepage must render before account/private-workspace loading');assert.ok(!startup.includes('搜索作品名称'));assert.equal(startupStorageReads.length,0,'Public app startup cannot read private local collections');
   const pages = [
-    ['home', 'aria-label="首页创作入口"'], ['works', '搜索作品名称'],
+    ['home', 'aria-label="首页创作入口"'], ['works', '搜索作品名称'], ['create','aria-label="新建作品信息"'],
     ['novels', '小说写作'], ['tools', '写作工具'], ['workflows', '从灵感到黄金三章'],
     ['dismantle', '点击上传 TXT 文稿'], ['scripts', '新建剧本'],
     ['video', '视频相关功能已暂缓'], ['submit', '保存投稿计划'],

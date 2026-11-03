@@ -30,6 +30,8 @@ import {StoryMemoryPanel} from './StoryMemory.jsx';
 import {ChapterQueue} from './ChapterQueue.jsx';
 import {WritingEvaluation} from './WritingEvaluation.jsx';
 import WorkspaceDashboard from './WorkspaceDashboard.jsx';
+import CreateWorkPage from './CreateWorkPage.jsx';
+import {createWorkDraft} from './createWork.mjs';
 import {recordWorkspaceActivity} from './workspaceActivity.mjs';
 import { validateWork } from './backup';
 import { initialWorks, tools, workflows, wordCount, workWords } from './data';
@@ -48,6 +50,7 @@ const iconMap = { BookOpen, Feather, Clapperboard, ScanText, Lightbulb, ListTree
 const navItems = [
  { id:'workspace', label:'工作台', icon:LayoutDashboard },
  { id:'works', label:'我的作品', icon:FolderOpen, section:'创作' },
+ { id:'create', label:'新建作品', icon:Plus },
  { id:'conversation',label:'创作对话',icon:MessageCircle },
  { id:'novels', label:'小说写作', icon:BookOpen, section:'创作工具' },
  { id:'outline-tool',label:'大纲生成',icon:ListTree,action:{type:'tool',tool:tools.find(tool=>tool.id==='outline')} },
@@ -78,7 +81,7 @@ export function ApplicationRouter() {
  useEffect(()=>{if(route==='home'&&launch&&account?.ready&&!canAccessPrivate(account))setLaunch(null);},[route,launch,account?.ready,account?.error,account?.user,account?.configured,account?.spaceId]);
  useEffect(()=>{const change=()=>{const next=location.hash.slice(1)||'home';setRoute(next);if(next==='home')setLaunch(null);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  const navigate=id=>{location.hash='#'+id;setRoute(id);if(id==='home')setLaunch(null);window.scrollTo?.(0,0);};
- const openCreation=modal=>{const destination=modal.type==='home-conversation'?'conversation':modal.type==='tool'?'tools':modal.type==='quick-start'?'novels':'works';setLaunch({id:uid(),modal});navigate(destination);};
+ const openCreation=modal=>{const destination=modal.type==='create'?'create':modal.type==='home-conversation'?'conversation':modal.type==='tool'?'tools':modal.type==='quick-start'?'novels':'works';setLaunch({id:uid(),modal});navigate(destination);};
  if(route==='admin'||route.startsWith('admin/')||route==='service-admin')return <AdminConsole initialSection={route==='service-admin'?'services':route.split('/')[1]||'overview'}/>;
  const publicVisible=route==='home'&&!launch;
  return <><PublicHomeShell visible={publicVisible} onNavigate={navigate} onLaunch={openCreation}/>{!publicVisible&&<PrivateAccountGate requireLogin onHome={()=>navigate('home')}><WorkspaceProvider key={`${account?.spaceId||'unconfirmed'}:${launch?.id||'route'}`}><GenerationProvider><BillingProvider><WritingApp initialModal={launch?.modal?.type==='home-conversation'?null:launch?.modal||null} initialConversation={launch?.modal?.type==='home-conversation'?launch.modal:null} onReturnPublicHome={()=>setLaunch(null)}/></BillingProvider></GenerationProvider></WorkspaceProvider></PrivateAccountGate>}</>;
@@ -98,7 +101,10 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const [submissions, setSubmissions] = useStored('mdd-submissions-v1', []);
  const [workspaceTasks,setWorkspaceTasks] = useStored('mdd-workspaceTasks-v1',[]);
  const [workspaceActivity,setWorkspaceActivity] = useStored('mdd-workspaceActivity-v1',[]);
- const [modal, setModal] = useState(initialModal);const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
+ const [modal, setModalState] = useState(initialModal?.type==='create'?null:initialModal);
+ const [creationDraft,setCreationDraft]=useState(()=>createWorkDraft(initialModal?.type==='create'?initialModal:{}));
+ const creationReturn=useRef('works');
+ const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
  const initialBillingNavigation=useRef(billing?.navigationKey);
  useEffect(()=>{if(initialBillingNavigation.current!==billing?.navigationKey){initialBillingNavigation.current=billing?.navigationKey;setModal(null);}},[billing?.navigationKey]);
  useEffect(()=>{if(initialModal&&route==='home'&&!modal)onReturnPublicHome?.();},[modal,route,initialModal,onReturnPublicHome]);
@@ -108,7 +114,17 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const importRef = useRef();
  const modalElement = useRef();
  const notify = message => { setToast(message); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 3200); };
- const navigate = id => {if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId('');setModal(null);location.hash='#'+id;setRoute(id);window.scrollTo(0,0);};
+ const navigate = id => {
+  if(id==='create'&&routeRef.current!=='create')creationReturn.current=['workspace','works','novels','scripts','tools','workflows','dismantle','learn','history','submit','membership','conversation'].includes(routeRef.current)?routeRef.current:'works';
+  if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId('');setModalState(null);location.hash='#'+id;setRoute(id);window.scrollTo(0,0);
+ };
+ const setModal=value=>{
+  const next=typeof value==='function'?value(modal):value;
+  if(next?.type==='create'){
+   setCreationDraft(previous=>createWorkDraft({...previous,...next}));
+   navigate('create');
+  }else setModalState(next);
+ };
  useEffect(() => { const change = () => {const next=location.hash.slice(1)||'home';if(next!==routeRef.current){setRoute(next);setModal(null);}window.scrollTo(0,0);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  useEffect(() => { const onKey = event => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setModal({ type:'search' }); } if (event.key === 'Escape') { setModal(null); } }; window.addEventListener('keydown',onKey); return () => window.removeEventListener('keydown',onKey); }, []);
  useEffect(() => {
@@ -123,12 +139,18 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
   dialog.addEventListener('keydown',trap);
   return()=>{cancelAnimationFrame(frame);dialog.removeEventListener('keydown',trap);if(previous?.isConnected)previous.focus();};
  },[modal?.type]);
- const createWork = ({ title, kind, genre, idea = '', outline, characters = '', text = '' }) => {
-  const id = uid();
-  const work = { id, title, kind, genre, cover: genre === '言情' ? 'spring' : genre === '科幻' ? 'orbit' : 'plain', subtitle:'A NEW STORY BEGINS', description:idea || '每一个故事，都从第一句话开始。', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), updated:'刚刚', progress:0, chapters:[{id:uid(), title:kind === '剧本' ? '第一场 · 故事开始' : '第一章 · 故事开始', text}], outline:outline ?? idea, characters };
+ const createWork = ({ title, kind, genre, idea = '', description, styles, templateId, notes='', outline, characters = '', text = '' }) => {
+  const id = uid(),at=new Date().toISOString();
+  const work = { id, title, kind, genre, cover: genre === '言情' ? 'spring' : genre === '科幻' ? 'orbit' : 'plain', subtitle:'A NEW STORY BEGINS', description:description ?? (idea || '每一个故事，都从第一句话开始。'), createdAt:at, updatedAt:at, updated:'刚刚', progress:0, chapters:[{id:uid(), title:kind === '剧本' ? '第一场 · 故事开始' : '第一章 · 故事开始', text}], outline:outline ?? idea, characters, notes,...(styles!==undefined?{styles}:{}),...(templateId?{templateId}:{}) };
   setWorks(prev => [work, ...prev]);
   setWorkspaceActivity(previous=>recordWorkspaceActivity(previous,{workId:id,at:work.createdAt,type:'create'}));
+  setCreationDraft(createWorkDraft());
   setModal(null); navigate(`editor/${id}`); notify('新作品已创建，开始你的故事吧');
+ };
+ const startCreationAI=draft=>{
+  const idea=[draft.title?`作品名称：${draft.title}`:'',draft.description,draft.notes,draft.styles?.length?`作品风格：${draft.styles.join('、')}`:''].filter(Boolean).join('\n\n');
+  if(idea.length>60000){notify('构思资料较长，请先整理到 6 万字以内再开始规划。');return;}
+  setModal({type:'quick-start',autoGenerate:false,idea,kind:draft.kind,genre:draft.genre,audience:'全频',perspective:'第三人称',mode:'灵感共创',creationPlanning:{title:draft.title,outline:draft.outline,characters:draft.characters,text:''}});
  };
  const updateWork = work => {
   const previous=worksRef.current.find(item=>item.id===work.id);
@@ -151,8 +173,9 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
   {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到本地服务，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
   {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
-    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content',route==='works'&&'library-content')} key={`${route}-${workspaceRevision}`}>
+    <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content',route==='works'&&'library-content',route==='create'&&'creation-content')} key={`${route}-${workspaceRevision}`}>
      {route === 'workspace' && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity} openWork={work=>navigate(`editor/${work.id}`)}/>}
+     {route === 'create' && <CreateWorkPage draft={creationDraft} onDraftChange={setCreationDraft} onCreate={createWork} onCancel={()=>navigate(creationReturn.current)} onAI={startCreationAI}/>}
      {route === 'home' && <ReferenceHome {...common}/>}
      {route === 'works' && <WorksPage {...common}/> }
      {route === 'novels' && <NovelDesk {...common}/>}
@@ -181,8 +204,7 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
    {modal.type === 'chapter-queue' && modalWork && <ChapterQueue work={modalWork} onChange={updateWork} notify={notify} onClose={()=>setModal(null)}/>}
    {modal.type === 'chapters' && <ChapterManager work={currentWork} chapterId={modal.chapterId} onChange={updateWork} notify={notify}/>}
    {modal.type === 'versions' && <VersionDialog work={currentWork} chapterId={modal.chapterId} onChange={updateWork} notify={notify}/>}
-   {modal.type === 'create' && <CreateForm initial={modal} onCreate={createWork}/>}
-   {modal.type === 'quick-start' && <QuickStartDialog initial={modal} createWork={createWork}/>}
+   {modal.type === 'quick-start' && <QuickStartDialog initial={modal} initialPlanning={modal.creationPlanning} createWork={payload=>createWork(route==='create'?{...payload,description:creationDraft.description,styles:creationDraft.styles,templateId:creationDraft.templateId,notes:creationDraft.notes}:payload)}/>}
    {modal.type === 'draft-review' && <DraftReviewDialog {...modal}/>}
    {modal.type === 'tool' && <ToolDialog getWork={id=>worksRef.current.find(work=>work.id===id&&!work.deletedAt)} tool={modal.tool} works={works} onFavorite={() => toggleFavorite(modal.tool.id)} favorite={favorites.includes(modal.tool.id)} initial={modal} createWork={createWork} notify={notify} setModal={setModal} onChange={updateWork}/>}
    {modal.type === 'workflow' && <WorkflowDialog flow={modal.flow} works={works} createWork={createWork} initial={modal} onChange={updateWork} setModal={setModal} notify={notify}/>}
@@ -202,11 +224,6 @@ function SectionHeading({ title, desc, children }) { return <div className="sect
 
 function ToolCard({ tool, favorite, onFavorite, onOpen }) { return <article className="tool-card"><div className="tool-card-top"><span className={`type-icon ${tool.color}`}><Icon name={tool.icon} size={22} strokeWidth={1.7}/></span><button className={cn('favorite-button',favorite&&'saved')} aria-label={favorite?'取消收藏':'收藏工具'} onClick={onFavorite}><Star size={17} fill={favorite?'currentColor':'none'}/></button></div><button className="tool-card-main" onClick={onOpen}><h3>{tool.title}</h3><p>{tool.desc}</p></button><div className="tool-card-bottom"><span>{tool.tags.map(t=><small key={t}>{t}</small>)}</span><button onClick={onOpen}>使用<ArrowUpRight size={13}/></button></div></article>; }
 function WorkflowsPage({ setModal }) { const [filter,setFilter]=useState('全部工作流');return <><PageHeading eyebrow="STEP BY STEP, STORY BY STORY" title="创作工作流" desc="把创作拆成小步骤，让好故事自然而然发生。"/><div className="workflow-intro"><span className="workflow-intro-icon"><Workflow size={30}/></span><div><h3>少一点来回切换，多一点专注创作。</h3><p>串联灵感、大纲、正文与润色。每一步都能查看、修改，由你掌握故事的方向。</p></div><span className="soft-label">你始终是故事的作者</span></div><div className="pill-tabs flow-tabs">{['全部工作流','长篇创作','短篇创作','剧本改编','编辑优化'].map(t=><button className={cn(filter===t&&'active')} key={t} onClick={()=>setFilter(t)}>{t}</button>)}</div><div className="workflow-grid">{workflows.filter(f=>filter==='全部工作流'||f.type===filter).map(flow=><article className="workflow-card" key={flow.id}><div className="workflow-card-head"><span className={`type-icon ${flow.color}`}><Icon name={flow.icon} size={25}/></span><span className="category-tag">{flow.type}</span></div><h2>{flow.title}</h2><p>{flow.desc}</p><div className="flow-nodes">{flow.steps.map((s,i)=><React.Fragment key={s}><span>{s}</span>{i<flow.steps.length-1&&<ChevronRight size={12}/>}</React.Fragment>)}</div><div className="workflow-card-bottom"><span><Workflow size={14}/>{flow.steps.length} 个步骤 · 分步确认</span><button className="button secondary" onClick={()=>setModal({type:'workflow',flow})}>开始工作流<ArrowRight size={15}/></button></div></article>)}</div></>; }
-
-function CreateForm({initial,onCreate}) {
- const [title,setTitle]=useState(initial.title||''); const [kind,setKind]=useState(initial.kind||'长篇小说'); const [genre,setGenre]=useState(initial.genre||'悬疑'); const [idea,setIdea]=useState(initial.idea||'');
- return <form onSubmit={e=>{e.preventDefault();if(title.trim())onCreate({title:title.trim(),kind,genre,idea});}}><div className="modal-symbol"><Feather size={25}/></div><span className="eyebrow">新的创作</span><h2>新建作品</h2><p className="modal-desc">设置名称与题材，创建后即可进入编辑器。</p><label className="field">作品名称<input autoFocus required maxLength={30} value={title} onChange={e=>setTitle(e.target.value)} placeholder="你的下一个好故事，叫什么？"/></label><label className="field">创作类型</label><div className="form-type-options">{['长篇小说','短篇故事','剧本'].map(t=><button type="button" key={t} onClick={()=>setKind(t)} className={cn(kind===t&&'selected')}>{t}{kind===t&&<Check size={14}/>}</button>)}</div><label className="field">题材方向<select value={genre} onChange={e=>setGenre(e.target.value)}>{['悬疑','言情','科幻','奇幻','都市','历史','治愈','其他'].map(t=><option key={t}>{t}</option>)}</select></label><label className="field">最初的灵感<span className="optional">选填</span><textarea value={idea} onChange={e=>setIdea(e.target.value)} placeholder="一个人物、一句话，或者一个你念念不忘的画面…" rows={3}/></label><button type="submit" className="button primary full">创建作品，开始落笔<ArrowRight size={17}/></button><p className="form-footnote">作品自动保存到本机服务，并保留浏览器缓存。</p></form>;
-}
 
 export function ToolDialog({tool,works,onFavorite,favorite,notify,setModal,onChange,initial={},createWork,getWork}) {
  const [workId,setWorkId]=useState(initial.workId||''),[selectedChapter,setSelectedChapter]=useState(initial.chapterId||''),[busy,setBusy]=useState(false),[pendingExample,setPendingExample]=useState('');

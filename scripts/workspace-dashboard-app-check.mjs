@@ -115,9 +115,10 @@ try {
 
   const createdTitle = 'APP真实新建作品';
   await click(button(dashboard(), '新建小说'));
-  const createForm = renderer.root.findByProps({ role: 'dialog', 'aria-label': '新建作品' }).findByType('form');
-  await change(field(createForm, '作品名称', 'input'), createdTitle);
-  await change(field(createForm, '最初的灵感', 'textarea'), '这段是灵感与大纲，不能当作正文字数');
+  assert.equal(location.hash,'#create');
+  const createForm = renderer.root.findByProps({ 'aria-label': '新建作品信息' });
+  await change(byLabel('作品名称'), createdTitle);
+  await change(byLabel('作品简介'), '这段是灵感与简介，不能当作正文字数');
   const beforeCreate = Date.now(), createActivityPuts = putCount('workspaceActivity');
   await submit(createForm); await settled();
   assert.equal(data('works').length, 1);
