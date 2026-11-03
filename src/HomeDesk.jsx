@@ -3,7 +3,8 @@ import {ArrowRight, BookMarked, BookOpen, ChevronDown, ChevronRight, CircleHelp,
 import {useGeneration} from './Generation';
 import {BookCover} from './Art';
 import {ToolGuide} from './ToolGuide';
-import {HomeFeatureArtwork} from './HomeFeatureArtwork.jsx';
+import {LandingFeaturePreview} from './LandingFeaturePreview.jsx';
+import './commercial-landing.css';
 import {tools, inspirations} from './data';
 
 const genres = ['玄幻','都市','言情','悬疑','科幻','仙侠','历史','奇幻','武侠','末世','游戏','现实','青春','治愈'];
@@ -56,6 +57,14 @@ const publicStoryExamples = [
   {id:'silent-moon',title:'沉默的第七颗月亮',genre:'科幻',kind:'原创预写示例',cover:'orbit',description:'在一颗失去日出的行星，探险队收到了一段来自明天的求救。',idea:'探险队在一颗从不日出的行星着陆，收到一段来自明天、由他们自己发出的求救信号。',outline:'队员循着求救信号寻找源头，发现每次通信都会改变一段航行记录。他们必须在信任彼此和相信记录之间作出选择。',character:'纪遥 · 航行记录员。相信所有答案都能被记录，却发现自己最重要的一段记忆从未写入日志。',text:'第七颗月亮升起时，所有时钟都停了。纪遥摘下耳机，通讯舱里传出了她明天才会说出的第一句话。'}
 ];
 
+const landingQuestions=[
+  ['只有一句话想法，也能开始写吗？','可以。先写下一个角色、场景或冲突，与创作助手讨论故事方向，再逐步完善大纲、人物与开篇。'],
+  ['已经写了一部分，可以继续创作吗？','可以。登录后在「我的作品」中管理文稿或导入 TXT，再使用剧情续写、对白打磨和文字润色等工具继续创作。'],
+  ['生成的内容可以自己修改吗？','可以。大纲、人物设定和正文都可以继续编辑。你可以调整故事方向、修改语言表达，让作品保留自己的风格。'],
+  ['需要先登录才能浏览吗？','浏览首页、查看创作示例和填写灵感都无需登录。进入创作与保存作品时，优先使用手机号验证码登录，也支持邮箱登录。'],
+  ['会员和墨点现在会真实扣款吗？','目前会员与墨点为方案演示，不产生真实收款。具体状态在方案页面中说明，进入创作空间后可查看。']
+];
+
 export function ReferenceHome({navigate,setModal,notify=()=>{},onRequireAccount,authenticated=false,onEnterStudio}) {
   const [prompt,setPrompt]=useState(''),[guideId,setGuideId]=useState(null),[menuId,setMenuId]=useState(null),[exampleOpen,setExampleOpen]=useState(false),[exampleId,setExampleId]=useState(publicStoryExamples[0].id),[exampleFilter,setExampleFilter]=useState('全部'),[toolsOpen,setToolsOpen]=useState(false);
   const exampleRef=useRef(null),heroRef=useRef(null),toolsRef=useRef(null),inputRef=useRef(null);
@@ -65,19 +74,48 @@ export function ReferenceHome({navigate,setModal,notify=()=>{},onRequireAccount,
   const openConversation=initialPrompt=>gate(()=>setModal({type:'home-conversation',initialPrompt}));
   const openTool=(tool,extra={})=>gate(()=>setModal({type:'tool',tool,...extra}));
   const selectedExample=publicStoryExamples.find(item=>item.id===exampleId)||publicStoryExamples[0];
-  const showExample=()=>{setExampleOpen(true);exampleRef.current?.scrollIntoView({behavior:'smooth',block:'start'});};
-  const useExample=()=>{setPrompt(selectedExample.idea);heroRef.current?.scrollIntoView({behavior:'smooth',block:'start'});inputRef.current?.focus?.({preventScroll:true});notify('示例灵感已填入，点击开始创作后再继续。');};
+  const scrollTo=ref=>ref.current?.scrollIntoView({behavior:globalThis.window?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',block:'start'});
+  const showExample=()=>{setExampleOpen(true);scrollTo(exampleRef);};
+  const useExample=()=>{setPrompt(selectedExample.idea);scrollTo(heroRef);inputRef.current?.focus?.({preventScroll:true});notify('示例灵感已填入，点击开始创作后再继续。');};
   const groups=homeToolGroups.map(group=>({...group,tools:group.ids.map(id=>tools.find(tool=>tool.id===id)).filter(Boolean)}));
   const guideTool=tools.find(tool=>tool.id===guideId);
-  const features=[['ideas','灵感生成','找到故事的起点，让一个念头长成新的可能。','amber'],['outline','故事大纲','梳理主线与转折，让故事有清晰的方向。','blue'],['character','人物设定','塑造角色的目标、动机与人物关系。','mint'],['continue','剧情续写','承接已有情节，把故事继续写下去。','violet'],['polish','文字润色','保留作者风格，打磨节奏与表达。','teal']];
-  return <div className="home-v2 home-business home-window home-public home-landing">
-    <section className="home-window-hero" aria-label="首页创作入口" id="landing-create" ref={heroRef}><div className="home-window-inner home-landing-hero-grid"><header className="home-landing-hero-copy"><span className="home-landing-eyebrow"><Sparkles size={14}/>新一代 AI 小说创作平台</span><h1><span>让好故事</span><span>从一个想法<em>开始</em></span></h1><p>用 AI 激发灵感，构建故事、塑造角色，<br className="home-landing-desktop-break"/>把脑海里的那个想法，写成属于你的作品。</p><ul className="home-landing-capabilities" aria-label="创作能力"><li><strong>大纲与人物</strong><span>搭建故事骨架</span></li><li><strong>续写与修改</strong><span>打磨每一章节</span></li><li><strong>作者确认采纳</strong><span>创作由你掌控</span></li></ul></header><div className="home-landing-hero-input"><PublicHomeComposer appearance="landing" forwardedInputRef={inputRef} value={prompt} onChange={setPrompt} onSend={openConversation} onReference={()=>openConversation(prompt.trim())} onShowExample={showExample} notify={notify}/></div></div></section>
-    <div className="home-window-content home-landing-content">
-      <section className="home-landing-features-section" aria-label="创作功能" id="landing-features"><header className="home-landing-section-heading"><div><h2>从想法到作品，陪你走过创作的每一步</h2><p>无论是初次尝试，还是已经写下许多故事，都能找到合适的创作帮手。</p></div><button type="button" className="home-text-link" onClick={()=>{setToolsOpen(true);toolsRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}>了解更多<ArrowRight size={15}/></button></header><div className="home-landing-features" aria-label="创作快捷入口">{features.map(([id,label,description,color])=>{const Icon=toolIcons[id];return <button type="button" className={'home-landing-feature feature-'+color} key={id} aria-label={'体验'+label} onClick={()=>openTool(tools.find(tool=>tool.id===id))}><span className="home-landing-feature-visual" aria-hidden="true"><HomeFeatureArtwork feature={id}/></span><span className="home-landing-feature-copy"><span className="home-landing-feature-title"><span className="home-landing-feature-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.8}/></span><strong>{label}</strong><ArrowRight className="home-landing-feature-arrow" size={16} aria-hidden="true"/></span><small>{description}</small></span></button>;})}</div></section>
-      <section className="home-landing-examples" aria-label="预写创作示例" id="landing-examples" ref={exampleRef}><header className="home-landing-section-heading"><div><h2>创作示例</h2><p>原创预写内容，仅展示故事与输出形式；不是实时生成结果或用户真实作品。</p></div><div className="home-landing-example-filters" role="group" aria-label="示例题材">{['全部','悬疑','言情','科幻'].map(genre=><button type="button" key={genre} aria-pressed={exampleFilter===genre} onClick={()=>setExampleFilter(genre)}>{genre}</button>)}</div></header><div className="home-landing-example-grid">{publicStoryExamples.filter(item=>exampleFilter==='全部'||item.genre===exampleFilter).map(item=><button type="button" className={'home-landing-example'+(exampleOpen&&exampleId===item.id?' is-selected':'')} key={item.id} aria-label={'查看预写示例：'+item.title} onClick={()=>{setExampleId(item.id);setExampleOpen(true);}}><span className="home-landing-example-cover" aria-hidden="true"><BookCover work={item}/></span><span className="home-landing-example-copy"><strong>{item.title}</strong><span>{item.genre} · 预写示例</span><p>{item.description}</p><small>查看故事构思<ArrowRight size={13}/></small></span></button>)}</div><div className="home-landing-example-actions"><button type="button" className="home-text-link" aria-expanded={exampleOpen} onClick={()=>setExampleOpen(!exampleOpen)}>{exampleOpen?'收起示例':'展开示例'}<ChevronDown size={15}/></button></div>{exampleOpen&&<div className="home-public-example"><header><div><span>预先编写的输出示例</span><h2>{selectedExample.title}</h2></div><button type="button" className="home-text-link" onClick={useExample}>填入示例灵感<ArrowRight size={15}/></button></header><div className="home-public-example-columns"><article><span>故事大纲</span><p>{selectedExample.outline}</p></article><article><span>人物设定</span><p>{selectedExample.character}</p></article><article><span>开篇正文</span><p>{selectedExample.text}</p></article></div></div>}</section>
-      <details className="home-landing-toolbox" id="landing-tools" ref={toolsRef} open={toolsOpen} onToggle={event=>setToolsOpen(event.currentTarget.open)}><summary><span><strong>更多写作工具与使用指南</strong><small>对白、审稿、书名与简介，以及完整的示例说明</small></span><ChevronDown size={18}/></summary><section className="home-tools-section" aria-label="写作工具"><div className="home-tool-groups">{groups.map(group=><section className="home-tool-group" aria-label={group.title} key={group.id}><h3>{group.title}</h3><div className="home-tools-grid">{group.tools.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={false} publicMode onFavorite={()=>gate(()=>navigate('tools'))} onOpen={()=>openTool(tool)} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div></section>)}</div>{guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={value=>openTool(guideTool,{prompt:value})}/></div>}<button type="button" className="home-text-link" onClick={()=>gate(()=>navigate('tools'))}>进入工具库<ArrowRight size={15}/></button></section></details>
-      <section className="home-landing-studio-cta" aria-label="进入创作空间" id="landing-plans"><span className="home-landing-cta-icon"><BookOpen size={40}/></span><div><h2>开启你的创作之旅</h2><p>把脑海里的那个故事，认真写成你的作品。</p></div><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={17}/></button></section>
-      <HomeSupport navigate={navigate} setModal={setModal} gate={gate}/>
+  const features=[
+    ['outline','故事大纲','让每一个转折，都有迹可循。','把零散的灵感串成故事主线，梳理章节与情节走向。'],
+    ['character','人物设定','让角色，成为故事的灵魂。','从目标、动机到人物关系，塑造值得记住的角色。'],
+    ['ideas','灵感生成','找到那个，值得写下的念头。','从一个场景、一句对白或一次意外开始。'],
+    ['continue','剧情续写','故事卡住了，换个角度继续。','承接已有文稿，探索接下来的情节方向。'],
+    ['polish','文字润色','保留你的声音，让文字更有力量。','打磨表达与叙事节奏，写出更自然的段落。']
+  ];
+  return <div className="mdd-landing">
+    <section className="mdd-hero" aria-label="首页创作入口" id="landing-create" ref={heroRef}>
+      <div className="mdd-container">
+        <div className="mdd-hero-heading"><span className="mdd-eyebrow"><Sparkles size={15}/>为小说作者打造的 AI 创作平台</span><h1><span>一句话灵感，</span><em>写出你的下一部小说。</em></h1><p>从故事大纲、人物设定到章节正文，<br className="mdd-mobile-break"/>墨多多陪你把每一个想法写成作品。</p></div>
+        <div className="mdd-composer-wrap"><div className="mdd-composer-top"><span><span className="mdd-live-dot"/>墨多多创作助手</span><span>从一个想法开始</span></div><PublicHomeComposer appearance="landing" forwardedInputRef={inputRef} value={prompt} onChange={setPrompt} onSend={openConversation} onReference={()=>openConversation(prompt.trim())} onShowExample={showExample} notify={notify}/></div>
+        <ul className="mdd-capability-line" aria-label="创作能力"><li><ListTree size={16}/>从大纲到正文</li><li><UsersRound size={16}/>人物与设定集中管理</li><li><Feather size={16}/>生成内容自由修改</li></ul>
+      </div>
+    </section>
+
+    <section className="mdd-workflow" aria-label="创作流程"><div className="mdd-container"><div className="mdd-workflow-intro"><span className="mdd-section-kicker">从想法到作品</span><h2>好的故事，有一步步的开始。</h2></div><ol>{[['01','写下灵感','一句话，也能成为故事的起点。'],['02','搭建故事','梳理大纲，找到人物与冲突。'],['03','落笔成篇','逐章创作，反复修改与打磨。']].map(([number,title,detail])=><li key={number}><span>{number}</span><div><h3>{title}</h3><p>{detail}</p></div></li>)}</ol></div></section>
+
+    <div className="mdd-container mdd-main-sections">
+      <section className="mdd-features" aria-label="创作功能" id="landing-features">
+        <header className="mdd-section-heading"><div><span className="mdd-section-kicker">你的故事，你来主导</span><h2>不止帮你开头，<br/>更陪你把故事写下去。</h2></div><div><p>把构思、写作和修改放在同一个创作空间。<br/>从任何一步开始，找到适合你的写作节奏。</p><span className="mdd-demo-label">下方为功能示意</span></div></header>
+        <div className="mdd-feature-grid" aria-label="创作快捷入口">{features.map(([id,label,title,description])=>{const Icon=toolIcons[id];return <button type="button" key={id} className={'mdd-feature mdd-feature-'+id} aria-label={'体验'+label} onClick={()=>openTool(tools.find(tool=>tool.id===id))}><span className="mdd-feature-kind"><Icon size={17}/>{label}<ArrowRight size={16}/></span><strong>{title}</strong><span className="mdd-feature-description">{description}</span><LandingFeaturePreview feature={id}/></button>;})}</div>
+      </section>
+
+      <section className="mdd-examples" aria-label="预写创作示例" id="landing-examples" ref={exampleRef}>
+        <header className="mdd-section-heading"><div><span className="mdd-section-kicker">让灵感有迹可循</span><h2>先看看，一个故事如何开始。</h2><p>原创预写示例，展示大纲、人物与开篇的内容形式。</p></div><div className="mdd-example-filters" role="group" aria-label="示例题材">{['全部','悬疑','言情','科幻'].map(genre=><button type="button" key={genre} aria-pressed={exampleFilter===genre} onClick={()=>setExampleFilter(genre)}>{genre}</button>)}</div></header>
+        <div className="mdd-example-grid">{publicStoryExamples.filter(item=>exampleFilter==='全部'||item.genre===exampleFilter).map(item=><button type="button" className={'mdd-example'+(exampleOpen&&exampleId===item.id?' is-selected':'')} key={item.id} aria-label={'查看预写示例：'+item.title} onClick={()=>{setExampleId(item.id);setExampleOpen(true);}}><span className="mdd-example-cover" aria-hidden="true"><BookCover work={item}/></span><span className="mdd-example-copy"><span className="mdd-example-genre">{item.genre} · 预写示例</span><strong>{item.title}</strong><p>{item.description}</p><small>翻开这个故事<ArrowRight size={14}/></small></span></button>)}</div>
+        <div className="mdd-example-toggle"><button type="button" className="home-text-link" aria-expanded={exampleOpen} onClick={()=>setExampleOpen(!exampleOpen)}>{exampleOpen?'收起示例':'展开示例'}<ChevronDown size={15}/></button></div>
+        {exampleOpen&&<div className="home-public-example"><header><div><span>预先编写的输出示例</span><h2>{selectedExample.title}</h2></div><button type="button" className="home-text-link" onClick={useExample}>填入示例灵感<ArrowRight size={15}/></button></header><div className="home-public-example-columns"><article><span>故事大纲</span><p>{selectedExample.outline}</p></article><article><span>人物设定</span><p>{selectedExample.character}</p></article><article><span>开篇正文</span><p>{selectedExample.text}</p></article></div></div>}
+      </section>
+
+      <details className="mdd-toolbox" id="landing-tools" ref={toolsRef} open={toolsOpen} onToggle={event=>setToolsOpen(event.currentTarget.open)}><summary><span><span className="mdd-section-kicker">还有更多写作帮手</span><strong>每一步创作，都有趁手的工具。</strong><small>对白打磨、章节审稿、书名与简介，以及完整的使用指南。</small></span><span className="mdd-toolbox-toggle">查看工具<ChevronDown size={18}/></span></summary><section className="home-tools-section" aria-label="写作工具"><div className="home-tool-groups">{groups.map(group=><section className="home-tool-group" aria-label={group.title} key={group.id}><h3>{group.title}</h3><div className="home-tools-grid">{group.tools.map(tool=><HomeToolRow key={tool.id} tool={tool} favorite={false} publicMode onFavorite={()=>gate(()=>navigate('tools'))} onOpen={()=>openTool(tool)} guideOpen={guideId===tool.id} onGuide={()=>setGuideId(guideId===tool.id?null:tool.id)} menuOpen={menuId===tool.id} onMenuToggle={force=>setMenuId(current=>force?tool.id:current===tool.id?null:tool.id)} onMenuClose={closeMenu}/>)}</div></section>)}</div>{guideTool&&<div className="home-open-guide"><button type="button" className="home-guide-close" aria-label="收起工具使用指南" onClick={()=>setGuideId(null)}><X size={16}/>收起指南</button><ToolGuide key={guideTool.id} toolId={guideTool.id} onUseExample={value=>openTool(guideTool,{prompt:value})}/></div>}<button type="button" className="home-text-link" onClick={()=>gate(()=>navigate('tools'))}>进入工具库<ArrowRight size={15}/></button></section></details>
+
+      <section className="mdd-faq" aria-label="常见问题" id="landing-faq"><div><span className="mdd-section-kicker">开始之前，你可能想知道</span><h2>把疑问放下，<br/>把故事写下。</h2><p>关于开始创作、文稿修改和登录方式。</p></div><div className="mdd-faq-list">{landingQuestions.map(([question,answer])=><details key={question}><summary>{question}<Plus size={18}/></summary><p>{answer}</p></details>)}</div></section>
+
+      <section className="mdd-final-cta" aria-label="进入创作空间" id="landing-plans"><div className="mdd-final-copy"><span>墨多多 · 写作</span><h2>你的故事，值得有一个开始。</h2><p>把一直想写的那个念头，现在写下来。</p></div><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={18}/></button></section>
+      <div className="mdd-support"><HomeSupport navigate={navigate} setModal={setModal} gate={gate}/></div>
     </div>
   </div>;
 }

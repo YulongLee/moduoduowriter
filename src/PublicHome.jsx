@@ -42,11 +42,31 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
  const navigate=id=>onNavigate(id);
  const enterStudio=()=>requireAccount(()=>onNavigate('works'));
  const scrollTo=(label,id)=>{setActiveSection(label);const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';if(id){const target=document.getElementById(id);if(target?.tagName==='DETAILS')target.open=true;target?.scrollIntoView?.({behavior,block:'start'});}else window.scrollTo?.({top:0,behavior});};
- const sections=[['首页',''],['AI创作','landing-create'],['作品示例','landing-examples'],['创作工具','landing-tools'],['会员权益','landing-plans']];
+ const sections=[['首页',''],['创作能力','landing-features'],['作品示例','landing-examples'],['写作工具','landing-tools'],['常见问题','landing-faq']];
  const pageModal=options=>{if(['help','notifications'].includes(options.type))setDialog(options.type);else onLaunch(options);};
  return <div className="public-landing" data-public-home="true" hidden={!visible}>
-  <header className="public-landing-header" aria-label="网站导航"><button type="button" className="public-landing-brand" aria-label="墨多多首页" onClick={()=>scrollTo('首页','')}><Brand/><BrandWordmark/></button><nav aria-label="网站主导航">{sections.map(([label,id])=><button type="button" key={label} aria-current={activeSection===label?'page':undefined} onClick={()=>scrollTo(label,id)}>{label}</button>)}</nav><div className="public-landing-header-actions"><button type="button" className="public-landing-search" aria-label="搜索写作工具" onClick={()=>{setQuery('');setDialog('search');}}><Search size={16}/><span>搜索工具与创作方法…</span></button>{!authenticated&&<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}<button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'免费使用'}<ArrowRight size={15}/></button></div></header>
-  <main className="public-landing-main" aria-label="公共首页"><ReferenceHome navigate={navigate} setModal={pageModal} notify={()=>{}} onRequireAccount={requireAccount} onEnterStudio={enterStudio} authenticated={authenticated}/><footer className="public-landing-footer"><div className="public-landing-footer-main"><span>墨多多 · 让好故事发生</span><button type="button" onClick={()=>setDialog('help')}>使用帮助</button><span>会员与墨点为方案演示</span></div><SiteRegistration/></footer></main>
+  <header className="public-landing-header" aria-label="网站导航">
+   <div className="public-landing-header-inner">
+    <button type="button" className="public-landing-brand" aria-label="墨多多首页" onClick={()=>scrollTo('首页','')}><Brand/><BrandWordmark/></button>
+    <nav aria-label="网站主导航">{sections.map(([label,id])=><button type="button" key={label} aria-current={activeSection===label?'page':undefined} onClick={()=>scrollTo(label,id)}>{label}</button>)}</nav>
+    <div className="public-landing-header-actions">
+     <button type="button" className="public-landing-search" aria-label="搜索写作工具" title="搜索写作工具（⌘ / Ctrl K）" onClick={()=>{setQuery('');setDialog('search');}}><Search size={19}/></button>
+     {!authenticated&&<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}
+     <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'开始写作'}<ArrowRight size={16}/></button>
+    </div>
+   </div>
+  </header>
+  <main className="public-landing-main" aria-label="公共首页">
+   <ReferenceHome navigate={navigate} setModal={pageModal} notify={()=>{}} onRequireAccount={requireAccount} onEnterStudio={enterStudio} authenticated={authenticated}/>
+   <footer className="public-landing-footer">
+    <div className="public-landing-footer-main">
+     <div className="public-footer-brand"><div className="public-footer-wordmark"><Brand/><BrandWordmark/></div><p>让好故事发生。</p><span>从灵感、大纲到正文，<br/>陪你把故事写成自己的作品。</span></div>
+     <nav className="public-footer-links" aria-label="页脚产品导航"><strong>探索墨多多</strong><button type="button" onClick={()=>scrollTo('创作能力','landing-features')}>创作能力</button><button type="button" onClick={()=>scrollTo('作品示例','landing-examples')}>作品示例</button><button type="button" onClick={()=>scrollTo('写作工具','landing-tools')}>写作工具</button></nav>
+     <nav className="public-footer-links" aria-label="页脚帮助导航"><strong>使用与支持</strong><button type="button" onClick={()=>scrollTo('常见问题','landing-faq')}>常见问题</button><button type="button" onClick={()=>setDialog('help')}>使用帮助</button><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={13}/></button></nav>
+    </div>
+    <div className="public-footer-bottom"><span>© {new Date().getFullYear()} 墨多多 · 写作</span><span className="public-footer-demo">会员与墨点为方案演示，暂不提供在线付费。</span><SiteRegistration/></div>
+   </footer>
+  </main>
   {dialog&&<div className="modal-backdrop public-dialog-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close();}}><section className={`modal public-home-dialog${dialog==='search'?' search-modal':''}`} role="dialog" aria-modal="true" aria-label={dialog==='auth'?'登录或注册':dialog==='search'?'搜索写作工具':'使用帮助'} ref={dialogRef}><button type="button" className="modal-close icon-button" aria-label="关闭公共首页弹窗" onClick={close}><X size={20}/></button>
    {dialog==='auth'&&(!account?.ready||account.error?<div className="account-form"><h2>{account?.error?'暂时无法连接创作服务':'正在检查账号状态'}</h2><p className="modal-desc" role="status">{account?.error||'你可以关闭此窗口继续浏览首页。'}</p>{account?.error&&<button type="button" className="button primary full" onClick={()=>account.refresh()}>重新连接</button>}</div>:<AccountForm modern loginOnly={account.configured} onSuccess={finishLogin}/>)}
    {dialog==='search'&&<><h2><Search size={22}/>查找写作工具</h2><label className="public-tool-search">输入工具或创作需求<input aria-label="搜索公开写作工具" value={query} onChange={event=>setQuery(event.target.value)} placeholder="试试：大纲、人物、润色…"/></label><div className="search-results">{tools.filter(tool=>`${tool.title}${tool.desc}`.includes(query.trim())).map(tool=><button type="button" key={tool.id} onClick={()=>requireAccount(()=>onLaunch({type:'tool',tool}))}><BookOpen size={18}/><span>{tool.title}<small>{tool.desc}</small></span><ArrowRight size={15}/></button>)}</div></>}
