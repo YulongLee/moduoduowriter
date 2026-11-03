@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-04",
+  "checkedAtUTC": "2026-11-03T21:11:45.247Z",
+  "revision": "c88858cc798ce61b8210431f497f9a03dfc2578b",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/ai-novel-writing/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-outline/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/character-design/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/text-polish/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/getting-started/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/about/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/ai-novel-prompts/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/guides/ai-long-novel/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/story-ideas/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-continuation/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-title-synopsis/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/novel-analysis/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    },
+    {
+      "path": "/features/script-writing/",
+      "status": 200,
+      "exactBuildMatch": true,
+      "canonical": true,
+      "csp": true
+    }
+  ],
+  "assetChecks": [
+    {
+      "path": "/assets/index-DfyDotZz.js",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/assets/index-DsNwuYQB.css",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/brand-mark.svg?v=3",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/art/hero-shanshui-v1.webp",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/art/cover-spring.webp",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/art/tool-writing-desk-v1.webp",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/art/cover-fog.webp",
+      "status": 200,
+      "exactBuildMatch": true
+    },
+    {
+      "path": "/art/cover-orbit.webp",
+      "status": 200,
+      "exactBuildMatch": true
+    }
+  ],
+  "browserQa": {
+    "desktop": true,
+    "mobile390x844": true,
+    "publicDemo": true
+  },
+  "tests": "npm test and targeted final SEO/home interaction checks passed",
+  "heading": "每一个灵感，都值得写成一个好故事。",
+  "phoneEmailAvailable": true,
+  "privateDataStatus": 401,
+  "discoveryFilesUnchanged": true,
+  "isolation": {
+    "allServicesActive": true,
+    "otherChangedUnits": [],
+    "vhostsUnchanged": true,
+    "accountStoreUnchanged": true
+  },
+  "productionBrowserVerified": true,
+  "heroAsset": {
+    "path": "/art/hero-shanshui-v1.webp",
+    "width": 1942,
+    "height": 809,
+    "bytes": 76510
+  }
+}
