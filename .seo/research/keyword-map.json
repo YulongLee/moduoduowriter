@@ -1,0 +1,38 @@
+{
+  "updated": "2026-11-04",
+  "market": "zh-CN",
+  "siteOrigin": "https://moduoduowriter.com",
+  "metricsStatus": "unavailable",
+  "metricAvailability": {"volume": "unknown", "difficulty": "unknown", "ranking": "unknown"},
+  "mappingBasis": "任务指定关键词与目标路径，按用户任务区分内容；尚无搜索量、KD、排名、Search Console 或 SERP 重合度数据。",
+  "priorityBasis": "编辑与业务优先级，不是流量、排名或竞争难度预测。",
+  "statusMeaning": {"update_existing": "更新已有页面", "create_new": "本轮新增页面，实际发布状态以部署验收为准"},
+  "keywordCount": 20,
+  "clusterCount": 13,
+  "publicUrlCount": 14,
+  "keywords": [
+    {"keyword": "AI小说写作", "path": "/features/ai-novel-writing/", "primaryUrl": "https://moduoduowriter.com/features/ai-novel-writing/", "cluster": "ai-novel-writing", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI写小说工具", "path": "/features/ai-novel-writing/", "primaryUrl": "https://moduoduowriter.com/features/ai-novel-writing/", "cluster": "ai-novel-writing", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI小说生成器", "path": "/features/ai-novel-writing/", "primaryUrl": "https://moduoduowriter.com/features/ai-novel-writing/", "cluster": "ai-novel-writing", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说写作助手", "path": "/features/ai-novel-writing/", "primaryUrl": "https://moduoduowriter.com/features/ai-novel-writing/", "cluster": "ai-novel-writing", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI写长篇小说", "path": "/features/ai-novel-writing/", "primaryUrl": "https://moduoduowriter.com/features/ai-novel-writing/", "cluster": "ai-novel-writing", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说大纲生成器", "path": "/features/novel-outline/", "primaryUrl": "https://moduoduowriter.com/features/novel-outline/", "cluster": "novel-outline", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说章节大纲生成", "path": "/features/novel-outline/", "primaryUrl": "https://moduoduowriter.com/features/novel-outline/", "cluster": "novel-outline", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说大纲怎么写", "path": "/features/novel-outline/", "primaryUrl": "https://moduoduowriter.com/features/novel-outline/", "cluster": "novel-outline", "intent": "informational", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说人物设定生成器", "path": "/features/character-design/", "primaryUrl": "https://moduoduowriter.com/features/character-design/", "cluster": "character-design", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说文字润色", "path": "/features/text-polish/", "primaryUrl": "https://moduoduowriter.com/features/text-polish/", "cluster": "text-polish", "intent": "commercial", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "新手用AI写小说", "path": "/guides/getting-started/", "primaryUrl": "https://moduoduowriter.com/guides/getting-started/", "cluster": "getting-started", "intent": "informational", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "墨多多写作", "path": "/", "primaryUrl": "https://moduoduowriter.com/", "cluster": "brand", "intent": "navigational", "priority": "P1", "pageStatus": "update_existing", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说灵感生成器", "path": "/features/story-ideas/", "primaryUrl": "https://moduoduowriter.com/features/story-ideas/", "cluster": "story-ideas", "intent": "commercial", "priority": "P1", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI小说续写", "path": "/features/novel-continuation/", "primaryUrl": "https://moduoduowriter.com/features/novel-continuation/", "cluster": "novel-continuation", "intent": "commercial", "priority": "P1", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说书名生成器", "path": "/features/novel-title-synopsis/", "primaryUrl": "https://moduoduowriter.com/features/novel-title-synopsis/", "cluster": "novel-title-synopsis", "intent": "commercial", "priority": "P2", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说简介生成器", "path": "/features/novel-title-synopsis/", "primaryUrl": "https://moduoduowriter.com/features/novel-title-synopsis/", "cluster": "novel-title-synopsis", "intent": "commercial", "priority": "P2", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "小说拆书工具", "path": "/features/novel-analysis/", "primaryUrl": "https://moduoduowriter.com/features/novel-analysis/", "cluster": "novel-analysis", "intent": "commercial", "priority": "P2", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI剧本写作", "path": "/features/script-writing/", "primaryUrl": "https://moduoduowriter.com/features/script-writing/", "cluster": "script-writing", "intent": "commercial", "priority": "P2", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "AI小说写作提示词", "path": "/guides/ai-novel-prompts/", "primaryUrl": "https://moduoduowriter.com/guides/ai-novel-prompts/", "cluster": "ai-novel-prompts", "intent": "informational", "priority": "P1", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null},
+    {"keyword": "如何用AI写长篇小说", "path": "/guides/ai-long-novel/", "primaryUrl": "https://moduoduowriter.com/guides/ai-long-novel/", "cluster": "ai-long-novel", "intent": "informational", "priority": "P1", "pageStatus": "create_new", "volume": null, "difficulty": null, "ranking": null}
+  ],
+  "supportingPages": [
+    {"path": "/about/", "primaryUrl": "https://moduoduowriter.com/about/", "purpose": "品牌、产品范围与事实说明，无独立目标关键词", "pageStatus": "update_existing"}
+  ]
+}

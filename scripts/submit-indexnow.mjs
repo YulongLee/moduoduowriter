@@ -22,7 +22,7 @@ export class IndexNowError extends Error {
   }
 }
 
-/** Validate an exact seven-page public batch; never accept request/user URLs. */
+/** Validate an exact public page batch; never accept request/user URLs. */
 export function buildIndexNowPayload({
   host = indexNowHost,
   key = indexNowKey,
@@ -38,8 +38,8 @@ export function buildIndexNowPayload({
   if (keyLocation !== indexNowKeyLocation) {
     throw new TypeError('IndexNow keyLocation must be the exact root key file on the production website.');
   }
-  if (!Array.isArray(urlList) || urlList.length !== 7 || new Set(urlList).size !== 7) {
-    throw new TypeError('IndexNow accepts exactly the seven distinct authored public URLs.');
+  if (!Array.isArray(urlList) || urlList.length !== allowedUrls.length || new Set(urlList).size !== allowedUrls.length) {
+    throw new TypeError('IndexNow accepts exactly the distinct authored public URLs.');
   }
   for (const url of urlList) {
     if (typeof url !== 'string' || !allowedUrlSet.has(url)) {

@@ -15,6 +15,7 @@ export default function SeoContentPage({ path }) {
   const page = getSeoPage(path);
   if (!page) return null;
   const relatedPages = page.related.map(getSeoPage).filter(Boolean);
+  const updated=page.updated||'2026-11-03';
 
   return <div className="seo-page">
     <a className="seo-skip" href="#seo-content">跳到正文</a>
@@ -38,7 +39,7 @@ export default function SeoContentPage({ path }) {
         <p className="seo-eyebrow"><span aria-hidden="true" />{page.eyebrow}</p>
         <h1>{page.h1}</h1>
         <p className="seo-lead">{page.lead}</p>
-        <p className="seo-publication">墨多多产品说明 · 更新于 <time dateTime="2026-11-03">2026 年 11 月 3 日</time></p>
+        <p className="seo-publication">墨多多{page.path.startsWith('/guides/')?'使用指南':'产品说明'} · 更新于 <time dateTime={updated}>{updated}</time></p>
         <div className="seo-intro-actions">
           <a className="seo-button" href={startHref}>进入墨多多 <span aria-hidden="true">→</span></a>
           <span>阅读说明无需登录 · 创作内容由你确认</span>

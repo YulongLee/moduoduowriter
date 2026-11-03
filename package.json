@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build && node scripts/prerender.mjs",
+    "build": "node scripts/generate-search-files.mjs && vite build && node scripts/prerender.mjs",
     "check": "node scripts/check.mjs",
     "check:design": "node scripts/design-check.mjs",
     "preview": "vite preview --host 127.0.0.1",
@@ -49,7 +49,7 @@
     "start": "node server/http.mjs",
     "test:production-http": "node scripts/production-http-check.mjs",
     "test:production-boundary": "node scripts/production-boundary-check.mjs",
-    "test:seo": "npm run build && node scripts/seo-head-check.mjs && node scripts/seo-check.mjs && node scripts/seo-hydration-check.mjs && node scripts/indexnow-check.mjs",
+    "test:seo": "npm run build && node scripts/seo-head-check.mjs && node scripts/seo-check.mjs && node scripts/seo-hydration-check.mjs && node scripts/indexnow-check.mjs && node scripts/seo-keywords-check.mjs",
     "search:submit": "node scripts/submit-indexnow.mjs --submit"
   },
   "dependencies": {

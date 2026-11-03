@@ -20,19 +20,19 @@ assert.equal(indexNowKeyLocation, `${siteOrigin}/${indexNowKey}.txt`);
 assert.equal(await readFile(new URL(`../public/${indexNowKey}.txt`, import.meta.url), 'utf8'), indexNowKey, 'Published protocol file matches the newly created public key exactly');
 const payload = buildIndexNowPayload();
 assert.deepEqual(payload, { host: indexNowHost, key: indexNowKey, keyLocation: indexNowKeyLocation, urlList: expectedUrls });
-assert.equal(payload.urlList.length, 7);
+assert.equal(payload.urlList.length, expectedUrls.length);
 payload.urlList.pop();
-assert.equal(buildIndexNowPayload().urlList.length, 7, 'Callers cannot mutate the default seven-page batch');
+assert.equal(buildIndexNowPayload().urlList.length, expectedUrls.length, 'Callers cannot mutate the default public-page batch');
 
 let calls = 0;
 const noNetwork = async () => { calls++; throw Error('Network is forbidden in a dry-run'); };
-assert.deepEqual(await submitIndexNow({ fetchImpl: noNetwork }), { status: 'dry-run', urlCount: 7 });
-assert.deepEqual(await submitIndexNow({ submit: false, fetchImpl: noNetwork }), { status: 'dry-run', urlCount: 7 });
+assert.deepEqual(await submitIndexNow({ fetchImpl: noNetwork }), { status: 'dry-run', urlCount: expectedUrls.length });
+assert.deepEqual(await submitIndexNow({ submit: false, fetchImpl: noNetwork }), { status: 'dry-run', urlCount: expectedUrls.length });
 assert.equal(calls, 0);
 for (const submit of ['true', 1, null]) {
   await assert.rejects(submitIndexNow({ submit, fetchImpl: noNetwork }), TypeError);
 }
-console.log('PASS dedicated public ownership token, immutable seven-page batch and default dry-run with zero network calls');
+console.log('PASS dedicated public ownership token, immutable public-page batch and default dry-run with zero network calls');
 
 const invalidPayloads = [
   { host: 'evil.example' }, { host: 'www.moduoduowriter.com' }, { host: `${indexNowHost}:443` },
@@ -95,7 +95,7 @@ function fixture({ keyStatus = 200, keyText = indexNowKey, postStatus = 200, fai
 for (const httpStatus of [200, 202]) {
   const state = fixture({ postStatus: httpStatus });
   const result = await submitIndexNow({ submit: true, fetchImpl: state.fetchImpl });
-  assert.deepEqual(result, { status: httpStatus === 200 ? 'received' : 'key-validation-pending', httpStatus, urlCount: 7 });
+  assert.deepEqual(result, { status: httpStatus === 200 ? 'received' : 'key-validation-pending', httpStatus, urlCount: expectedUrls.length });
   assert.equal(state.requests.length, 2);
   assert.ok(!/indexed|ranking-success/.test(JSON.stringify(result)), 'Protocol acknowledgment must not claim indexing');
 }
@@ -147,7 +147,7 @@ console.log('PASS 429 and other failures are explicit, timeout/transport details
 const entry = fileURLToPath(new URL('./submit-indexnow.mjs', import.meta.url));
 for (const args of [[], ['--dry-run']]) {
   const stdout = execFileSync(process.execPath, [entry, ...args], { encoding: 'utf8' });
-  assert.deepEqual(JSON.parse(stdout), { status: 'dry-run', urlCount: 7 });
+  assert.deepEqual(JSON.parse(stdout), { status: 'dry-run', urlCount: expectedUrls.length });
   assert.ok(!stdout.includes(indexNowKey) && !stdout.includes(siteOrigin), 'Dry-run output exposes only safe status/count');
 }
 assert.throws(() => execFileSync(process.execPath, [entry, '--unknown'], { encoding: 'utf8', stdio: 'pipe' }), error => {
@@ -159,7 +159,7 @@ const tempDirectory = await mkdtemp(join(tmpdir(), 'mdd-indexnow-cli-'));
 try {
   const link = join(tempDirectory, 'submit-indexnow.mjs');
   await symlink(entry, link);
-  assert.deepEqual(JSON.parse(execFileSync(process.execPath, [link], { encoding: 'utf8' })), { status: 'dry-run', urlCount: 7 }, 'Whole-release symlink deployment still executes the default safe CLI');
+  assert.deepEqual(JSON.parse(execFileSync(process.execPath, [link], { encoding: 'utf8' })), { status: 'dry-run', urlCount: expectedUrls.length }, 'Whole-release symlink deployment still executes the default safe CLI');
 } finally {
   await rm(tempDirectory, { recursive: true, force: true });
 }

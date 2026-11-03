@@ -1,19 +1,13 @@
 import { createHash } from 'node:crypto';
+import {seoPagePaths} from '../src/seo-content.mjs';
 
 // Use a fixed origin rather than request headers for all public search URLs.
 export const siteOrigin = 'https://moduoduowriter.com';
 export const siteName = '墨多多';
 export const defaultTitle = '墨多多写作｜AI小说写作、小说大纲与人物设定';
 export const defaultDescription = '墨多多是一款AI小说创作与内容编辑工具，支持故事灵感、小说大纲、人物设定、章节续写与文字润色，帮助创作者从想法逐步完成作品。';
-export const publicPaths = Object.freeze([
-  '/',
-  '/features/ai-novel-writing/',
-  '/features/novel-outline/',
-  '/features/character-design/',
-  '/features/text-polish/',
-  '/guides/getting-started/',
-  '/about/',
-]);
+export const publicPaths = Object.freeze(['/',...seoPagePaths]);
+if(new Set(publicPaths).size!==publicPaths.length||publicPaths.some(path=>path!=='/'&&!/^\/(?:features\/[a-z-]+|guides\/[a-z-]+|about)\/$/.test(path)))throw Error('Invalid public content routes.');
 
 const allowedPaths = new Set(publicPaths);
 const websiteId = `${siteOrigin}/#website`;

@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-04",
+  "keywords": 20,
+  "clusters": 13,
+  "publicPageCount": 14,
+  "newPaths": [
+    "/features/story-ideas/",
+    "/features/novel-continuation/",
+    "/features/novel-title-synopsis/",
+    "/features/novel-analysis/",
+    "/features/script-writing/",
+    "/guides/ai-novel-prompts/",
+    "/guides/ai-long-novel/"
+  ],
+  "uniqueMetadata": true,
+  "metricsStatus": "unknown",
+  "readingStylesheetBytes": 13730,
+  "writingAppJavaScriptOnReadingPages": false,
+  "rankingsAndAICitations": null,
+  "verification": "npm test passed including build, SEO, HTTP, hydration, login/account boundary and keyword mapping checks"
+}

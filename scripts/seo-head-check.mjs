@@ -15,6 +15,13 @@ const expectedPaths = [
   '/features/text-polish/',
   '/guides/getting-started/',
   '/about/',
+  '/guides/ai-novel-prompts/',
+  '/guides/ai-long-novel/',
+  '/features/story-ideas/',
+  '/features/novel-continuation/',
+  '/features/novel-title-synopsis/',
+  '/features/novel-analysis/',
+  '/features/script-writing/',
 ];
 const descriptors = [
   { path: '/', title: defaultTitle, description: defaultDescription },
@@ -59,10 +66,10 @@ const forbiddenFields = new Set([
 const forbiddenTypes = new Set(['FAQPage', 'HowTo', 'AggregateRating', 'Review', 'Offer', 'SearchAction']);
 assert.equal(siteOrigin, 'https://moduoduowriter.com');
 assert.equal(siteName, '墨多多');
-assert.deepEqual(publicPaths, expectedPaths, 'The metadata allowlist contains the seven authored public pages');
+assert.deepEqual([...publicPaths].sort(), [...expectedPaths].sort(), 'The metadata allowlist contains the authored public pages');
 assert.deepEqual(descriptors.map(page => page.path).sort(), [...expectedPaths].sort(), 'All authored pages are represented exactly once');
-assert.equal(new Set(descriptors.map(page => normalize(page.title))).size, 7, 'Each page has a distinct title');
-assert.equal(new Set(descriptors.map(page => normalize(page.description))).size, 7, 'Each page has a distinct description');
+assert.equal(new Set(descriptors.map(page => normalize(page.title))).size, expectedPaths.length, 'Each page has a distinct title');
+assert.equal(new Set(descriptors.map(page => normalize(page.description))).size, expectedPaths.length, 'Each page has a distinct description');
 
 const canonicals = new Set();
 const cspHashes = new Set();
@@ -155,9 +162,9 @@ for (const descriptor of descriptors) {
   const modifiedHead = head.replace(json, `${json}\n`);
   assert.notDeepEqual(seoScriptHashes(modifiedHead), [expectedHash], 'A whitespace change in the script body invalidates the old CSP hash');
 }
-assert.equal(canonicals.size, 7, 'Seven pages have seven unique canonical URLs');
-assert.equal(cspHashes.size, 7, 'CSP is derived for each distinct page, not reused globally');
-console.log('PASS seven authored pages: unique titles/descriptions/canonicals, sharing metadata, factual schema and exact CSP hashes');
+assert.equal(canonicals.size, expectedPaths.length, 'All public pages have distinct canonical URLs');
+assert.equal(cspHashes.size, expectedPaths.length, 'CSP is derived for each distinct page, not reused globally');
+console.log('PASS all authored pages: unique titles/descriptions/canonicals, sharing metadata, factual schema and exact CSP hashes');
 
 for (const path of [
   'https://evil.example/', '//evil.example/', 'http://moduoduowriter.com/',

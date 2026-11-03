@@ -11,10 +11,17 @@
 - [小说大纲规划](https://moduoduowriter.com/features/novel-outline/): 梳理故事主线、冲突、阶段与章节目标。
 - [人物设定](https://moduoduowriter.com/features/character-design/): 整理人物身份、动机、关系与成长变化。
 - [文字润色](https://moduoduowriter.com/features/text-polish/): 在作者要求和原文基础上调整表达、对话和叙述。
+- [小说灵感生成](https://moduoduowriter.com/features/story-ideas/): 从人物目标、核心冲突和场景线索展开候选故事方向。
+- [AI 小说续写](https://moduoduowriter.com/features/novel-continuation/): 根据作者提供的前情、已确认设定和本章目标准备后续草稿。
+- [小说书名与简介](https://moduoduowriter.com/features/novel-title-synopsis/): 比较书名和简介候选，让介绍与作品实际内容一致。
+- [小说拆书分析](https://moduoduowriter.com/features/novel-analysis/): 围绕作者提供的文本梳理情节、人物和写作方法，区分原文与分析。
+- [AI 剧本写作](https://moduoduowriter.com/features/script-writing/): 辅助准备文字剧本的场景、动作与对白，不提供视频生成。
 
 ## 使用说明
 
 - [新手入门](https://moduoduowriter.com/guides/getting-started/): 登录、说明故事需求、预览草稿、确认采用及继续编辑。
+- [AI 小说写作提示词](https://moduoduowriter.com/guides/ai-novel-prompts/): 按任务补充故事前提、参考文本、约束和预期输出的提示示例。
+- [用 AI 分步写长篇小说](https://moduoduowriter.com/guides/ai-long-novel/): 从主线规划到逐章创作，整理已确认事实并检查前后连贯。
 - [关于墨多多](https://moduoduowriter.com/about/): 产品定位、能力与使用边界。
 - [公开产品说明全文](https://moduoduowriter.com/llms-full.txt): 便于阅读的产品摘要和功能说明。
 

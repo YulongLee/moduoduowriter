@@ -42,6 +42,48 @@
 
 功能说明：https://moduoduowriter.com/features/text-polish/
 
+## 没有完整故事时，怎样寻找小说灵感？
+
+作者可以从一个人物愿望、一段关系、一个异常事件或一处场景开始，说明偏好的题材与情绪，再比较几个不同的故事方向。灵感生成适合展开候选冲突和行动目标；作者选择方向后，再完善大纲与人物。尚未选择的建议不应混入已确认设定。
+
+功能说明：https://moduoduowriter.com/features/story-ideas/
+
+## AI 小说续写需要提供哪些信息？
+
+续写前，作者应选择相关前文，说明当前人物状态、已经发生的事实、本场目标、叙述视角和希望停下的位置。墨多多可以在这些要求基础上准备后续草稿，再由作者检查是否承接前情、有无提前揭晓信息或改变人物行为。保存过的资料不一定全部用于当前任务，请检查实际选择的参考内容。
+
+功能说明：https://moduoduowriter.com/features/novel-continuation/
+
+## 小说书名和简介如何生成？
+
+作者可以提供作品题材、主角、核心冲突、阅读感受以及希望保留或避免的表达，请求多个书名与简介候选。书名和简介应准确呈现作品的内容与吸引点，作者可以比较不同侧重后修改。候选名称仍需作者自行核对，不代表名称可注册、独家使用或能够带来特定阅读量。
+
+功能说明：https://moduoduowriter.com/features/novel-title-synopsis/
+
+## 小说拆书工具怎样辅助学习？
+
+小说拆书分析围绕作者提供的文本，梳理情节结构、人物行动、冲突安排和表达方法。分析应区分原文已有的信息、读者可以推断的内容和待核对的问题；作者需要回到原文检查结论。使用自己的文稿或有权使用的参考材料，可以将学习收获整理为结构与表达方法，不把原文内容直接当作新作品。
+
+功能说明：https://moduoduowriter.com/features/novel-analysis/
+
+## AI 剧本写作提供什么？
+
+当前剧本创作面向文字，包括故事梗概、场景安排、人物动作和对白草稿。作者可以说明场景目标、出场人物、冲突与篇幅要求，预览并编辑候选内容。文字剧本工具不等于视频制作服务，当前不提供拍摄、配音或视频生成。
+
+功能说明：https://moduoduowriter.com/features/script-writing/
+
+## AI 小说写作提示词怎样组织？
+
+写提示时，可以依次说明任务、已确认事实、参考材料、输出格式与限制。例如先要求比较三个主线方向，不直接写正文；润色时则明确保留人物关系和情节事实。提示词指南提供可按自己作品改写的示例，不是保证生成质量的固定口令。示例由预先编写的文本组成，不代表用户作品或现场生成结果。
+
+使用指南：https://moduoduowriter.com/guides/ai-novel-prompts/
+
+## 如何用 AI 分步写长篇小说？
+
+长篇创作适合先确认故事主线与人物，再拆解近期章节的任务，逐章生成、阅读和修改。作者可以整理人物状态、时间线、伏笔和已经发生的事实；前情发生变化时，同步检查大纲与后续计划。长篇指南介绍的是分步工作方法，不承诺一次生成整本小说，也不保证自动保持全部设定一致。
+
+使用指南：https://moduoduowriter.com/guides/ai-long-novel/
+
 ## 从想法到作品的使用流程
 
 1. 浏览公开产品介绍和创作示例，了解功能与边界。
@@ -73,7 +115,14 @@ AI 可能产生不准确、重复、前后矛盾或不符合作者要求的文�
 - 小说大纲规划：https://moduoduowriter.com/features/novel-outline/
 - 人物设定：https://moduoduowriter.com/features/character-design/
 - 文字润色：https://moduoduowriter.com/features/text-polish/
+- 小说灵感生成：https://moduoduowriter.com/features/story-ideas/
+- AI 小说续写：https://moduoduowriter.com/features/novel-continuation/
+- 小说书名与简介：https://moduoduowriter.com/features/novel-title-synopsis/
+- 小说拆书分析：https://moduoduowriter.com/features/novel-analysis/
+- AI 剧本写作：https://moduoduowriter.com/features/script-writing/
 - 新手入门：https://moduoduowriter.com/guides/getting-started/
+- AI 小说写作提示词：https://moduoduowriter.com/guides/ai-novel-prompts/
+- 用 AI 分步写长篇小说：https://moduoduowriter.com/guides/ai-long-novel/
 - 关于墨多多：https://moduoduowriter.com/about/
 
 本文件不替代对应网页，不是服务条款或价格合同，也不保证搜索引擎收录、排名或生成式搜索引用。

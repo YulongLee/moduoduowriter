@@ -39,7 +39,7 @@ try{
   const bot=await request(path,{headers:{'User-Agent':'OAI-SearchBot'}});assert.equal(await bot.text(),html,'People and crawlers receive identical HTML');
   htmlByPath.set(path,html);
  }
- console.log('PASS seven public pages: visible HTML, unique metadata, same visitor/bot content, JSON-LD CSP hashes, HEAD and private-data boundary');
+ console.log('PASS all public pages: visible HTML, unique metadata, same visitor/bot content, JSON-LD CSP hashes, HEAD and private-data boundary');
  for(const [path,html] of htmlByPath){
   const fragmentIds=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]));
   for(const [,raw] of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)){
