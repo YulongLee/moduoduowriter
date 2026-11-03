@@ -230,4 +230,11 @@
   .studio-conversation .studio-conversation-composer > textarea { height: 60px; min-height: 60px; }
   .studio-conversation .studio-conversation-composer-shell { padding-bottom: 7px; }
 }
+@media (max-height: 480px) {
+  .studio-conversation .studio-conversation-center { overflow-y: auto; overscroll-behavior: contain; }
+  .studio-conversation .studio-conversation-message-slot { flex: none; min-height: 160px; overflow: visible; }
+  .studio-conversation .studio-conversation-message-slot > .home-chat-log, .studio-conversation .studio-conversation-message-slot > [role='log'] { flex: none; overflow: visible; }
+  .studio-conversation .studio-conversation-empty { flex: none; min-height: 180px; overflow: visible; }
+  .studio-conversation .studio-conversation-option-popover { position: static; width: 100%; max-height: 45dvh; margin-top: 10px; }
+}
 @media (prefers-reduced-motion: reduce) { .studio-conversation .studio-conversation-examples > button { transition: none; } .studio-conversation .studio-conversation-spinner { animation: none; } }
