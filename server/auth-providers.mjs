@@ -1,5 +1,6 @@
 import {createHash,createHmac,randomBytes} from 'node:crypto';
 import {isIP} from 'node:net';
+import {createVerificationEmail} from './auth-email.mjs';
 
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 const plain=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
@@ -108,7 +109,7 @@ async function readResponse(response) {
 
 export function createAuthProviders({fetchImpl=globalThis.fetch,mailTransport,timeoutMs=10000,now=()=>new Date(),nonce=()=>randomBytes(16).toString('hex')}={}) {
  if(!Number.isInteger(timeoutMs)||timeoutMs<1||timeoutMs>30000)throw fail('登录服务等待时间配置不正确');
- const sendCode=async(config,{channel,target,code})=>{
+ const sendCode=async(config,{channel,target,code,purpose='login'})=>{
   const settings=validateAuthConfig(config);
   if(!['phone','email'].includes(channel)||!authMethods(settings)[channel].available)throw fail('该验证码登录方式暂未开放',503);
   if(typeof code!=='string'||!/^\d{6}$/.test(code)||(channel==='phone'?!validPhone(target):!validEmail(target)))throw fail('验证码发送参数不正确');
@@ -121,7 +122,7 @@ export function createAuthProviders({fetchImpl=globalThis.fetch,mailTransport,ti
    const email=settings.email;let transport;
    try{
     const options={host:email.host,port:email.port,secure:email.secure,requireTLS:!email.secure,auth:{user:email.user,pass:email.password},tls:{rejectUnauthorized:true,minVersion:'TLSv1.2'},connectionTimeout:timeoutMs,greetingTimeout:timeoutMs,socketTimeout:timeoutMs,logger:false,debug:false,disableFileAccess:true,disableUrlAccess:true,pool:false};
-    const message={from:{name:email.fromName||'墨多多',address:email.from},to:target,envelope:{from:email.from,to:[target]},subject:'墨多多登录验证码',text:`你的墨多多登录验证码是：${code}\n\n验证码 5 分钟内有效，仅用于本次登录或绑定。请勿向任何人透露验证码。\n如果不是你发起的操作，请忽略本邮件。`,disableFileAccess:true,disableUrlAccess:true};
+    const message={...createVerificationEmail({code,purpose}),from:{name:email.fromName||'墨多多',address:email.from},to:target,envelope:{from:email.from,to:[target]},disableFileAccess:true,disableUrlAccess:true};
     const result=await timed(async signal=>{
      transport=mailTransport?await mailTransport(options):(await import('nodemailer')).default.createTransport(options);
      if(signal.aborted){try{transport?.close?.();}catch{}throw fail('邮件服务响应超时',502);}

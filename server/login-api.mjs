@@ -80,7 +80,7 @@ export function createLoginApi({directory,database,fetchImpl,sendJSON,readBody,s
     const channel=body.channel;if(!['phone','email'].includes(channel))throw fail('请选择手机号或邮箱登录。');assertAvailable(methods,channel);
     const binding=path.includes('/identities/'),userId=binding?authenticated(req,auth):null,code=String(randomInt(0,1000000)).padStart(6,'0'),target=normalizeLoginTarget(channel,body.target);
     const challenge=database().createCodeChallenge({channel,target,code,requester,purpose:binding?'bind':'login',userId});
-    try{await providers.sendCode(config,{channel,target,code});database().activateCodeChallenge(challenge.id);}catch(error){database().failCodeChallenge(challenge.id);throw error;}
+    try{await providers.sendCode(config,{channel,target,code,purpose:binding?'bind':'login'});database().activateCodeChallenge(challenge.id);}catch(error){database().failCodeChallenge(challenge.id);throw error;}
     sendJSON(res,200,{challengeId:challenge.id,expiresAt:challenge.expiresAt,retryAfter:challenge.retryAfter});return true;
    }
    if(['/api/auth/code/login','/api/auth/identities/code/bind'].includes(path)){

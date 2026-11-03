@@ -36,7 +36,7 @@
     "test:conversation-ui": "node scripts/conversation-ui-check.mjs",
     "test:public-home": "node scripts/public-home-check.mjs && node scripts/public-home-app-check.mjs",
     "test:auth-identity": "node scripts/auth-identity-check.mjs",
-    "test:auth-providers": "node scripts/auth-providers-check.mjs",
+    "test:auth-providers": "node scripts/auth-providers-check.mjs && node scripts/auth-email-check.mjs",
     "test:auth-api": "node scripts/auth-api-check.mjs && node scripts/auth-wechat-callback-check.mjs",
     "test:login-methods": "node scripts/login-methods-check.mjs",
     "test:login-settings": "node scripts/login-settings-check.mjs",

@@ -8,7 +8,7 @@ import {createLoginFlows} from '../server/login-flows.mjs';
 
 const directory=await mkdtemp(join(tmpdir(),'mdd-auth-api-')),origin='https://writer.example.com';
 const messages=[],upstream=[];let failDelivery=false;
-const mailTransport=()=>({async sendMail(message){if(failDelivery){failDelivery=false;throw Error('fixture-secret-provider-error');}messages.push({channel:'email',target:message.envelope.to[0],code:message.text.match(/\d{6}/)[0]});return {accepted:message.envelope.to};},close(){}});
+const mailTransport=()=>({async sendMail(message){if(failDelivery){failDelivery=false;throw Error('fixture-secret-provider-error');}messages.push({channel:'email',target:message.envelope.to[0],code:message.text.match(/\d{6}/)[0],subject:message.subject,html:message.html});return {accepted:message.envelope.to};},close(){}});
 const fetchImpl=async(value,options)=>{
  const url=new URL(value);upstream.push(url.hostname);
  if(url.hostname==='dysmsapi.aliyuncs.com'){if(failDelivery){failDelivery=false;return Response.json({Code:'FAIL',Message:'fixture-secret-provider-error'});}messages.push({channel:'phone',target:url.searchParams.get('PhoneNumbers'),code:JSON.parse(url.searchParams.get('TemplateParam')).code});return Response.json({Code:'OK'});}
@@ -45,8 +45,9 @@ try{
  assert.equal(phoneUser.role,'author');assert.equal(phoneUser.hasPassword,false);assert.notEqual(phoneUser.id,'local');assert.ok(!JSON.stringify(phoneUser).includes(phone.target));
  assert.notEqual((await call('/api/auth/code/login',phone)).status,200);
  assert.equal((await call('/api/auth/settings',undefined,{session:phoneSession})).status,403);
- const email=await sendCode('email','reader@example.com');result=await call('/api/auth/code/login',email);assert.equal(result.status,200);assert.notEqual(result.data.user.id,phoneUser.id);
+ const email=await sendCode('email','reader@example.com');assert.equal(messages.at(-1).subject,'墨多多 · 登录验证码');assert.ok(messages.at(-1).html.includes('你的登录验证码'));result=await call('/api/auth/code/login',email);assert.equal(result.status,200);assert.notEqual(result.data.user.id,phoneUser.id);
  const bound=await sendCode('email','owner@example.com',{session:owner},true);
+ assert.ok(messages.at(-1).subject.includes('邮箱绑定'));assert.ok(messages.at(-1).html.includes('确认绑定你的邮箱'));
  assert.notEqual((await call('/api/auth/code/login',bound)).status,200,'A bind challenge cannot be used to sign in');
  assert.notEqual((await call('/api/auth/identities/code/bind',bound,{session:phoneSession})).status,200,'A bind challenge belongs to its authenticated owner');
  result=await call('/api/auth/identities/code/bind',bound,{session:owner});assert.equal(result.status,200);assert.equal(result.data.bound,true);assert.equal(result.data.user.id,'local');
