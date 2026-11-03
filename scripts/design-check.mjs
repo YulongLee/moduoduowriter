@@ -70,3 +70,39 @@ for(const [name,foreground,background] of [
   console.log(`PASS ${name} ${ratio.toFixed(2)}:1`);
 }
 console.log('Shared and homepage colors meet a 4.5:1 text contrast threshold. This does not replace browser visual QA.');
+
+// The private library uses scoped colors for its actual metadata and state chips.
+const libraryCss=readFileSync(new URL('../src/works-library.css',import.meta.url),'utf8');
+const libraryRoot=libraryCss.match(/\.novel-library\s*\{([^}]+)\}/)?.[1];
+const libraryTokens=Object.fromEntries([...libraryRoot.matchAll(/(--[\w-]+)\s*:\s*(#[\da-f]{6})\s*;/gi)].map(match=>[match[1],match[2]]));
+const libraryRule=selector=>{
+ const escaped=selector.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const match=libraryCss.match(new RegExp(escaped+'\\s*\\{([^}]+)\\}'));
+ assert.ok(match,`Missing library contrast source: ${selector}`);
+ return property=>{
+  const value=match[1].match(new RegExp('(?:^|;)\\s*'+property+'\\s*:\\s*([^;]+)'))?.[1]?.trim();
+  const variable=value?.match(/^var\((--[\w-]+)\)$/)?.[1];
+  return variable?libraryTokens[variable]:value;
+ };
+};
+const libraryPairs=[
+ ['作品库正文',libraryTokens['--novel-ink'],'#ffffff'],
+ ['作品库辅助文字',libraryTokens['--novel-muted'],'#f7f8f6'],
+ ...[
+  ['作品分类数量','.novel-library .novel-kind-tabs > button small','#ffffff'],
+  ['选中分类数量','.novel-library .novel-kind-tabs > .novel-tab-selected small','#eef4ec'],
+  ['作品日期','.novel-library .novel-work-edited','#ffffff'],
+  ['作品字数','.novel-library .novel-work-size','#ffffff'],
+  ['搜索输入提示','.novel-library .novel-library-search input::placeholder','#fbfcfa'],
+  ['新建小说说明','.novel-library .novel-shortcut-primary .novel-shortcut-copy > span','#245b42']
+ ].map(([label,selector,background])=>[label,libraryRule(selector)('color'),background]),
+ ...['writing','serializing','completed'].map(state=>{
+  const property=libraryRule(`.novel-library .novel-work-tags>.novel-work-status-${state}`);
+  return [`作品状态 ${state}`,property('color'),property('background')];
+ })
+];
+for(const [label,foreground,background] of libraryPairs){
+ const ratio=contrast(foreground,background);
+ assert.ok(ratio>=4.5,`${label}: ${ratio.toFixed(2)}:1 is below 4.5:1`);
+ console.log(`PASS ${label} ${ratio.toFixed(2)}:1`);
+}

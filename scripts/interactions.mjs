@@ -156,19 +156,19 @@ try {
 
   let destination;
   await act(async()=>{renderer=TestRenderer.create(React.createElement(WorksPage,{works:initialWorks,navigate:route=>{destination=route;},setModal:value=>{modal=value;},notify,onImport(){}}));});
-  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className.startsWith('work-card ')).length,3);
+  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className.startsWith('novel-work-card ')).length,3);
   await click(renderer.root.findByProps({'aria-label':'列表视图'}));
-  assert.equal(renderer.root.findAllByProps({className:'work-list-row'}).length,3);
-  await click(findButton(renderer,'短篇故事'));
-  assert.equal(renderer.root.findAllByProps({className:'work-list-row'}).length,1);
-  await click(renderer.root.findByProps({className:'work-list-row'}).findAllByType('button').find(button=>textOf(button).trim()==='继续写作'));
+  assert.equal(renderer.root.findAllByProps({className:'novel-work-card novel-work-card-list'}).length,3);
+  await click(renderer.root.findByProps({'aria-label':'作品类型'}).findAllByType('button').find(button=>textOf(button).startsWith('短篇故事')));
+  assert.equal(renderer.root.findAllByProps({className:'novel-work-card novel-work-card-list'}).length,1);
+  await click(renderer.root.findByProps({className:'novel-work-card novel-work-card-list'}).findAllByType('button').find(button=>textOf(button).trim()==='继续写作'));
   assert.equal(destination,'editor/spring');
   await act(async()=>renderer.root.findByProps({'aria-label':'搜索作品'}).props.onChange({target:{value:'不存在的书名'}}));
-  assert.ok(textOf(renderer.root).includes('没有找到这部作品'));
+  assert.ok(textOf(renderer.root).includes('没有找到符合条件的作品'));
   await click(findButton(renderer,'清空筛选'));
-  assert.equal(renderer.root.findAllByProps({className:'work-list-row'}).length,3);
+  assert.equal(renderer.root.findAllByProps({className:'novel-work-card novel-work-card-list'}).length,3);
   await click(renderer.root.findByProps({'aria-label':'卡片视图'}));
-  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className.startsWith('work-card ')).length,3);
+  assert.equal(renderer.root.findAll(node=>node.type==='article'&&node.props.className.startsWith('novel-work-card ')).length,3);
   await act(async()=>renderer.unmount());
   console.log('PASS redesigned work library, view switching, filtering, empty-state recovery and correct editor navigation');
 

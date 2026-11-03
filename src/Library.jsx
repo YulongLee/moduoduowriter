@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowRight, ArrowUpRight, BookOpen, CheckCheck, Clock3, Download, FileText, LayoutGrid, List, Plus, Settings2, Search, Trash2, Type, Upload } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpen, ChevronRight, Clock3, Download, Ellipsis, FileText, Globe2, LayoutGrid, Lightbulb, List, ListTree, Plus, RotateCcw, Search, Settings2, Trash2, Type, Upload, UsersRound } from 'lucide-react';
 import { BookCover } from './Art';
-import { workWords } from './data';
+import { tools, workWords } from './data';
+import { workStatus, workStatusLabel, workTargetProgress, workEditTime, workEditLabel, selectLibraryWorks, libraryCounts } from './workPresentation.mjs';
 import './library.css';
+import './works-library.css';
 
 export function WorkCard({work,onOpen,onExport,onManage}) {
   return <article className={`work-card shelf-${work.cover||'plain'}`}>
@@ -12,28 +14,85 @@ export function WorkCard({work,onOpen,onExport,onManage}) {
   </article>;
 }
 
-function WorkRow({work,onOpen,onExport,onManage}) {
-  return <article className="work-list-row"><button className="work-list-name" onClick={onOpen}><BookCover work={work}/><span><strong>{work.title}</strong><small>{work.kind} · {work.genre}</small></span></button><span className="work-list-words">{workWords(work).toLocaleString()}<small>字 · {work.chapters.length} 章</small></span><span className="work-list-time">{work.updated}</span><div className="work-row-actions">{onManage&&<button className="text-button" aria-label={`管理${work.title}`} onClick={onManage}>管理</button>}<button className="text-button" onClick={onOpen}>继续写作<ArrowRight size={14}/></button>{onExport&&<button className="icon-button" aria-label={`导出${work.title}`} onClick={onExport}><Download size={16}/></button>}</div></article>;
+const libraryKinds = [{ value: 'all', label: '全部作品' }, { value: '长篇小说', label: '长篇小说' }, { value: '短篇故事', label: '短篇故事' }, { value: '剧本', label: '剧本' }];
+const libraryStatuses = [{ value: 'all', label: '全部状态' }, { value: 'draft', label: '草稿' }, { value: 'writing', label: '创作中' }, { value: 'serializing', label: '连载中' }, { value: 'completed', label: '已完结' }];
+const libraryShortcuts = [
+  { id: 'create', title: '新建小说', description: '写下新故事的第一章', Icon: Plus, tone: 'primary' },
+  { id: 'outline', title: '生成大纲', description: '理清主线与章节脉络', Icon: ListTree, tone: 'blue' },
+  { id: 'character', title: '人物设定', description: '塑造有血有肉的角色', Icon: UsersRound, tone: 'purple' },
+  { id: 'world', title: '世界观设定', description: '搭建故事发生的世界', Icon: Globe2, tone: 'green' },
+  { id: 'tools', title: '灵感广场', description: '发现更多创作工具', Icon: Lightbulb, tone: 'gold' },
+];
+
+function NovelWorkCard({ work, view, onOpen, onManage, onExport }) {
+  const title = work.title || '未命名作品';
+  const words = workWords({ ...work, chapters: Array.isArray(work.chapters) ? work.chapters : [] });
+  const chapters = Array.isArray(work.chapters) ? work.chapters.length : 0;
+  const progress = workTargetProgress(work);
+  const edited = workEditTime(work);
+  return <article className={`novel-work-card novel-work-card-${view}`} aria-label={`作品：${title}`}>
+    <div className="novel-work-card-body">
+      <button type="button" className="novel-work-cover" onClick={onOpen} aria-label={`继续写作：${title}`}><span aria-hidden="true"><BookCover work={work} large /></span></button>
+      <div className="novel-work-content"><button type="button" className="novel-work-title" onClick={onOpen} title={title}>{title}</button><div className="novel-work-tags"><span>{work.kind || '作品'}</span>{work.genre && <span>{work.genre}</span>}<span className={`novel-work-status novel-work-status-${workStatus(work)}`}><i aria-hidden="true" />{workStatusLabel(work)}</span></div><p className="novel-work-description">{work.description || '尚未填写作品简介，可以在作品资料中补充。'}</p><div className="novel-work-size"><span><Type size={14} aria-hidden="true" />{words.toLocaleString('zh-CN')} 字</span><span><FileText size={14} aria-hidden="true" />{chapters} 章</span></div>{progress && <div className="novel-work-progress"><div><span>目标 {progress.target.toLocaleString('zh-CN')} 字</span><strong>{Math.round(progress.percent)}%</strong></div><span role="progressbar" aria-label={`${title}创作目标进度`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.percent)}><i style={{ width: `${progress.percent}%` }} /></span></div>}</div>
+    </div>
+    <footer className="novel-work-footer"><span className="novel-work-edited"><Clock3 size={13} aria-hidden="true" />{edited !== null ? <time dateTime={new Date(edited).toISOString()}>{workEditLabel(work)}</time> : <span>{workEditLabel(work)}</span>}</span><div className="novel-work-actions"><button type="button" className="novel-icon-button novel-work-manage" aria-label={`管理${title}`} title="管理作品资料与回收站" onClick={onManage}><Ellipsis size={20} aria-hidden="true" /></button><button type="button" className="novel-icon-button novel-work-export" onClick={onExport} aria-label={`导出${title}`} title="导出 TXT 文稿"><Download size={17} aria-hidden="true" /></button><button type="button" className="novel-continue-button" onClick={onOpen}>{words > 0 ? '继续写作' : '开始写作'}<ArrowRight size={15} aria-hidden="true" /></button></div></footer>
+  </article>;
 }
 
-export function WorksPage({works,navigate,setModal,onImport,notify,trashWorks=[],onRestoreWork}) {
-  const [filter,setFilter]=useState('全部作品');const [showTrash,setShowTrash]=useState(false);
-  const [query,setQuery]=useState('');
-  const [sort,setSort]=useState('recent');
-  const [view,setView]=useState('grid');
-  const list=works.filter(w=>(filter==='全部作品'||w.kind===filter)&&`${w.title}${w.genre}`.includes(query.trim()));
-  if(sort==='words')list.sort((a,b)=>workWords(b)-workWords(a));
-  if(sort==='name')list.sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));
-  const recent=works[0];
-  const words=works.reduce((sum,work)=>sum+workWords(work),0),chapters=works.reduce((sum,work)=>sum+work.chapters.length,0);
-  const exportWork=work=>{const text=`${work.title}\n\n${work.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`;const url=URL.createObjectURL(new Blob(['\ufeff'+text],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`${work.title}.txt`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('完整作品已导出为 TXT');};
-  return <div className="library-page">
-    <div className="page-heading"><div><h1>我的作品</h1><p>管理你的故事，接着上一次灵感继续写。</p></div><div className="heading-actions"><button className="button secondary" onClick={onImport}><Upload size={16}/>导入文稿</button><button className="button primary" onClick={()=>setModal({type:'create'})}><Plus size={17}/>新建作品</button></div></div>
-    <section className="library-overview" aria-label="创作概览">{recent?<div className="library-resume"><div className="library-resume-cover" aria-hidden="true"><BookCover work={recent}/></div><div className="library-resume-content"><span className="resume-label"><Clock3 size={13}/>最近编辑</span><h2>{recent.title}</h2><p>{recent.chapters[0]?.title}<span>· {recent.updated}</span></p></div><button onClick={()=>navigate(`editor/${recent.id}`)}>继续写作<ArrowRight size={15}/></button></div>:<div className="library-resume library-resume-empty"><span className="library-empty-document"><BookOpen size={27}/></span><div className="library-resume-content"><span className="resume-label">你的创作空间</span><h2>给第一个故事留个位置。</h2><p>新建作品，或导入已经写好的文稿。</p></div><button onClick={()=>setModal({type:'create'})}>创建第一部作品<ArrowRight size={15}/></button></div>}
-      <div className="library-metrics"><div><span>作品</span><strong>{works.length}<small>部</small></strong></div><div><span>累计字数</span><strong>{words.toLocaleString()}<small>字</small></strong></div><div><span>章节</span><strong>{chapters}<small>章</small></strong></div><p><CheckCheck size={14}/>本地保存，随时导出</p></div>
+export function WorksPage({ works = [], navigate, setModal, onImport, notify, trashWorks = [], onRestoreWork }) {
+  const [kind, setKind] = useState('all');
+  const [status, setStatus] = useState('all');
+  const [showTrash, setShowTrash] = useState(false);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState('recent');
+  const [view, setView] = useState('grid');
+  const list = selectLibraryWorks(works, { kind, status, query, sort });
+  const counts = libraryCounts(works, { kind, query });
+  const statusTotal = Object.values(counts.statuses).reduce((sum, value) => sum + value, 0);
+  const kindCounts = libraryCounts(works, { kind: 'all', query });
+  const total = libraryCounts(works, { kind: 'all', query: '' }).total;
+  const trashList = Array.isArray(trashWorks) ? trashWorks.filter(Boolean) : [];
+  const hasFilters = kind !== 'all' || status !== 'all' || query.trim();
+  const clearFilters = () => { setKind('all'); setStatus('all'); setQuery(''); };
+  const createWork = () => setModal({ type: 'create', kind: '长篇小说' });
+  const shortcut = id => {
+    if (id === 'create') return createWork();
+    if (id === 'tools') return navigate('tools');
+    if (id === 'world') return setModal({ type: 'home-conversation', initialPrompt: '我想构思小说世界观，请帮我梳理时代背景、地点、规则与势力关系。' });
+    const tool = tools.find(item => item.id === id);
+    if (tool) setModal({ type: 'tool', tool });
+  };
+  const exportWork = work => {
+    try {
+      const chapters = Array.isArray(work.chapters) ? work.chapters : [];
+      const text = `${work.title || '未命名作品'}\n\n${chapters.map(chapter => `${chapter.title || '未命名章节'}\n\n${chapter.text || ''}`).join('\n\n')}`;
+      const url = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/plain;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${work.title || '未命名作品'}.txt`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify?.('完整作品已导出为 TXT');
+    } catch { notify?.('导出未完成，请稍后重试。'); }
+  };
+
+  return <div className="novel-library">
+    <header className="novel-library-hero"><div><h1>我的作品</h1><p>管理你的小说作品，继续创作、编辑与完善。</p></div><div className="novel-library-hero-actions">{typeof onImport === 'function' && <button type="button" className="novel-secondary-button novel-import-button" onClick={onImport}><Upload size={17} aria-hidden="true" />导入文稿</button>}<button type="button" className="novel-trash-toggle" onClick={() => setShowTrash(value => !value)}><Trash2 size={17} aria-hidden="true" />{showTrash ? '返回作品书架' : `回收站（${trashList.length}）`}</button></div></header>
+
+    <section className="novel-library-shortcuts" aria-label="创作快捷入口">{libraryShortcuts.map(({ id, title, description, Icon, tone }) => <button type="button" key={id} className={`novel-shortcut novel-shortcut-${tone}`} onClick={() => shortcut(id)}><span className="novel-shortcut-icon"><Icon size={25} aria-hidden="true" /></span><span className="novel-shortcut-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="novel-shortcut-arrow" size={17} aria-hidden="true" /></button>)}</section>
+
+    <section className="novel-library-shelf" aria-labelledby="novel-library-shelf-title">
+      <div className={`novel-library-section-heading${showTrash ? '' : ' novel-library-section-quiet'}`}><h2 id="novel-library-shelf-title">{showTrash ? '回收站' : '作品书架'}<span>{showTrash ? trashList.length : total}</span></h2></div>
+
+      {!showTrash && <div className="novel-library-filters">
+        <div className="novel-library-filter-top"><div className="novel-kind-tabs" role="group" aria-label="作品类型">{libraryKinds.map(item => <button type="button" key={item.value} className={kind === item.value ? 'novel-tab-selected' : ''} aria-pressed={kind === item.value} onClick={() => setKind(item.value)}><span>{item.label}</span><small>{item.value === 'all' ? kindCounts.total : kindCounts.kinds[item.value] || 0}</small></button>)}</div><label className="novel-library-search"><Search size={17} aria-hidden="true" /><input aria-label="搜索作品" placeholder="搜索作品名称、题材…" value={query} onChange={event => setQuery(event.target.value)} /></label></div>
+        <div className="novel-library-filter-bottom"><div className="novel-status-tabs" role="group" aria-label="作品状态">{libraryStatuses.map(item => <button type="button" key={item.value} className={status === item.value ? 'novel-status-selected' : ''} aria-pressed={status === item.value} onClick={() => setStatus(item.value)}>{item.label}<span>{item.value === 'all' ? statusTotal : counts.statuses[item.value] || 0}</span></button>)}</div><div className="novel-library-view-controls"><select aria-label="排序方式" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近编辑</option><option value="words">字数最多</option><option value="name">名称排序</option></select><div className="novel-view-toggle" role="group" aria-label="作品显示方式"><button type="button" aria-label="卡片视图" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={18} aria-hidden="true" /></button><button type="button" aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={19} aria-hidden="true" /></button></div></div></div>
+      </div>}
+
+      {showTrash ? trashList.length > 0 ? <>
+        <p className="novel-trash-description">移入回收站的作品会保留在这里，可以随时恢复到作品书架。</p>
+        <div className="novel-trash-list">{trashList.map(work => <article className="novel-trash-card" key={work.id}><span className="novel-trash-cover" aria-hidden="true"><BookCover work={work} /></span><div><h3>{work.title || '未命名作品'}</h3><p>{work.kind || '作品'}{work.genre && ` · ${work.genre}`}</p><span>{workWords({ ...work, chapters: Array.isArray(work.chapters) ? work.chapters : [] }).toLocaleString('zh-CN')} 字</span></div><button type="button" className="novel-secondary-button" aria-label={`恢复${work.title || '未命名作品'}`} disabled={typeof onRestoreWork !== 'function'} onClick={() => onRestoreWork(work)}><RotateCcw size={16} aria-hidden="true" />恢复作品</button></article>)}</div>
+      </> : <div className="novel-library-empty"><span className="novel-empty-symbol"><Trash2 size={34} aria-hidden="true" /></span><h3>回收站是空的</h3><p>移入回收站的作品会保留在这里，方便你恢复。</p><button type="button" className="novel-secondary-button" onClick={() => setShowTrash(false)}>返回作品书架<ArrowRight size={16} aria-hidden="true" /></button></div> : list.length > 0 ? <>{hasFilters && <p className="novel-library-results" role="status">共 {list.length} 部作品<button type="button" onClick={clearFilters}>清空筛选</button></p>}<div className={`novel-library-collection novel-library-collection-${view}`}>{list.map(work => <NovelWorkCard key={work.id} work={work} view={view} onOpen={() => navigate(`editor/${work.id}`)} onManage={() => setModal({ type: 'work-details', work })} onExport={() => exportWork(work)} />)}</div></> : <div className="novel-library-empty"><span className="novel-empty-symbol">{hasFilters ? <Search size={34} aria-hidden="true" /> : <BookOpen size={34} aria-hidden="true" />}</span><h3>{hasFilters ? '没有找到符合条件的作品' : '为你的第一个故事，留一个位置'}</h3><p>{hasFilters ? '试试其他分类或关键词，也可以清空筛选重新查看。' : '新建一部小说，或导入已经写好的 TXT 文稿。'}</p><div>{hasFilters ? <button type="button" className="novel-secondary-button" onClick={clearFilters}>清空筛选<ArrowRight size={16} aria-hidden="true" /></button> : <><button type="button" className="novel-primary-button" onClick={createWork}><Plus size={17} aria-hidden="true" />新建作品</button>{typeof onImport === 'function' && <button type="button" className="novel-secondary-button" onClick={onImport}><Upload size={16} aria-hidden="true" />导入文稿</button>}</>}</div></div>}
     </section>
-    <div className="library-section-title"><h2>{showTrash?'回收站':'作品书架'}<span>{showTrash?trashWorks.length:works.length}</span></h2><div className="library-shelf-actions"><button className="text-button library-trash-toggle" onClick={()=>setShowTrash(!showTrash)}><Trash2 size={15}/>{showTrash?'返回作品书架':`回收站（${trashWorks.length}）`}</button>{!showTrash&&<div className="library-view-toggle" aria-label="作品显示方式"><button className={view==='grid'?'active':''} aria-label="卡片视图" aria-pressed={view==='grid'} onClick={()=>setView('grid')}><LayoutGrid size={17}/></button><button className={view==='list'?'active':''} aria-label="列表视图" aria-pressed={view==='list'} onClick={()=>setView('list')}><List size={18}/></button></div>}</div></div>
-    {!showTrash&&<div className="works-toolbar"><div className="pill-tabs">{['全部作品','长篇小说','短篇故事','剧本'].map(t=><button key={t} aria-pressed={filter===t} className={filter===t?'active':''} onClick={()=>setFilter(t)}>{t}</button>)}</div><div className="toolbar-end"><label className="inline-search"><Search size={16}/><input aria-label="搜索作品" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索作品名称"/></label><select aria-label="排序方式" value={sort} onChange={e=>setSort(e.target.value)}><option value="recent">最近编辑</option><option value="words">字数最多</option><option value="name">名称排序</option></select></div></div>}
-    {showTrash?<div className="trash-list">{trashWorks.length?trashWorks.map(work=><article key={work.id}><span className="library-trash-cover" aria-hidden="true"><BookCover work={work}/></span><span><strong>{work.title}</strong><small>{work.kind} · {workWords(work).toLocaleString()} 字</small></span><button className="button secondary" onClick={()=>onRestoreWork(work)}>恢复作品<ArrowRight size={14}/></button></article>):<div className="empty-state"><span className="library-empty-symbol"><Trash2 size={27}/></span><h3>回收站是空的</h3><p>移入回收站的作品会保留在这里，方便你恢复。</p></div>}</div>:list.length>0?<div className={view==='grid'?'work-grid full-works':'work-list'}>{view==='list'&&<div className="library-list-heading" aria-hidden="true"><span>作品名称</span><span>内容规模</span><span>最近编辑</span><span>操作</span></div>}{list.map(work=>view==='grid'?<WorkCard key={work.id} work={work} onOpen={()=>navigate(`editor/${work.id}`)} onExport={()=>exportWork(work)} onManage={()=>setModal({type:'work-details',work})}/>:<WorkRow key={work.id} work={work} onOpen={()=>navigate(`editor/${work.id}`)} onExport={()=>exportWork(work)} onManage={()=>setModal({type:'work-details',work})}/>)}</div>:<div className="empty-state library-empty"><span className="library-empty-symbol">{query?<Search size={29}/>:<BookOpen size={29}/>}</span><h3>{query?'没有找到这部作品':'这里还没有作品'}</h3><p>{query?'换个书名或题材，或者清空筛选。':'创建一本作品，开始你的第一段故事。'}</p><button className="button secondary" onClick={()=>{if(query||filter!=='全部作品'){setQuery('');setFilter('全部作品');}else setModal({type:'create'});}}>{query||filter!=='全部作品'?'清空筛选':'新建作品'}<ArrowRight size={14}/></button></div>}
   </div>;
 }
