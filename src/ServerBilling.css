@@ -13,3 +13,10 @@
 .billing-checkout button:disabled { cursor:wait; }
 .billing-checkout button:disabled:not([aria-busy=true]) { cursor:default; }
 .account-form .account-recovery-code .modal-symbol { margin-top:0; }
+.billing-payment-readiness { display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 18px;padding:16px 20px;border:1px solid #dce7df;border-radius:12px;background:#f6faf7;color:#233b2f; }
+.billing-payment-readiness strong { font-size:14px; }
+.billing-payment-readiness p { margin:5px 0 0;color:#52665a;font-size:13px;line-height:1.6; }
+.billing-payment-channels { display:flex;gap:10px;flex-wrap:wrap; }
+.billing-payment-channels span { display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #dfe9e2;border-radius:8px;background:#fff;font-size:13px;font-weight:600; }
+.billing-payment-channels small { color:#68786d;font-size:12px;font-weight:400; }
+@media(max-width:600px) { .billing-payment-readiness { padding:14px;gap:10px; } .billing-payment-channels { width:100%; } }

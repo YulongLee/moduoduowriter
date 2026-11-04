@@ -15,7 +15,7 @@ for(const name of ['studio.sqlite','login-flows.sqlite']){
  const db=new DatabaseSync(source,{readOnly:true});
  try{await backup(db,join(target,name));chmodSync(join(target,name),0o600);copied.push(name);}finally{db.close();}
 }
-for(const name of ['auth-pepper','auth-flow-key','auth.json','ai.json','oss.json','media-permissions.json']){
+for(const name of ['auth-pepper','auth-flow-key','auth.json','ai.json','oss.json','media-permissions.json','payment-settings.json']){
  const source=join(directory,name);if(!existsSync(source))continue;
  copyFileSync(source,join(target,name));chmodSync(join(target,name),0o600);copied.push(name);
 }

@@ -10,6 +10,7 @@ import {createMediaService} from './media.mjs';
 import {createStore,collections} from './store.mjs';
 import { createCloudStore,defaultOSS,publicOSS,validateOSS } from './oss.mjs';
 import {createAdminApi} from './admin-api.mjs';
+import {defaultPaymentConfig,validatePaymentConfig,publicPaymentConfig,paymentStatus} from './payment-config.mjs';
 import {createLoginApi} from './login-api.mjs';
 
 const defaultConfig={baseUrl:'',model:'',protocol:'chat',apiKey:'',jsonMode:false,defaultMode:'demo'};
@@ -72,7 +73,17 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
  const quoteForGeneration=body=>quoteTask({taskId:['plan','chapterPlan'].includes(body.task)?'outline':body.task==='memoryExtract'?'review':body.task==='chapterDraft'?'continue':body.task,inputChars:JSON.stringify({prompt:body.prompt||'',context:body.context||{},previous:body.previous||{}}).length,outputChars:Math.min(4000,Math.max(300,Number(body.target)||1000)),model:body.mode==='refine'?'refine':'standard',dimensions:body.dimensions?.length||4});
  const cookie=(res,token,secure=false)=>res.setHeader('Set-Cookie',`mdd_session=${token||''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${token?604800:0}${secure?'; Secure':''}`);
  const loginApi=createLoginApi({directory,database,fetchImpl,mailTransport,sendJSON:send,readBody,setSessionCookie:cookie,publicOrigin:deploymentOrigin});
- const adminApi=createAdminApi({database,sendJSON:send,readBody});
+ const paymentFile=path.join(directory,'payment-settings.json');
+ const getPaymentSettings=async()=>{const saved=await readJSON(paymentFile,defaultPaymentConfig);return {...publicPaymentConfig(saved),revision:saved.revision||'legacy'};};
+ const putPaymentSettings=(value,actorId)=>serial(async()=>{
+  if(!value||typeof value!=='object'||Array.isArray(value)||typeof value.revision!=='string'||!value.revision||Object.keys(value).some(key=>!['wechat','alipay','revision'].includes(key)))throw fail('支付配置版本或数据格式不正确');
+  const previous=await readJSON(paymentFile,defaultPaymentConfig);
+  if(value.revision!==(previous.revision||'legacy'))throw fail('支付配置已在其他页面更改，请重新读取后再保存',409);
+  const next=validatePaymentConfig({wechat:value.wechat,alipay:value.alipay},previous),revision=randomUUID();
+  database().addAdminAudit({actorId,action:'payment-settings.update-attempt',targetId:'payments',targetLabel:'支付配置保存尝试'});
+  await atomicJSON(paymentFile,{...next,revision});return {...publicPaymentConfig(next),revision};
+ });
+ const adminApi=createAdminApi({database,sendJSON:send,readBody,getPaymentSettings,putPaymentSettings});
  const handle=async(req,res,next=()=>send(res,404,{error:'接口不存在'}))=>{
   const url=new URL(req.url,'http://localhost');if(!url.pathname.startsWith('/api/'))return next();
   try {
@@ -85,6 +96,7 @@ export function createApi({directory=path.resolve('.local'),fetchImpl=globalThis
    const requester=clientAddress(req);
    if(await adminApi(req,res,{url,origin,secure}))return;
    if(await loginApi.handle(req,res,{url,origin,secure,requester}))return;
+   if(url.pathname==='/api/payments/status'&&req.method==='GET')return send(res,200,paymentStatus());
    if(url.pathname==='/api/auth/status'&&req.method==='GET')return send(res,200,database().auth(sessionToken(req)));
    if(['/api/auth/login','/api/auth/register','/api/auth/recover'].includes(url.pathname)&&req.method==='POST') {
     const address=requester,attempts=failures.get(address)||{count:0,until:0};if(attempts.until>Date.now()&&attempts.count>=5)throw fail('尝试次数过多，请 15 分钟后再试',429);

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { ArrowRight, ArrowUpRight, BarChart3, BookOpen, Check, CheckCircle2, ChevronRight, Coins, Crown, Feather, Gift, Info, LoaderCircle, ReceiptText, ShieldCheck, Sparkles, Wallet, X } from 'lucide-react';
 import { BILLING_KEY, activePlan, applyDemoPurchase, balanceOf, billingTasks, creditPacks, dateLabel, finishTask, money, newBillingAccount, number, offerDetails, plans, quoteTask, readBilling, refreshBilling, reserveTask, writingModes } from './billing';
 import './billing.css';
-import { useGeneration } from './Generation';
+import { requestApi, useGeneration } from './Generation';
 import {useAccount} from './Account';
 import {useServerBilling} from './serverBillingClient';
 import './ServerBilling.css';
@@ -154,6 +154,8 @@ const faqs=[
 
 export function MembershipPage({navigate}) {
   const billing=useBilling();
+  const session=useAccount();
+  const [paymentStatus,setPaymentStatus]=useState(null);
   const [tab,setTab]=useState(billing?.destinationTab||'plans');
   const [cycle,setCycle]=useState('monthly');
   const [offer,setOffer]=useState(null);
@@ -167,6 +169,7 @@ export function MembershipPage({navigate}) {
   const [failure,setFailure]=useState(false);
   const meter=useTaskMeter(task,{inputChars,dimensions});
   useEffect(()=>{if(billing)setTab(billing.destinationTab);},[billing?.destinationTab]);
+  useEffect(()=>{let active=true;if(!billing?.server)return;requestApi('/api/payments/status',undefined,{method:'GET',...(session?.spaceId?{spaceId:session.spaceId}:{})}).then(value=>{if(active)setPaymentStatus(value);}).catch(()=>{if(active)setPaymentStatus({unavailable:true});});return()=>{active=false;};},[billing?.server,session?.spaceId]);
   if(!billing)return null;
   const {account,balance,plan}=billing;
   const memberBalance=account.buckets.filter(b=>b.kind==='member'&&(!b.expiresAt||b.expiresAt>Date.now())).reduce((sum,b)=>sum+b.remaining,0);
@@ -179,6 +182,7 @@ export function MembershipPage({navigate}) {
   };
   return <div className="membership-page">
     <div className="billing-page-heading"><div><h1>会员与墨点</h1><p>按创作频率选择，用量和费用一目了然。</p></div><span className="billing-preview-badge"><ShieldCheck size={14}/>方案预览 · 暂不收款</span></div>
+    <section className="billing-payment-readiness" aria-label="支付方式状态"><div><strong>支付方式</strong><p>微信支付与支付宝正在准备中。当前套餐和订单仅供体验，不会发起真实付款。</p></div><div className="billing-payment-channels"><span>微信支付 <small>{paymentStatus?.unavailable?'状态暂不可用':'尚未开通'}</small></span><span>支付宝 <small>{paymentStatus?.unavailable?'状态暂不可用':'尚未开通'}</small></span></div></section>
     <section className="billing-account-panel"><div className="billing-account-plan"><span className="billing-account-icon"><Crown size={24}/></span><div><span>当前方案 · 演示账户</span><h2>{plan.name}</h2><p>{account.member?`${dateLabel(account.member.expiresAt)} 到期 · 不自动续费`:'手动写作与导出永久免费'}</p></div></div><div className="billing-balance"><span>可用演示墨点</span><strong>{billing.ready===false?'—':number(balance)}<small>墨点</small></strong><button onClick={()=>changeTab('usage')}>查看用量<ArrowUpRight size={13}/></button></div><div className="billing-month-progress"><div><span>{account.member?'本月会员额度':'新手体验额度'}</span><strong>{account.member?`${number(memberBalance)} / ${number(plan.credits)}`:'首次赠送 300 演示墨点'}</strong></div><div className="billing-progress-track"><span style={{width:`${account.member?Math.max(0,100-used/plan.credits*100):Math.min(100,balance/300*100)}%`}}/></div><p>{account.member?`下次到账 / 到期：${dateLabel(account.member.nextGrantAt)}`:'当前预置示例默认不扣点，可在下方开启模拟计费。'}</p></div></section>
     {billing.storageError&&<div className="billing-error-banner" role="alert"><Info size={16}/>{billing.storageError}{billing.refresh&&<button onClick={billing.refresh}>重新连接账本</button>}</div>}
     {notice&&<div className="billing-success" role="status"><CheckCircle2 size={17}/>{notice}<button aria-label="关闭计费提示" onClick={()=>setNotice('')}><X size={15}/></button></div>}

@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+import {createServer} from 'vite';
+globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+const settings={revision:'rev1',wechat:{enabled:false,appId:'wx123',mchId:'',serialNo:'',platformPublicKeyId:'PUB_KEY_ID_TEST',hasPlatformPublicKey:true,hasApiV3Key:true,hasPrivateKey:true,hasPlatformCertificate:false},alipay:{enabled:false,appId:'',sellerId:'2088123456789012',hasPrivateKey:false,hasAlipayPublicKey:false},collectionAvailable:false};
+let lastPut,conflict=false;
+globalThis.fetch=async(url,options={})=>{assert.equal(url,'/api/admin/payment-settings');if(options.method==='PUT'){lastPut=JSON.parse(options.body);if(conflict)return {ok:false,status:409,json:async()=>({error:'配置已更新'})};}return {ok:true,json:async()=>settings};};
+const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});let renderer;
+try{const {PaymentSettings}=await vite.ssrLoadModule('/src/PaymentSettings.jsx');await act(async()=>{renderer=TestRenderer.create(React.createElement(PaymentSettings));});
+ const input=renderer.root.findByProps({'aria-label':'微信支付API v3 密钥'});assert.equal(input.props.type,'password');assert.equal(input.props.value,'');assert.match(input.props.placeholder,/留空/);
+ await act(async()=>input.props.onChange({target:{value:'fixture-secret'}}));
+ const publicKey=renderer.root.findByProps({'aria-label':'微信支付微信支付公钥（选填）'});assert.equal(publicKey.props.value,'');assert.match(publicKey.props.placeholder,/留空/);
+ const submit=renderer.root.findByType('form');await act(async()=>submit.props.onSubmit({preventDefault(){}}));assert.equal(lastPut.wechat.apiV3Key,'fixture-secret');assert.equal(renderer.root.findByProps({'aria-label':'微信支付API v3 密钥'}).props.value,'');
+ const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');assert.ok(text(renderer.root).includes('收款流程尚未开通'));assert.ok(!text(renderer.root).includes('fixture-secret'));
+ const checkbox=renderer.root.findAllByType('input').find(n=>n.props.type==='checkbox'&&n.parent?.props?.className==='payment-clear');await act(async()=>checkbox.props.onChange({target:{checked:true}}));await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.equal(lastPut.wechat.clearApiV3Key,true);assert.equal(lastPut.alipay.sellerId,'2088123456789012');assert.equal(lastPut.wechat.platformPublicKeyId,'PUB_KEY_ID_TEST');assert.equal(lastPut.wechat.platformPublicKey,'');const publicClear=renderer.root.findByProps({'aria-label':'微信支付微信支付公钥（选填）'}).parent.findAllByType('input').find(n=>n.props.type==='checkbox');await act(async()=>publicClear.props.onChange({target:{checked:true}}));await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));assert.equal(lastPut.wechat.clearPlatformPublicKey,true);
+ assert.equal(lastPut.revision,'rev1');conflict=true;
+ await act(async()=>renderer.root.findByProps({'aria-label':'支付宝应用 AppID'}).props.onChange({target:{value:'unsaved-field'}}));
+ await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(renderer.root.findByProps({'aria-label':'支付宝应用 AppID'}).props.value,'unsaved-field');assert.ok(text(renderer.root).includes('当前输入仍保留'));assert.ok(renderer.root.findAllByType('button').some(b=>text(b).includes('重新读取并放弃当前修改')));
+ console.log('PASS admin payment settings preserve credentials and unsaved input on concurrent updates; collection is not yet enabled');
+}finally{if(renderer)await act(async()=>renderer.unmount());await vite.close();}

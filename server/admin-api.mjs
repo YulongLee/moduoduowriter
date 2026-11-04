@@ -6,7 +6,7 @@ const pagination=url=>{
  if(q.length>254||/[\r\n\0]/.test(q))throw fail('搜索内容过长或格式不正确。');
  return {page:number('page',1,1000000),pageSize:number('pageSize',20,100),q:q.trim(),status};
 };
-export function createAdminApi({database,sendJSON,readBody}) {
+export function createAdminApi({database,sendJSON,readBody,getPaymentSettings,putPaymentSettings}) {
  return async(req,res,{url})=>{
   if(!url.pathname.startsWith('/api/admin/'))return false;
   const store=database(),auth=store.auth(sessionToken(req));
@@ -14,6 +14,8 @@ export function createAdminApi({database,sendJSON,readBody}) {
   if(auth.user.role!=='admin')throw fail('此页面仅供管理员访问。',403);
   if(req.headers['x-mdd-space']&&req.headers['x-mdd-space']!==auth.user.id)throw fail('账号空间已变化，请重新登录后操作。',412);
   const path=url.pathname;
+  if(path==='/api/admin/payment-settings'&&req.method==='GET'){sendJSON(res,200,await getPaymentSettings());return true;}
+  if(path==='/api/admin/payment-settings'&&req.method==='PUT'){const result=await putPaymentSettings(await readBody(req,100000),auth.user.id);sendJSON(res,200,result);return true;}
   if(req.method==='GET'){
    const input=pagination(url);let data;
    if(path==='/api/admin/overview')data=store.adminOverview();

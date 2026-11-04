@@ -123,6 +123,7 @@ try{
  assert.ok(accountDialog.findAllByProps({'aria-label':'管理登录方式'}).length,'the account dialog must reuse the real login-method management control');
  const logout=accountDialog.findAllByType('button').find(node=>text(node).trim()==='退出登录');assert.ok(logout,'a member can sign out directly from the public homepage');
  assert.match(text(accountDialog),/fixture-alice/,'the dialog identifies the authenticated fixture account');
+ assert.ok(!text(accountDialog).includes('进入管理后台'),'ordinary members must not see the management entrance');
  assert.equal(location.hash,'#home');assert.ok(!publicWrapper().props.hidden);
  assert.deepEqual(calls.map(call=>call.url),['/api/auth/status'],'opening account management must not initialize workspace, billing, generation or identity-management requests');
  assert.deepEqual(privateReads(),[]);assert.deepEqual(writes,[]);assert.ok(!text(publicMain()).includes('PRIVATE MANUSCRIPT'));
@@ -136,6 +137,7 @@ try{
  assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,accountDraft,'account management and sign-out preserve the public draft');
  assert.deepEqual(privateReads(),[]);assert.deepEqual(writes,[]);assert.ok(!text(renderer.root).includes('fixture-alice'));assert.ok(!text(renderer.root).includes('PRIVATE MANUSCRIPT'));
  console.log('PASS persistent member account entry, public account management and sign-out back to guest actions without private workspace side effects');
+ const adminState=member('admin');adminState.user.role='admin';await mount({state:adminState});await click(renderer.root.findByProps({'aria-label':'我的账号'}));assert.ok(text(renderer.root.findByProps({role:'dialog','aria-label':'我的账号'})).includes('进入管理后台'),'administrators can reach the management console from the public account menu');
  await mount({behavior:'pending'});assertPublic('status-pending');assert.equal(typeof statusPending,'function');
  await act(async()=>{statusPending();await sleep(10);});assertPublic('status-resolved');
  await mount({behavior:'failure'});assertPublic('status-error');

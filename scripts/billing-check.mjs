@@ -74,6 +74,11 @@ try {
   function Probe(){meter=useTaskMeter('continue',{inputChars:1000});return React.createElement(TaskMeter,{meter});}
   const mount=child=>React.createElement(BillingProvider,null,React.createElement(Observer),child);
   await act(async()=>{renderer=TestRenderer.create(mount(React.createElement(MembershipPage,{navigate(){}})));});
+  const readiness=renderer.root.findByProps({'aria-label':'支付方式状态'});
+  assert.match(textOf(readiness),/微信支付.*尚未开通/);
+  assert.match(textOf(readiness),/支付宝.*尚未开通/);
+  assert.match(textOf(readiness),/不会发起真实付款/);
+  assert.equal(readiness.findAllByType('button').length,0,'Unconfigured payment methods must not offer real checkout');
   await click(findButton(renderer,'模拟开通创作版'));
   const confirm=findButton(renderer,'确认模拟开通');
   assert.equal(confirm.props.disabled,true,'Checkout consent must not be preselected');
