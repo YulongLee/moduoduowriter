@@ -35,7 +35,7 @@ export function createWorkspaceClient({storage,request,defaults={},spaceId,onCha
     let attempts=0;while(entry.dirty&&attempts++<4&&!stopped&&!spaceMismatch){const version=entry.version,data=entry.data;try{const saved=await fetchWorkspace(`/api/data/${name}`,{revision:entry.revision,data},{method:'PUT'});if(stopped)return;entry.revision=saved.revision;entry.base=data;if(entry.version===version)entry.dirty=false;persistPending();}catch(e){if(e.status!==409)throw e;const latest=await fetchWorkspace('/api/data',undefined,{method:'GET'});if(stopped)return;const remote=rowFor(latest,name);const merged=mergeCollection(name,entry.base,entry.data,remote.data||[]);state.conflicts+=merged.filter(item=>item.title?.endsWith('（冲突副本）')).length;entry.data=merged;entry.base=remote.data||[];entry.revision=remote.revision;entry.version++;cache(name,merged);emit();}}
    }
    if(!spaceMismatch){state.status=Object.values(entries).some(e=>e.dirty)?'pending':'saved';state.error='';}
-  }catch(e){if(!spaceMismatch){state.status='offline';state.error=e.message||'暂未保存到本机服务端';}}
+  }catch(e){if(!spaceMismatch){state.status='offline';state.error=e.message||'暂未保存到创作空间';}}
   finally{active=false;emit();if(Object.values(entries).some(e=>e.dirty)&&!stopped&&!spaceMismatch){clearTimeout(retryTimer);retryTimer=setTimeout(flush,state.status==='offline'?5000:100);}}
  };
  const initialize=async()=>{

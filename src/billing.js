@@ -1,7 +1,7 @@
 // Proposed pricing, in CNY cents. This module never processes real payments.
 export const BILLING_KEY = 'mdd-billing-demo-v1';
 export const plans = [
-  { id:'free', name:'免费体验', note:'先找到适合自己的写作节奏', monthly:0, yearly:0, credits:300, audience:'偶尔创作 · 初次体验', features:['本地作品与章节管理','导入、编辑与 TXT 导出','全部创作流程可体验','首次赠送 300 演示墨点'] },
+  { id:'free', name:'免费体验', note:'先找到适合自己的写作节奏', monthly:0, yearly:0, credits:300, audience:'偶尔创作 · 初次体验', features:['作品与章节管理','导入、编辑与 TXT 导出','全部创作流程可体验','首次赠送 300 演示墨点'] },
   { id:'creator', name:'创作版', note:'给持续落笔的你，多一点灵感', monthly:2900, yearly:29000, credits:5000, audience:'短篇作者 · 稳定更新', features:['包含全部免费写作功能','每月 5,000 墨点','灵感与精修两种计费模式','额度不足时可单独加购'] },
   { id:'pro', name:'专业版', note:'让长篇与日更，有更充足的空间', monthly:7900, yearly:79000, credits:16000, audience:'长篇作者 · 高频创作', featured:true, features:['包含全部免费写作功能','每月 16,000 墨点','与创作版相同的透明计费','更适合持续生成与反复改稿'] }
 ];

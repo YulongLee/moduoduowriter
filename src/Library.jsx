@@ -76,7 +76,7 @@ export function WorksPage({ works = [], navigate, setModal, onImport, notify, tr
     } catch { notify?.('导出未完成，请稍后重试。'); }
   };
 
-  return <div className="novel-library">
+  return <div className="works-library-view">
     <header className="novel-library-hero"><div><h1>我的作品</h1><p>管理你的小说作品，继续创作、编辑与完善。</p></div><div className="novel-library-hero-actions">{typeof onImport === 'function' && <button type="button" className="novel-secondary-button novel-import-button" onClick={onImport}><Upload size={17} aria-hidden="true" />导入文稿</button>}<button type="button" className="novel-trash-toggle" onClick={() => setShowTrash(value => !value)}><Trash2 size={17} aria-hidden="true" />{showTrash ? '返回作品书架' : `回收站（${trashList.length}）`}</button></div></header>
 
     <section className="novel-library-shortcuts" aria-label="创作快捷入口">{libraryShortcuts.map(({ id, title, description, Icon, tone }) => <button type="button" key={id} className={`novel-shortcut novel-shortcut-${tone}`} onClick={() => shortcut(id)}><span className="novel-shortcut-icon"><Icon size={25} aria-hidden="true" /></span><span className="novel-shortcut-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="novel-shortcut-arrow" size={17} aria-hidden="true" /></button>)}</section>

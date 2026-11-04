@@ -30,7 +30,7 @@ export function WorkbenchFrame({items, route, navigate, setModal, onSearch, dial
   const accountInitialFocus = useRef('first');
   accountOpenRef.current = accountOpen;
   const hidden = !desktop && !mobileOpen;
-  const current = route === 'service-admin' ? {label:'本机服务管理'} : items.find(item => item.id === route) || items[0];
+  const current = route === 'service-admin' ? {label:'服务管理'} : route === 'membership' ? {label:'会员与墨点'} : items.find(item => item.id === route) || items[0];
 
   useEffect(() => {
     const resize = () => setDesktop(window.innerWidth > 1024);

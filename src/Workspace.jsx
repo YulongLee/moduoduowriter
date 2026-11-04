@@ -13,7 +13,7 @@ export function WorkspaceProvider({children}) {
  const clientRef=useRef();if(!clientRef.current)clientRef.current=createWorkspaceClient({storage:globalThis.localStorage,request:requestApi,...(account?{spaceId}:{}),defaults:{works:account?.user?[]:initialWorks,favorites:['ideas','polish']},onChange:status=>{setSnapshot(status);tick(v=>v+1);}});
  const client=clientRef.current;
  useEffect(()=>{client.initialize();const refresh=()=>client.refresh().catch(()=>{});const interval=setInterval(refresh,10000);window.addEventListener('focus',refresh);return()=>{clearInterval(interval);window.removeEventListener('focus',refresh);client.stop();};},[]);
- return <Context.Provider value={{client,spaceId,...snapshot}}>{snapshot.status==='loading'?<div className="account-gate"><p role="status">正在载入本机文稿…</p></div>:children}</Context.Provider>;
+ return <Context.Provider value={{client,spaceId,...snapshot}}>{snapshot.status==='loading'?<div className="account-gate"><p role="status">正在载入创作空间…</p></div>:children}</Context.Provider>;
 }
 export function useCollection(name,fallback=[]) {
  const workspace=useContext(Context);const key=`mdd-${name==='video'?'video':name}-v1`;

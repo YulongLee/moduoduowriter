@@ -73,7 +73,7 @@ console.log('Shared and homepage colors meet a 4.5:1 text contrast threshold. Th
 
 // The private library uses scoped colors for its actual metadata and state chips.
 const libraryCss=readFileSync(new URL('../src/works-library.css',import.meta.url),'utf8');
-const libraryRoot=libraryCss.match(/\.novel-library\s*\{([^}]+)\}/)?.[1];
+const libraryRoot=libraryCss.match(/\.works-library-view\s*\{([^}]+)\}/)?.[1];
 const libraryTokens=Object.fromEntries([...libraryRoot.matchAll(/(--[\w-]+)\s*:\s*(#[\da-f]{6})\s*;/gi)].map(match=>[match[1],match[2]]));
 const libraryRule=selector=>{
  const escaped=selector.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -89,15 +89,15 @@ const libraryPairs=[
  ['作品库正文',libraryTokens['--novel-ink'],'#ffffff'],
  ['作品库辅助文字',libraryTokens['--novel-muted'],'#f7f8f6'],
  ...[
-  ['作品分类数量','.novel-library .novel-kind-tabs > button small','#ffffff'],
-  ['选中分类数量','.novel-library .novel-kind-tabs > .novel-tab-selected small','#eef4ec'],
-  ['作品日期','.novel-library .novel-work-edited','#ffffff'],
-  ['作品字数','.novel-library .novel-work-size','#ffffff'],
-  ['搜索输入提示','.novel-library .novel-library-search input::placeholder','#fbfcfa'],
-  ['新建小说说明','.novel-library .novel-shortcut-primary .novel-shortcut-copy > span','#245b42']
+  ['作品分类数量','.works-library-view .novel-kind-tabs > button small','#ffffff'],
+  ['选中分类数量','.works-library-view .novel-kind-tabs > .novel-tab-selected small','#eef4ec'],
+  ['作品日期','.works-library-view .novel-work-edited','#ffffff'],
+  ['作品字数','.works-library-view .novel-work-size','#ffffff'],
+  ['搜索输入提示','.works-library-view .novel-library-search input::placeholder','#fbfcfa'],
+  ['新建小说说明','.works-library-view .novel-shortcut-primary .novel-shortcut-copy > span','#245b42']
  ].map(([label,selector,background])=>[label,libraryRule(selector)('color'),background]),
  ...['writing','serializing','completed'].map(state=>{
-  const property=libraryRule(`.novel-library .novel-work-tags>.novel-work-status-${state}`);
+  const property=libraryRule(`.works-library-view .novel-work-tags>.novel-work-status-${state}`);
   return [`作品状态 ${state}`,property('color'),property('background')];
  })
 ];

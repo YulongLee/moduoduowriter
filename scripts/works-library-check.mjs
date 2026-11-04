@@ -59,6 +59,10 @@ try {
   };
 
   await mount(React.createElement(LibraryHarness));
+  const pageRoot = renderer.root.findByProps({ className: 'works-library-view' });
+  assert.ok(pageRoot.findAllByProps({ className: 'novel-library-hero' }).length === 1);
+  assert.ok(pageRoot.findAllByProps({ className: 'novel-library-shortcuts', 'aria-label': '创作快捷入口' }).length === 1);
+  assert.equal(renderer.root.findAllByProps({ className: 'novel-library' }).length, 0, 'The page must not inherit the legacy novel-card grid layout');
   assert.equal(text(renderer.root.findByType('h1')), '我的作品');
   assert.deepEqual(workOrder(), [short.id, script.id, main.id, serial.id, undated.id], 'Recent sorting uses real ISO dates and leaves unknown dates at the end');
   const kinds = () => byLabel('作品类型'), statuses = () => byLabel('作品状态');
