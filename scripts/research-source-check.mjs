@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+import {createServer} from 'vite';
+globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+globalThis.window={innerWidth:1400};
+const cache=new Map();globalThis.localStorage={getItem:k=>cache.get(k)??null,setItem:(k,v)=>cache.set(k,v),removeItem:k=>cache.delete(k)};
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
+const button=(r,name)=>r.root.findAllByType('button').find(b=>text(b).trim()===name);
+const click=async b=>{assert.ok(b);await act(async()=>{await b.props.onClick();});};
+const change=async(node,value)=>act(async()=>node.props.onChange({target:{value}}));
+let view;
+try {
+ const {DismantleDesk}=await server.ssrLoadModule('/src/ProductDesk.jsx');
+ const {initialWorks}=await server.ssrLoadModule('/src/data.js');
+ await act(async()=>{view=TestRenderer.create(React.createElement(DismantleDesk,{works:initialWorks,notify(){},setModal(){}}));});
+ await click(button(view,'粘贴文本'));
+ await change(view.root.findByProps({'aria-label':'拆书作品片段'}),'这是一段要分析的原文。');
+ await click(button(view,'开始拆解'));
+ assert.ok(view.root.findByProps({'aria-label':'我的阅读笔记'}));
+ await change(view.root.findByProps({'aria-label':'我的阅读笔记'}),'这是我的阅读笔记');
+ await change(view.root.findByProps({'aria-label':'拆书作品片段'}),'修改后的原文。');
+ assert.ok(text(view.root).includes('下面保留的是上一次报告'));
+ assert.equal(view.root.findByProps({'aria-label':'我的阅读笔记'}).props.value,'这是我的阅读笔记');
+ await click(button(view,'我的作品'));
+ assert.equal(view.root.findByProps({'aria-label':'选择拆书作品'}).props.value,'');
+ assert.ok(view.root.findAllByType('button').find(b=>text(b).includes('开始拆解')).props.disabled,'No previous text should be submitted for an unselected work');
+ await change(view.root.findByProps({'aria-label':'选择拆书作品'}),initialWorks[0].id);
+ await click(button(view,'粘贴文本'));
+ assert.equal(view.root.findByProps({'aria-label':'拆书作品片段'}).props.value,'修改后的原文。');
+ assert.equal(view.root.findByProps({'aria-label':'我的阅读笔记'}).props.value,'这是我的阅读笔记');
+ await click(button(view,'我的作品'));
+ assert.equal(view.root.findByProps({'aria-label':'选择拆书作品'}).props.value,initialWorks[0].id);
+ console.log('PASS reading sources retain separate drafts and reports, prior results are identified, and no unselected work submits old text');
+} finally {if(view)await act(async()=>view.unmount());await server.close();}

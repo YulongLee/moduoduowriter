@@ -9,6 +9,11 @@ export default function CreateWorkPage({ initial = {}, draft, onDraftChange, onC
   const controlled = draft !== undefined && draft !== null;
   const [localDraft, setLocalDraft] = useState(() => controlled ? null : createWorkDraft(initial));
   const form = controlled ? draft : (localDraft ?? createWorkDraft(initial));
+  const initialTemplate = creationTemplates.find(template => template.id === form.templateId);
+  const editedTemplateFields = useRef({
+    genre: Boolean(form.genre && form.genre !== (initialTemplate?.genre || '玄幻')),
+    styles: Array.isArray(form.styles) && JSON.stringify(form.styles) !== JSON.stringify(initialTemplate?.styles || []),
+  });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -32,6 +37,7 @@ export default function CreateWorkPage({ initial = {}, draft, onDraftChange, onC
     setSubmitError('');
   };
   const changeField = (field, value) => {
+    if (field === 'genre' || field === 'styles') editedTemplateFields.current[field] = true;
     changeDraft({ ...form, [field]: value });
     setErrors(previous => ({ ...previous, [field]: undefined }));
   };
@@ -41,7 +47,10 @@ export default function CreateWorkPage({ initial = {}, draft, onDraftChange, onC
   };
   const selectTemplate = id => {
     if (submitLock.current) return;
-    changeDraft(applyCreationTemplate(form, id));
+    const next = applyCreationTemplate(form, id);
+    if (editedTemplateFields.current.genre) next.genre = form.genre;
+    if (editedTemplateFields.current.styles) next.styles = [...selectedStyles];
+    changeDraft(next);
     setErrors({});
   };
   const submit = async event => {
@@ -94,7 +103,7 @@ export default function CreateWorkPage({ initial = {}, draft, onDraftChange, onC
       </form>
 
       <aside className="create-work-sidebar" aria-label="创作模板与构思助手">
-        <section className="create-work-template-panel" aria-labelledby="create-work-template-title"><div className="create-work-section-title"><h2 id="create-work-template-title">从一个模板开始<span>可选</span></h2><p>选一个喜欢的方向，再写成你自己的故事。</p></div><div className="create-work-templates" role="group" aria-label="创作模板">{creationTemplates.map(template => { const selected = form.templateId === template.id; return <button type="button" key={template.id} aria-label={`使用${template.name}`} aria-pressed={selected} disabled={busy} className={`create-work-template create-work-template-${template.id}${selected ? ' create-work-template-selected' : ''}`} onClick={() => selectTemplate(template.id)}><span className="create-work-template-image" aria-hidden="true"><img src={template.image} alt="" loading="lazy" /></span><span className="create-work-template-copy"><strong>{template.name}</strong><span className="create-work-template-description">{template.summary}</span><span className="create-work-template-tags">{template.tags.map(tag => <span key={tag}>{tag}</span>)}</span></span><span className="create-work-template-state">{selected ? <CheckCircle2 size={19} aria-hidden="true" /> : <span aria-hidden="true" />}{selected && <small>已选</small>}</span></button>; })}</div><p className="create-work-template-note"><BookOpen size={16} aria-hidden="true" /><span>仅填入可编辑的创作框架，创建后仍可修改。</span></p></section>
+        <section className="create-work-template-panel" aria-labelledby="create-work-template-title"><div className="create-work-section-title"><h2 id="create-work-template-title">从一个模板开始<span>可选</span></h2><p>选一个喜欢的方向，再写成你自己的故事。</p></div><div className="create-work-templates" role="group" aria-label="创作模板">{creationTemplates.map(template => { const selected = form.templateId === template.id; return <button type="button" key={template.id} aria-label={`使用${template.name}`} aria-pressed={selected} disabled={busy} className={`create-work-template create-work-template-${template.id}${selected ? ' create-work-template-selected' : ''}`} onClick={() => selectTemplate(template.id)}><span className="create-work-template-image" aria-hidden="true"><img src={template.image} alt="" loading="lazy" /></span><span className="create-work-template-copy"><strong>{template.name}</strong><span className="create-work-template-description">{template.summary}</span><span className="create-work-template-tags">{template.tags.map(tag => <span key={tag}>{tag}</span>)}</span></span><span className="create-work-template-state">{selected ? <CheckCircle2 size={19} aria-hidden="true" /> : <span aria-hidden="true" />}{selected && <small>已选</small>}</span></button>; })}</div><p className="create-work-template-note"><BookOpen size={16} aria-hidden="true" /><span>填入可编辑的创作框架；已手动选择的题材与风格会保留。</span></p></section>
 
         <section className="create-work-ai-panel" aria-labelledby="create-work-ai-title"><span className="create-work-ai-symbol"><Lightbulb size={25} aria-hidden="true" /></span><div><h2 id="create-work-ai-title">还没有想好怎么开始？</h2><p>聊聊你的一个念头，一起推敲故事背景、人物与冲突。</p></div><button type="button" onClick={() => onAI?.(form)} disabled={busy || typeof onAI !== 'function'}><Sparkles size={16} aria-hidden="true" />AI 帮我构思<ArrowRight size={16} aria-hidden="true" /></button></section>
       </aside>

@@ -194,3 +194,36 @@
   .workspace-dashboard .workspace-dashboard-inspiration p { max-width: 270px; font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .workspace-dashboard .workspace-dashboard-quick-card, .workspace-dashboard .workspace-dashboard-work { transition: none; transform: none; } }
+
+/* Keep the workspace readable at desktop scale without making cards feel sparse. */
+.workspace-dashboard { --workspace-dashboard-muted: #56635c; }
+.workspace-dashboard .workspace-dashboard-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); gap: 20px; }
+.workspace-dashboard .workspace-dashboard-welcome { min-height: 162px; padding: 24px 26px 27px; }
+.workspace-dashboard .workspace-dashboard-welcome-description { color: #56635c; font-size: 15px; }
+.workspace-dashboard .workspace-dashboard-quick-actions { gap: 12px; margin-bottom: 23px; }
+.workspace-dashboard .workspace-dashboard-quick-card { min-height: 137px; padding: 18px 16px; }
+.workspace-dashboard .workspace-dashboard-quick-copy > span,
+.workspace-dashboard .workspace-dashboard-work-description,
+.workspace-dashboard .workspace-dashboard-empty p,
+.workspace-dashboard .workspace-dashboard-inspiration p { color: #56635c; font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-copy > span { color: #e3efe8; }
+.workspace-dashboard .workspace-dashboard-work-top > span,
+.workspace-dashboard .workspace-dashboard-work-numbers,
+.workspace-dashboard .workspace-dashboard-work-bottom > span,
+.workspace-dashboard .workspace-dashboard-progress > div,
+.workspace-dashboard .workspace-dashboard-more-works { color: #59675f; font-size: 12px; }
+.workspace-dashboard .workspace-dashboard-text-link,
+.workspace-dashboard .workspace-dashboard-kind-tabs > button,
+.workspace-dashboard .workspace-dashboard-sort select { font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-kind-tabs { flex-wrap: wrap; }
+.workspace-dashboard .workspace-dashboard-work-bottom > span { overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  .workspace-dashboard .workspace-dashboard-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .workspace-dashboard .workspace-dashboard-welcome { min-height: 0; padding: 21px 18px 26px; }
+  .workspace-dashboard .workspace-dashboard-quick-card { min-height: 77px; padding: 15px 17px; }
+  .workspace-dashboard .workspace-dashboard-kind-tabs > button { padding: 6px 7px; }
+  .workspace-dashboard .workspace-dashboard-section-heading { flex-wrap: wrap; }
+  .workspace-dashboard .workspace-dashboard-section-heading .workspace-dashboard-text-link { font-size: 12px; }
+}

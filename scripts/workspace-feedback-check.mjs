@@ -102,12 +102,12 @@ try{
  const status=()=>renderer.root.findByProps({'aria-label':'保存状态'});
  const footer=()=>renderer.root.findByProps({className:'page-footer'});
  assert.equal(renderer.root.findAllByProps({'aria-label':'保存状态'}).length,1,'Save feedback must have a single source in the workbench header');
- assert.ok(text(status()).includes('已保存到本地服务'));
+ assert.ok(text(status()).includes('已保存到创作空间'));
  assert.ok(!text(footer()).includes('自动保存')&&!text(footer()).includes('已保存'));
  online=false;await act(async()=>{await workspace.client.refresh().catch(()=>{});});
- assert.ok(text(status()).includes('离线缓存待同步'));assert.ok(!text(status()).includes('已保存到本地服务'));
+ assert.ok(text(status()).includes('离线缓存待同步'));assert.ok(!text(status()).includes('已保存到创作空间'));
  online=true;await act(async()=>{await status().findAllByType('button').find(node=>text(node).includes('重新连接')).props.onClick();});
- assert.ok(text(status()).includes('已保存到本地服务'));
+ assert.ok(text(status()).includes('已保存到创作空间'));
  assert.equal(renderer.root.findAllByProps({'aria-label':'保存状态'}).length,1);
  console.log('PASS real workbench header feedback, single saved/offline source, explicit reconnect and no contradictory footer claim');
 }finally{

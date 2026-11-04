@@ -12,7 +12,7 @@ const quickActions = [
   { id: 'create', title: '新建小说', description: '开启你的下一部作品', Icon: Plus, tone: 'primary' },
   { id: 'outline', title: '生成大纲', description: '梳理主线与章节', Icon: ListTree, tone: 'blue' },
   { id: 'character', title: '人物设定', description: '塑造鲜活的故事角色', Icon: UsersRound, tone: 'purple' },
-  { id: 'continue', title: '情节扩写', description: '让场景与情节更丰富', Icon: Feather, tone: 'amber' },
+  { id: 'continue', title: '情节续写', description: '承接上文，推进故事', Icon: Feather, tone: 'amber' },
   { id: 'polish', title: '润色修改', description: '打磨文字与叙述节奏', Icon: WandSparkles, tone: 'green' },
 ];
 

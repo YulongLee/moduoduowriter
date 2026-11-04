@@ -26,7 +26,7 @@
     "test:account-ui": "node scripts/account-ui-check.mjs",
     "test:extended-workspace": "node scripts/extended-workspace-check.mjs",
     "test:service-upgrade": "node scripts/service-upgrade-check.mjs",
-    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home && npm run test:auth-identity && npm run test:auth-providers && npm run test:auth-api && npm run test:login-methods && npm run test:login-settings && npm run test:admin-store && npm run test:admin-api && npm run test:admin-provision && npm run test:admin-ui && npm run test:admin-boundary && npm run test:production-http && npm run test:production-boundary && npm run test:workspace-dashboard && npm run test:works-library && npm run test:create-work && npm run test:studio-conversation",
+    "test:upgrades": "npm run test:home-redesign && npm run test:revisions && npm run test:memory-queue && npm run test:submission-versions && npm run test:account-ui && npm run test:extended-workspace && npm run test:service-upgrade && npm run test:evaluation && npm run test:billing-concurrency && npm run test:home-resume && npm run test:workspace-feedback && npm run test:conversation-api && npm run test:conversation-data && npm run test:conversation-ui && npm run test:public-home && npm run test:auth-identity && npm run test:auth-providers && npm run test:auth-api && npm run test:login-methods && npm run test:login-settings && npm run test:admin-store && npm run test:admin-api && npm run test:admin-provision && npm run test:admin-ui && npm run test:admin-boundary && npm run test:production-http && npm run test:production-boundary && npm run test:workspace-dashboard && npm run test:works-library && npm run test:create-work && npm run test:studio-conversation && npm run test:research-sources && npm run test:history-selection",
     "test:evaluation": "node scripts/writing-evaluation-check.mjs",
     "test:billing-concurrency": "node scripts/billing-concurrency-check.mjs",
     "test:home-resume": "node scripts/home-resume-check.mjs",
@@ -54,7 +54,9 @@
     "test:workspace-dashboard": "node scripts/workspace-dashboard-check.mjs && node scripts/workspace-insights-check.mjs && node scripts/workspace-dashboard-data-check.mjs && node scripts/workspace-dashboard-app-check.mjs",
     "test:works-library": "node scripts/work-presentation-check.mjs && node scripts/works-library-check.mjs && node scripts/works-library-api-check.mjs",
     "test:create-work": "node scripts/create-work-data-check.mjs && node scripts/create-work-ui-check.mjs && node scripts/create-work-app-check.mjs",
-    "test:studio-conversation": "node scripts/conversation-presentation-check.mjs && node scripts/studio-conversation-check.mjs && node scripts/studio-conversation-app-check.mjs"
+    "test:studio-conversation": "node scripts/conversation-presentation-check.mjs && node scripts/studio-conversation-check.mjs && node scripts/studio-conversation-app-check.mjs",
+    "test:research-sources": "node scripts/research-source-check.mjs",
+    "test:history-selection": "node scripts/generation-history-selection-check.mjs"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",

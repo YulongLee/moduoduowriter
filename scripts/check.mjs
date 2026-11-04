@@ -58,7 +58,7 @@ try {
   const { Editor } = await server.ssrLoadModule('/src/main.jsx');
   const failedSaveHtml = renderToString(React.createElement(Editor, { work:initialWorks[0], saveError:true, onChange(){}, onBack(){}, notify(){}, setModal(){} }));
   assert.ok(failedSaveHtml.includes('保存未完成'));
-  assert.ok(failedSaveHtml.includes('本地保存失败，请导出备份'));
+  assert.ok(failedSaveHtml.includes('设备缓存保存失败，请导出备份'));
   assert.ok(!failedSaveHtml.includes('已自动保存'));
   const { placeRecentlyEdited } = await server.ssrLoadModule('/src/works.js');
   const recent = placeRecentlyEdited(initialWorks, {...initialWorks[2], title:'修改后的作品'});

@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+import {createServer} from 'vite';
+globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+globalThis.window={innerWidth:1400};
+const cache=new Map();globalThis.localStorage={getItem:k=>cache.get(k)??null,setItem:(k,v)=>cache.set(k,v),removeItem:k=>cache.delete(k)};
+const pending={};
+const items=[{id:'a',task:'outline',status:'succeeded',startedAt:'2026-11-04T00:00:00Z'},{id:'b',task:'character',status:'succeeded',startedAt:'2026-11-04T00:00:01Z'}];
+const response=data=>({ok:true,json:async()=>data});
+globalThis.fetch=async url=>url==='/api/tasks'?response({items}):new Promise(resolve=>{pending[url.split('/').at(-1)]=data=>resolve(response(data));});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
+let view;
+try {
+ const {GenerationHistory}=await server.ssrLoadModule('/src/GenerationHistory.jsx');
+ await act(async()=>{view=TestRenderer.create(React.createElement(GenerationHistory,{works:[],createWork(){},navigate(){},setModal(){},onChange(){},notify(){}}));});
+ const buttons=()=>view.root.findAllByType('button');
+ const choose=id=>buttons().find(b=>b.props.onClick&&text(b).includes(id));
+ const list=view.root.findAllByType('section').find(s=>s.props.className==='history-list');
+ const [first,second]=list.findAllByType('button');
+ await act(async()=>{first.props.onClick();});
+ await act(async()=>{second.props.onClick();});
+ assert.ok(text(view.root).includes('正在读取生成记录'));
+ const detail=(id,task,value)=>({id,task,status:'succeeded',request:{prompt:'测试需求',context:{}},result:{text:value}});
+ await act(async()=>{pending.b(detail('b','character','后选择的内容'));});
+ assert.equal(view.root.findByProps({'aria-label':'历史生成结果'}).props.value,'后选择的内容');
+ await act(async()=>{pending.a(detail('a','outline','先选择的内容'));});
+ assert.equal(view.root.findByProps({'aria-label':'历史生成结果'}).props.value,'后选择的内容','Older responses must not replace the latest selection');
+ await act(async()=>{choose('未完成').props.onClick();});
+ assert.ok(text(view.root).includes('没有符合条件的记录'));
+ console.log('PASS history selection remains correct with out-of-order responses and filtered empty state is clear');
+} finally {if(view)await act(async()=>view.unmount());await server.close();}

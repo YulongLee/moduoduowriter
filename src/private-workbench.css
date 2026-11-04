@@ -15,7 +15,7 @@
 .commercial.private-workbench .brand .brand-writing { color:#e1eee5;border:0;background:#ffffff12;font-size:11px;padding:3px 4px; }
 .commercial.private-workbench .brand small { color:#b8cec1;font-size:11px;letter-spacing:.7px; }
 .commercial.private-workbench .sidebar nav { margin-top:23px;padding:0 0 14px;scrollbar-width:thin;scrollbar-color:#547565 transparent; }
-.commercial.private-workbench .nav-section { margin:20px 14px 8px;font-size:11px;font-weight:500;color:#adc3b6;letter-spacing:1.2px; }
+.commercial.private-workbench .nav-section { margin:20px 14px 8px;font-size:12px;font-weight:500;color:#c2d3c8;letter-spacing:.6px; }
 .commercial.private-workbench .nav-item {
  min-height:40px;height:40px;margin-bottom:3px;padding:0 13px;border:1px solid transparent;
  border-radius:9px;gap:12px;color:#e6eee8;font-size:14px;line-height:1.4;font-weight:500;
@@ -31,12 +31,12 @@
 .commercial.private-workbench .sidebar-plan { min-height:65px;padding:11px 12px;border:1px solid #b49e6861;background:linear-gradient(120deg,#c9b57524,#e2c27d0d);border-radius:11px;gap:9px; }
 .commercial.private-workbench .sidebar-plan>svg:first-child { padding:3px;width:28px;height:28px;background:none;color:#e9c779; }
 .commercial.private-workbench .sidebar-plan strong { color:#f2e6c9;font-size:14px; }
-.commercial.private-workbench .sidebar-plan small { color:#cfccb8;font-size:11px; }
+.commercial.private-workbench .sidebar-plan small { color:#e0d9c2;font-size:12px; }
 .commercial.private-workbench .sidebar-plan>svg:last-child { color:#dacba7; }
 .commercial.private-workbench .sidebar-plan:hover { border-color:#d0b573;background:#bda56c33; }
 .commercial.private-workbench .sidebar-user { padding:7px 6px;min-height:50px; }
 .commercial.private-workbench .sidebar-user strong { color:#edf5ef;font-size:13px; }
-.commercial.private-workbench .sidebar-user small { color:#b0c7b9;font-size:11px; }
+.commercial.private-workbench .sidebar-user small { color:#c4d6ca;font-size:12px; }
 .commercial.private-workbench .sidebar-user>svg { color:#afc8b8; }
 .commercial.private-workbench .sidebar-user:hover,.commercial.private-workbench .sidebar-user[aria-expanded="true"] { background:#ffffff0d; }
 .commercial.private-workbench .sidebar-user>.avatar { border-color:#96b6a14d;background:#d9e6dc;color:#234f3d; }
@@ -46,7 +46,7 @@
 .commercial.private-workbench .topbar-brand { display:none; }
 .commercial.private-workbench .topbar-location-separator { display:none; }
 .commercial.private-workbench .topbar-location { color:#3c4d43;font-size:14px;font-weight:600; }
-.commercial.private-workbench .breadcrumb>.workspace-save-status { max-width:190px;margin-left:10px;font-size:11px;color:#647a6a; }
+.commercial.private-workbench .breadcrumb>.workspace-save-status { max-width:190px;margin-left:10px;font-size:12px;color:#53695a; }
 .commercial.private-workbench .global-search { width:252px;min-height:38px;padding:8px 11px;background:#fff;border:1px solid #e0e7e1;border-radius:10px;box-shadow:0 2px 4px #253b2904;color:#6f7973;font-size:12px; }
 .commercial.private-workbench .global-search kbd { font-family:inherit;font-size:11px; }
 .commercial.private-workbench .topbar .icon-button { border:0;color:#5a6c60;border-radius:9px;width:34px;height:34px; }
@@ -84,13 +84,17 @@
  .commercial.private-workbench .breadcrumb>.workspace-save-status { max-width:160px; }
  .commercial.private-workbench .global-search { width:220px; }
 }
+@media(max-width:800px) {
+ /* The shared layout hides the search text at this breakpoint; keep the button compact too. */
+ .commercial.private-workbench .global-search { width:38px;min-width:38px;min-height:38px;padding:9px;border:0;background:none;box-shadow:none; }
+}
 @media(max-width:680px) {
  .commercial.private-workbench .topbar { padding:0 14px;gap:8px;height:58px; }
  .commercial.private-workbench .topbar-right { gap:4px; }
  .commercial.private-workbench .topbar .topbar-right>.icon-button[aria-label="创作与数据设置"] { display:none; }
  .commercial.private-workbench .global-search { width:34px;min-height:34px;padding:8px;border:0;background:none;box-shadow:none; }
  .commercial.private-workbench .global-search span,.commercial.private-workbench .global-search kbd,.commercial.private-workbench .topbar-divider { display:none; }
- .commercial.private-workbench .breadcrumb>.workspace-save-status { max-width:92px;margin-left:0;font-size:10px; }
+ .commercial.private-workbench .breadcrumb>.workspace-save-status { max-width:110px;margin-left:0;font-size:12px; }
  .commercial.private-workbench .topbar-location { font-size:13px;max-width:76px; }
  .commercial.private-workbench .breadcrumb { gap:5px; }
  .commercial.private-workbench .main-content,.commercial.private-workbench .main-content.dashboard-content { padding:12px 14px 0; }
