@@ -28,7 +28,7 @@
 .mdd-centered-landing .mdd-container { width: calc(100% - 80px); max-width: 1320px; min-width: 0; margin: 0 auto; padding: 0; }
 .mdd-centered-landing .mdd-hero { position: relative; isolation: isolate; min-height: 442px; padding: 18px 0 24px; background: #fbfcfa; scroll-margin-top: 76px; }
 .mdd-centered-landing .mdd-hero::before, .mdd-centered-landing .mdd-hero::after { display: none; }
-.mdd-centered-landing .mdd-hero-art { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; margin: 0; object-fit: cover; object-position: center bottom; opacity: 1; pointer-events: none; }
+.mdd-centered-landing .mdd-hero-art { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; margin: 0; object-fit: cover; object-position: center top; opacity: 1; pointer-events: none; }
 .mdd-centered-landing .mdd-hero > .mdd-container { position: relative; z-index: 1; }
 .mdd-centered-landing .mdd-hero-heading { max-width: 1080px; margin: 0 auto; padding: 0; text-align: center; }
 .mdd-centered-landing .mdd-eyebrow { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 32px; padding: 4px 16px; border: 1px solid #dbe9df; border-radius: 999px; color: #203a2c; background: #f6faf6e8; font-size: 13px; font-weight: 600; line-height: 1.7; letter-spacing: .2px; }
@@ -321,6 +321,15 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .mdd-centered-landing button { transition: none !important; transform: none !important; }
+}
+
+/* Keep the complete mountain gate, sun and traveler on ultrawide displays. */
+@media (min-width: 1601px) {
+  .mdd-centered-landing .mdd-hero-art { display: none; }
+  .mdd-centered-landing .mdd-hero::before,
+  .mdd-centered-landing .mdd-hero::after { position: absolute; z-index: 0; top: 0; bottom: 0; display: block; width: min(28%, 900px); background-image: url('/art/hero-jianghu-centered-v2.webp'); background-size: auto 100%; background-repeat: no-repeat; content: ''; pointer-events: none; }
+  .mdd-centered-landing .mdd-hero::before { left: 0; background-position: left top; }
+  .mdd-centered-landing .mdd-hero::after { right: 0; background-position: right top; }
 }
 
 /* This smaller demonstration is also used in the public product modal. */
