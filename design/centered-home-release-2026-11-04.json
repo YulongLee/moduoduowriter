@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-04",
+  "revision": "c7aada5fbf2b3cd42e305ab1018f62c27f7cd6b2",
+  "url": "https://moduoduowriter.com/",
+  "reference": "codex-clipboard-9ddc69de-6063-4a5f-8aeb-73af3810d59d.png",
+  "layout": "centered title and composer, six capabilities, three scenes, four authored examples",
+  "fullTestSuite": true,
+  "finalBuild": true,
+  "visualReview": {
+    "browser": "Native Chrome",
+    "desktopViewport": [
+      1536,
+      1024
+    ],
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "ultrawideReviewed": true,
+    "desktopScreenshot": "design/centered-home-desktop-2026-11-04.png",
+    "mobileScreenshot": "design/centered-home-mobile-2026-11-04.png",
+    "screenshotsUnmodified": true
+  },
+  "publicPagesMatchingBuild": 14,
+  "assetsMatchingBuild": 2,
+  "newIllustrationsMatchingBuild": 4,
+  "anonymousData": 401,
+  "loginMethods": {
+    "phone": true,
+    "email": true,
+    "wechat": false
+  },
+  "health": 200,
+  "otherFiveServicesUnchanged": true,
+  "nginxAndAuthConfigurationUnchanged": true,
+  "gitHubSync": "Pending: normal push rejected by SSH authentication; no existing usable HTTPS credential. Local commits retained; no security settings changed."
+}
