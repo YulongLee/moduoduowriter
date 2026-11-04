@@ -118,7 +118,13 @@
 .public-landing-header-inner{max-width:1360px;height:68px;padding-left:44px;padding-right:44px;gap:30px}
 .public-landing-header-inner>nav{gap:28px}
 .public-landing-header-inner>nav>button{color:#33483b;font-size:15px;font-weight:550}
-.public-landing-header-actions>.public-landing-login{min-width:69px;border-color:#d1d8d2;border-radius:8px;background:#ffffff80;color:#354a3d}
+.public-landing-header-actions>.public-landing-login,.public-landing-header-actions>.public-landing-account{min-width:69px;border-color:#d1d8d2;border-radius:8px;background:#ffffff80;color:#354a3d}
+.public-landing-header-actions>.public-landing-account:hover{background:#eef3eb;border-color:#b5c9bc}
+.public-home-account .account-access{margin:20px 0 0;padding:0;border:0;border-radius:0;align-items:stretch;gap:12px}
+.public-home-account .account-access>div:first-child{flex-basis:100%;padding:14px;border:1px solid #e0e8e1;border-radius:9px;background:#f5f8f4;min-width:0}
+.public-home-account .account-access>div:first-child>span{min-width:0;overflow-wrap:anywhere}
+.public-home-account .account-access>.button{flex:1 1 auto;justify-content:center}
+.public-home-account .account-access>.identity-settings,.public-home-account .account-recovery-form{flex-basis:100%;min-width:0}
 .public-landing-header-actions>.public-landing-start{padding-left:20px;padding-right:20px;background:#1b5140}
 .public-dialog-backdrop .product-demo-modal,.public-dialog-backdrop .public-plans-modal{width:min(960px,calc(100vw - 40px));max-width:960px;max-height:90vh;overflow:auto;padding:32px;background:#fff;border:1px solid #dfe6df;border-radius:15px}
 .public-dialog-eyebrow{display:block;margin-bottom:9px;color:#4f795b;font-size:12px;font-weight:600;letter-spacing:.4px}
@@ -146,3 +152,4 @@
 @media(max-width:960px){.public-landing-header-inner{height:auto;min-height:68px;padding:13px 24px 0}.public-landing-header-inner>nav{margin-top:8px;padding-bottom:9px}}
 @media(max-width:640px){.public-landing-header-inner{padding:11px 18px 0;gap:0 7px}.public-landing .brand-wordmark>strong{font-size:18px}.public-landing .brand-writing{font-size:10px}.public-landing-header-actions>.public-landing-login{min-width:46px;padding:7px 9px}.public-landing-header-actions>.public-landing-start{padding:7px 11px;font-size:12px}.public-landing-header-inner>nav{gap:23px}.public-landing-header-inner>nav>button{font-size:13px}.public-dialog-backdrop .product-demo-modal,.public-dialog-backdrop .public-plans-modal{width:calc(100vw - 24px);max-height:92vh;padding:27px 18px 20px}.product-demo-modal>h2,.public-plans-modal>h2{font-size:23px}.public-plan-grid{grid-template-columns:1fr;gap:10px;margin:15px 0}.public-plan-card{padding:17px}.public-plan-card>h3{font-size:17px;margin:6px 0}.product-demo-workspace .lwp-canvas{min-height:240px}.product-demo-tabs>button{padding:6px 12px;font-size:13px}.public-dialog-actions{gap:9px}.public-dialog-actions>.button{font-size:13px}.public-dialog-actions>.button.primary{flex:1}}
 @media(max-width:640px){.product-demo-workspace{display:none}.product-demo-tabs{margin-top:18px}.product-demo-panel{padding-top:15px}}
+@media(max-width:380px){.public-landing-header-actions>.public-landing-account{width:36px;min-width:36px;padding:8px}.public-landing-account>span{display:none}}

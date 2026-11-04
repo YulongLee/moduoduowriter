@@ -1,8 +1,8 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {ArrowRight,BookOpen,CircleHelp,Search,X} from 'lucide-react';
+import {ArrowRight,BookOpen,CircleHelp,Search,UserRound,X} from 'lucide-react';
 import {Brand,BrandWordmark} from './Art.jsx';
 import {ReferenceHome} from './HomeDesk.jsx';
-import {AccountForm,canAccessPrivate,useAccount} from './Account.jsx';
+import {AccountAccess,AccountForm,canAccessPrivate,useAccount} from './Account.jsx';
 import {tools} from './data.js';
 import {SiteRegistration} from './SiteRegistration.jsx';
 import {SeoResourceLinks} from './SeoResourceLinks.jsx';
@@ -29,6 +29,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
  useEffect(()=>{
   if(dialog==='auth'&&authenticated&&(pending.current||account?.user))finishLogin();
  },[account?.ready,account?.error,account?.configured,account?.user,dialog]);
+ useEffect(()=>{if(dialog==='account'&&!authenticated)close();},[dialog,authenticated]);
  useEffect(()=>{if(!visible){pending.current=null;setDialog(null);}},[visible]);
  useEffect(()=>{
   if(!visible||!dialog)return;
@@ -61,7 +62,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
     <nav aria-label="网站主导航">{sections.map(([label,id])=><button type="button" key={label} aria-current={activeSection===label?'page':undefined} aria-haspopup={id===null?'dialog':undefined} onClick={()=>{if(id===null){setActiveSection(label);openPublicDialog('plans');}else scrollTo(label,id);}}>{label}</button>)}</nav>
     <div className="public-landing-header-actions">
      <button type="button" className="public-landing-search" aria-label="搜索写作工具" title="搜索写作工具（⌘ / Ctrl K）" onClick={()=>{setQuery('');setDialog('search');}}><Search size={19}/></button>
-     {!authenticated&&<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}
+     {authenticated?<button type="button" className="public-landing-account" aria-label="我的账号" aria-haspopup="dialog" onClick={()=>openPublicDialog('account')}><UserRound size={16} aria-hidden="true"/><span>我的账号</span></button>:<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}
      <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'免费开始写作'}<ArrowRight size={16}/></button>
     </div>
    </div>
@@ -79,7 +80,8 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
     <div className="public-footer-bottom"><span>© {new Date().getFullYear()} 墨多多 · 写作</span><span className="public-footer-demo">会员与墨点为方案演示，暂不提供在线付费。</span><SiteRegistration/></div>
    </footer>
   </main>
-  {dialog&&<div className="modal-backdrop public-dialog-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close();}}><section className={`modal public-home-dialog${dialog==='search'?' search-modal':''}${dialog==='demo'?' product-demo-modal':''}${dialog==='plans'?' public-plans-modal':''}`} role="dialog" aria-modal="true" aria-label={dialog==='auth'?'登录或注册':dialog==='search'?'搜索写作工具':dialog==='demo'?'产品功能演示':dialog==='plans'?'创作方案演示':'使用帮助'} ref={dialogRef}><button type="button" className="modal-close icon-button" aria-label="关闭公共首页弹窗" onClick={close}><X size={20}/></button>
+  {dialog&&<div className="modal-backdrop public-dialog-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close();}}><section className={`modal public-home-dialog${dialog==='search'?' search-modal':''}${dialog==='demo'?' product-demo-modal':''}${dialog==='plans'?' public-plans-modal':''}${dialog==='account'?' public-home-account':''}`} role="dialog" aria-modal="true" aria-label={dialog==='auth'?'登录或注册':dialog==='account'?'我的账号':dialog==='search'?'搜索写作工具':dialog==='demo'?'产品功能演示':dialog==='plans'?'创作方案演示':'使用帮助'} ref={dialogRef}><button type="button" className="modal-close icon-button" aria-label="关闭公共首页弹窗" onClick={close}><X size={20}/></button>
+   {dialog==='account'&&authenticated&&<><h2><UserRound size={22}/>我的账号</h2><p className="modal-desc">你已登录，可以管理登录方式，或进入创作台继续写作。</p><AccountAccess onClose={close}/></>}
    {dialog==='auth'&&(!account?.ready||account.error?<div className="account-form"><h2>{account?.error?'暂时无法连接创作服务':'正在检查账号状态'}</h2><p className="modal-desc" role="status">{account?.error||'你可以关闭此窗口继续浏览首页。'}</p>{account?.error&&<button type="button" className="button primary full" onClick={()=>account.refresh()}>重新连接</button>}</div>:<AccountForm modern loginOnly={account.configured} onSuccess={finishLogin}/>)}
    {dialog==='search'&&<><h2><Search size={22}/>查找写作工具</h2><label className="public-tool-search">输入工具或创作需求<input aria-label="搜索公开写作工具" value={query} onChange={event=>setQuery(event.target.value)} placeholder="试试：大纲、人物、润色…"/></label><div className="search-results">{tools.filter(tool=>`${tool.title}${tool.desc}`.includes(query.trim())).map(tool=><button type="button" key={tool.id} onClick={()=>requireAccount(()=>onLaunch({type:'tool',tool}))}><BookOpen size={18}/><span>{tool.title}<small>{tool.desc}</small></span><ArrowRight size={15}/></button>)}</div></>}
    {dialog==='demo'&&<><span className="public-dialog-eyebrow">先看看，故事怎样开始</span><h2>从想法，到你的第一章</h2><p className="modal-desc">以下大纲、人物与开篇是原创预写内容，用于展示功能与整理方式。它们不是实时生成结果，也不来自任何用户的私人作品。</p><div className="product-demo-workspace"><LandingWorkspacePreview/></div><div className="product-demo-tabs" role="tablist" aria-label="预写功能示例">{productDemoTabs.map((tab,index)=><button type="button" role="tab" id={`public-product-demo-tab-${tab.id}`} key={tab.id} aria-selected={demoTab===tab.id} aria-controls={`public-product-demo-panel-${tab.id}`} tabIndex={demoTab===tab.id?0:-1} ref={node=>{if(node)demoTabRefs.current.set(tab.id,node);else demoTabRefs.current.delete(tab.id);}} onClick={()=>setDemoTab(tab.id)} onKeyDown={event=>demoTabKey(event,index)}>{tab.label}</button>)}</div>{productDemoTabs.map(tab=><section className="product-demo-panel" role="tabpanel" key={tab.id} id={`public-product-demo-panel-${tab.id}`} aria-labelledby={`public-product-demo-tab-${tab.id}`} hidden={demoTab!==tab.id} tabIndex={0}><h3>{tab.title}</h3>{tab.paragraphs.map(paragraph=><p key={paragraph}>{paragraph}</p>)}{tab.list&&<ol>{tab.list.map(item=><li key={item}>{item}</li>)}</ol>}</section>)}<div className="public-dialog-actions"><button type="button" className="button secondary" onClick={close}>继续浏览</button><button type="button" className="button primary" onClick={enterStudio}>开始自己的故事<ArrowRight size={15}/></button></div></>}

@@ -38,6 +38,7 @@ globalThis.fetch=async(url,options={})=>{
  }
  if(url==='/api/auth/methods')return Response.json({ownerConfigured:true,...Object.fromEntries(['phone','email','wechat'].map(name=>[name,{enabled:false,configured:false,available:false,reason:'暂未开通'}]))});
  if(url==='/api/auth/login'){auth=member('alice');return Response.json({user:auth.user});}
+ if(url==='/api/auth/logout'){auth=guest();return Response.json({ok:true});}
  if(url==='/api/auth/register'){auth=member(auth.configured?'new-author':'local');return Response.json({user:auth.user,recoveryCode:'fixture-first-account-recovery-code'});}
  if(url==='/api/data'){
   const space=options.headers?.['X-Mdd-Space']||'local';
@@ -109,11 +110,32 @@ try{
  let publicHeading,publicSections;
  for(const [name,state]of [['guest',guest()],['signed-in',member('alice')],['legacy-local',legacy()]]){
   await mount({state});assertPublic(name);
-  if(state.user)assert.ok(renderer.root.findAllByProps({'aria-label':'进入创作台'}).length,'signed-in visitors should enter the private workbench from the marketing header');
-  else{assert.equal(renderer.root.findAllByProps({'aria-label':'登录'}).length,1);assert.equal(renderer.root.findAllByProps({'aria-label':'免费使用'}).length,1);}
+  if(state.user){assert.ok(renderer.root.findAllByProps({'aria-label':'进入创作台'}).length,'signed-in visitors should enter the private workbench from the marketing header');assert.equal(renderer.root.findAllByProps({'aria-label':'我的账号'}).length,1,'a confirmed member must keep a reachable account entry on the public homepage');assert.equal(renderer.root.findAllByProps({'aria-label':'登录'}).length,0);}
+  else{assert.equal(renderer.root.findAllByProps({'aria-label':'登录'}).length,1);assert.equal(renderer.root.findAllByProps({'aria-label':'免费使用'}).length,1);assert.equal(renderer.root.findAllByProps({'aria-label':'我的账号'}).length,0);}
   const heading=publicMain().findAllByType('h1').map(text),sections=publicMain().findAllByType('section').map(node=>node.props['aria-label']||node.props.className||'');
   if(!publicHeading){publicHeading=heading;publicSections=sections;}else{assert.deepEqual(heading,publicHeading,'auth state must not replace the public homepage title');assert.deepEqual(sections,publicSections,'auth state must keep the same public homepage structure');}
  }
+ // Account management is public-shell UI, not a reason to initialize the private workspace.
+ await mount({state:member('alice')});assertPublic('member-before-account-dialog');
+ const accountDraft='打开账号入口时保留的公开故事草稿';await change(publicMain().findByProps({'aria-label':'故事灵感输入'}),accountDraft);
+ await click(renderer.root.findByProps({'aria-label':'我的账号'}));
+ const accountDialog=renderer.root.findByProps({role:'dialog','aria-label':'我的账号'});
+ assert.ok(accountDialog.findAllByProps({'aria-label':'管理登录方式'}).length,'the account dialog must reuse the real login-method management control');
+ const logout=accountDialog.findAllByType('button').find(node=>text(node).trim()==='退出登录');assert.ok(logout,'a member can sign out directly from the public homepage');
+ assert.match(text(accountDialog),/fixture-alice/,'the dialog identifies the authenticated fixture account');
+ assert.equal(location.hash,'#home');assert.ok(!publicWrapper().props.hidden);
+ assert.deepEqual(calls.map(call=>call.url),['/api/auth/status'],'opening account management must not initialize workspace, billing, generation or identity-management requests');
+ assert.deepEqual(privateReads(),[]);assert.deepEqual(writes,[]);assert.ok(!text(publicMain()).includes('PRIVATE MANUSCRIPT'));
+ await click(logout);
+ assert.deepEqual(calls.map(call=>call.url),['/api/auth/status','/api/auth/logout','/api/auth/status'],'signing out should only revoke the session and refresh account status');
+ assert.equal(calls.find(call=>call.url==='/api/auth/logout').method,'POST');
+ assert.equal(location.hash,'#home','signing out from the public account dialog remains on the homepage');assert.ok(!publicWrapper().props.hidden);
+ assert.equal(renderer.root.findAllByProps({'aria-label':'登录'}).length,1);assert.equal(renderer.root.findAllByProps({'aria-label':'免费使用'}).length,1);
+ assert.equal(renderer.root.findAllByProps({role:'dialog','aria-label':'我的账号'}).length,0);assert.equal(renderer.root.findAllByProps({'aria-label':'我的账号'}).length,0);
+ assert.equal(getRequestSpace(),null,'signing out clears the authorized request scope');
+ assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,accountDraft,'account management and sign-out preserve the public draft');
+ assert.deepEqual(privateReads(),[]);assert.deepEqual(writes,[]);assert.ok(!text(renderer.root).includes('fixture-alice'));assert.ok(!text(renderer.root).includes('PRIVATE MANUSCRIPT'));
+ console.log('PASS persistent member account entry, public account management and sign-out back to guest actions without private workspace side effects');
  await mount({behavior:'pending'});assertPublic('status-pending');assert.equal(typeof statusPending,'function');
  await act(async()=>{statusPending();await sleep(10);});assertPublic('status-resolved');
  await mount({behavior:'failure'});assertPublic('status-error');
