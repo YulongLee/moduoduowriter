@@ -113,12 +113,12 @@
 @media(max-width:760px){.public-resource-directory {grid-template-columns:1fr;gap:24px;}.public-resource-directory section>div {grid-template-columns:repeat(2,minmax(0,1fr));}.public-resource-directory section:last-child>div {grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:380px){.public-resource-directory section>div,.public-resource-directory section:last-child>div {grid-template-columns:1fr;}}
 /* Reference homepage: quiet navigation and readable public demo dialogs. */
-.public-landing{background:#f7f5ef}
-.public-landing-header{border-bottom-color:#dedfd4;background:#f7f5efed}
+.public-landing{background:#fff}
+.public-landing-header{border-bottom-color:#eceeeb;background:#ffffffed}
 .public-landing-header-inner{max-width:1360px;height:68px;padding-left:44px;padding-right:44px;gap:30px}
 .public-landing-header-inner>nav{gap:28px}
 .public-landing-header-inner>nav>button{color:#33483b;font-size:15px;font-weight:550}
-.public-landing-header-actions>.public-landing-login,.public-landing-header-actions>.public-landing-account{min-width:69px;border-color:#cdd4c7;border-radius:8px;background:#fffdf8;color:#354a3d}
+.public-landing-header-actions>.public-landing-login,.public-landing-header-actions>.public-landing-account{min-width:69px;border-color:#d1d8d2;border-radius:8px;background:#ffffff80;color:#354a3d}
 .public-landing-header-actions>.public-landing-account:hover{background:#eef3eb;border-color:#b5c9bc}
 .public-home-account .account-access{margin:20px 0 0;padding:0;border:0;border-radius:0;align-items:stretch;gap:12px}
 .public-home-account .account-access>div:first-child{flex-basis:100%;padding:14px;border:1px solid #e0e8e1;border-radius:9px;background:#f5f8f4;min-width:0}
