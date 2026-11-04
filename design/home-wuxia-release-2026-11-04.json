@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-04",
+  "revision": "ec8ed6f54b32e1392a34d7274d9ba605da777203",
+  "url": "https://moduoduowriter.com/#home",
+  "publicHomeTests": true,
+  "designCheck": true,
+  "build": true,
+  "publicTextContrastPairs": [
+    {
+      "element": "副标题",
+      "ratio": 6.72
+    },
+    {
+      "element": "分区说明",
+      "ratio": 5.0
+    },
+    {
+      "element": "输入提示",
+      "ratio": 4.71
+    },
+    {
+      "element": "输入下方提示",
+      "ratio": 4.84
+    },
+    {
+      "element": "功能说明",
+      "ratio": 4.78
+    },
+    {
+      "element": "场景说明",
+      "ratio": 4.91
+    },
+    {
+      "element": "示例说明",
+      "ratio": 4.66
+    },
+    {
+      "element": "示例题材",
+      "ratio": 4.92
+    },
+    {
+      "element": "灵感说明",
+      "ratio": 4.64
+    },
+    {
+      "element": "登录/账号",
+      "ratio": 9.4
+    }
+  ],
+  "publicPagesMatchingBuild": 14,
+  "assetsMatchingBuild": 2,
+  "anonymousData": 401,
+  "loginMethods": {
+    "phone": true,
+    "email": true,
+    "wechat": false
+  },
+  "health": 200,
+  "otherFiveServicesUnchanged": true,
+  "nginxAndAuthConfigurationUnchanged": true,
+  "visualReview": "原山水素材已查看。线上浏览器标签读取和新建预览连接超时，未完成整页自动目测。"
+}
