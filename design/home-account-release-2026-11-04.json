@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-04",
+  "revision": "b4c6f9641481d95fdedd6191740b25f22f4f69ef",
+  "url": "https://moduoduowriter.com/#home",
+  "publicHomeTests": true,
+  "loginMethodTests": true,
+  "contrastCheck": true,
+  "build": true,
+  "publicPagesMatchingBuild": 14,
+  "assetsMatchingBuild": 2,
+  "anonymousData": 401,
+  "loginMethods": {
+    "phone": true,
+    "email": true,
+    "wechat": false
+  },
+  "health": 200,
+  "otherFiveServicesUnchanged": true,
+  "nginxAndAuthConfigurationUnchanged": true,
+  "visualReview": "自动目测受已保存浏览器权限规则限制；未声称完成。"
+}
