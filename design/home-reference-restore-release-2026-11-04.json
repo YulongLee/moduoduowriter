@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-04",
+  "revision": "ad8c170bf529f81f0c79f2a0f5e1391906b15c68",
+  "url": "https://moduoduowriter.com/#home",
+  "supersedesRejectedVisualRelease": "ec8ed6f54b32e1392a34d7274d9ba605da777203",
+  "stylesheetBaseline": "312876e",
+  "stylesheetBytesMatchBaseline": true,
+  "accountEntryPreserved": true,
+  "publicHomeTests": true,
+  "designCheck": true,
+  "build": true,
+  "publicPagesMatchingBuild": 14,
+  "assetsMatchingBuild": 2,
+  "anonymousData": 401,
+  "loginMethods": {
+    "phone": true,
+    "email": true,
+    "wechat": false
+  },
+  "health": 200,
+  "otherFiveServicesUnchanged": true,
+  "nginxAndAuthConfigurationUnchanged": true,
+  "visualReview": "Reference image and stylesheet differences reviewed. Browser screenshot and DOM reads timed out; full-page visual review remains incomplete."
+}
