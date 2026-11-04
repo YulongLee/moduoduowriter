@@ -52,18 +52,17 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
  const enterStudio=()=>requireAccount(()=>onNavigate('workspace'));
  const scrollTo=(label,id)=>{setActiveSection(label);const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';if(id){const target=document.getElementById(id);if(target?.tagName==='DETAILS')target.open=true;target?.scrollIntoView?.({behavior,block:'start'});}else window.scrollTo?.({top:0,behavior});};
  const openPublicDialog=type=>{triggerRef.current=globalThis.document?.activeElement;if(type==='demo')setDemoTab('outline');setDialog(type);};
- const sections=[['首页',''],['创作工具','landing-features'],['灵感广场','landing-inspiration'],['作品示例','landing-examples'],['创作方案',null]];
+ const sections=[['首页',''],['功能介绍','landing-features'],['创作案例','landing-examples'],['定价会员',null]];
  const pageModal=options=>{if(options.type==='product-demo')openPublicDialog('demo');else if(['help','notifications'].includes(options.type))setDialog(options.type);else onLaunch(options);};
  const demoTabKey=(event,index)=>{let next;if(event.key==='ArrowRight')next=(index+1)%productDemoTabs.length;else if(event.key==='ArrowLeft')next=(index+productDemoTabs.length-1)%productDemoTabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=productDemoTabs.length-1;else return;event.preventDefault();const id=productDemoTabs[next].id;setDemoTab(id);demoTabRefs.current.get(id)?.focus?.();};
- return <div className="public-landing" data-public-home="true" hidden={!visible}>
+ return <div className="public-landing public-centered-shell" data-public-home="true" hidden={!visible}>
   <header className="public-landing-header" aria-label="网站导航">
    <div className="public-landing-header-inner">
     <button type="button" className="public-landing-brand" aria-label="墨多多首页" onClick={()=>scrollTo('首页','')}><Brand/><BrandWordmark/></button>
     <nav aria-label="网站主导航">{sections.map(([label,id])=><button type="button" key={label} aria-current={activeSection===label?'page':undefined} aria-haspopup={id===null?'dialog':undefined} onClick={()=>{if(id===null){setActiveSection(label);openPublicDialog('plans');}else scrollTo(label,id);}}>{label}</button>)}</nav>
     <div className="public-landing-header-actions">
-     <button type="button" className="public-landing-search" aria-label="搜索写作工具" title="搜索写作工具（⌘ / Ctrl K）" onClick={()=>{setQuery('');setDialog('search');}}><Search size={19}/></button>
      {authenticated?<button type="button" className="public-landing-account" aria-label="我的账号" aria-haspopup="dialog" onClick={()=>openPublicDialog('account')}><UserRound size={16} aria-hidden="true"/><span>我的账号</span></button>:<button type="button" className="public-landing-login" aria-label="登录" onClick={enterStudio}>登录</button>}
-     <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'免费开始写作'}<ArrowRight size={16}/></button>
+     <button type="button" className="public-landing-start" aria-label={authenticated?'进入创作台':'免费使用'} onClick={enterStudio}>{authenticated?'进入创作台':'免费开始创作'}<ArrowRight size={16}/></button>
     </div>
    </div>
   </header>
@@ -73,7 +72,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
     <div className="public-landing-footer-main">
      <div className="public-footer-brand"><div className="public-footer-wordmark"><Brand/><BrandWordmark/></div><p>让好故事发生。</p><span>从灵感、大纲到正文，<br/>陪你把故事写成自己的作品。</span></div>
      <nav className="public-footer-links" aria-label="页脚产品导航"><strong>探索墨多多</strong><button type="button" onClick={()=>scrollTo('创作能力','landing-features')}>创作能力</button><button type="button" onClick={()=>scrollTo('作品示例','landing-examples')}>作品示例</button><button type="button" onClick={()=>scrollTo('写作工具','landing-tools')}>写作工具</button></nav>
-     <nav className="public-footer-links" aria-label="页脚帮助导航"><strong>使用与支持</strong><button type="button" onClick={()=>scrollTo('常见问题','landing-faq')}>常见问题</button><button type="button" onClick={()=>setDialog('help')}>使用帮助</button><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={13}/></button></nav>
+     <nav className="public-footer-links" aria-label="页脚帮助导航"><strong>使用与支持</strong><button type="button" onClick={()=>scrollTo('常见问题','landing-faq')}>常见问题</button><button type="button" aria-label="搜索写作工具" title="搜索写作工具（⌘ / Ctrl K）" onClick={()=>{setQuery('');setDialog('search');}}><Search size={14}/>搜索写作工具</button><button type="button" onClick={()=>setDialog('help')}>使用帮助</button><button type="button" onClick={enterStudio}>进入创作空间<ArrowRight size={13}/></button></nav>
      <nav className="public-footer-links" aria-label="写作功能与指南"><strong>写作功能与指南</strong><a href="/features/ai-novel-writing/">AI 小说写作</a><a href="/features/novel-outline/">小说大纲规划</a><a href="/features/character-design/">小说人物设定</a><a href="/features/text-polish/">正文润色与改稿</a><a href="/guides/getting-started/">新手入门指南</a><a href="/about/">关于墨多多</a></nav>
     </div>
     <SeoResourceLinks/>

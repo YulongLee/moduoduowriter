@@ -155,14 +155,25 @@ try{
  // Public navigation and demonstrations may inspect authored material only.
  await mount();
  const publicButton=(scope,label)=>scope.findAllByType('button').find(node=>text(node).trim()===label);
+ const hasClass=(node,name)=>typeof node.type==='string'&&String(node.props.className||'').split(/\s+/).includes(name);
+ const centeredHome=publicMain().findAll(node=>hasClass(node,'mdd-centered-landing'));
+ assert.equal(centeredHome.length,1,'The reference homepage must mount one centered public landing, without a second legacy hero');
+ assert.equal(text(centeredHome[0].findByType('h1')),'让好故事更容易写出来');
+ assert.equal(centeredHome[0].findAllByProps({'aria-label':'公开创作入口'}).length,1,'Keep one clear public story composer');
+ const leadingSections=centeredHome[0].findAll(node=>['mdd-hero','mdd-capability-strip','mdd-scenes','mdd-examples'].some(name=>hasClass(node,name)));
+ assert.deepEqual(leadingSections.map(node=>['mdd-hero','mdd-capability-strip','mdd-scenes','mdd-examples'].find(name=>hasClass(node,name))),['mdd-hero','mdd-capability-strip','mdd-scenes','mdd-examples'],'The story composer leads into the capability strip, three creation scenes and authored examples');
+ const capabilityStrip=centeredHome[0].findAll(node=>hasClass(node,'mdd-capability-strip'))[0];
+ assert.deepEqual(capabilityStrip.findAllByType('button').map(node=>node.props['aria-label']),['体验故事大纲','体验人物设定','体验世界观设定','体验正文创作','体验文字润色','体验创作管理'],'All six capabilities retain their explicit accessible, account-gated entry points');
+ assert.equal(publicMain().findAllByProps({'aria-label':'创作工作台功能示意'}).length,0,'The illustrative editor belongs in the optional product demonstration rather than duplicating the reference homepage body');
+ assert.equal(centeredHome[0].findAll(node=>node.type==='button'&&String(node.props.className||'').split(/\s+/).includes('mdd-scene')).length,3);
+ assert.equal(centeredHome[0].findAll(node=>node.type==='button'&&node.props['aria-label']?.startsWith('查看预写示例：')).length,4);
  const mainNav=renderer.root.findByProps({'aria-label':'网站主导航'});
- assert.deepEqual(mainNav.findAllByType('button').map(text),['首页','创作工具','灵感广场','作品示例','创作方案']);
- assert.equal(text(renderer.root.findByProps({'aria-label':'免费使用'})),'免费开始写作');
+ assert.deepEqual(mainNav.findAllByType('button').map(text),['首页','功能介绍','创作案例','定价会员']);
+ assert.equal(text(renderer.root.findByProps({'aria-label':'免费使用'})),'免费开始创作');
  const originalGetElementById=document.getElementById,originalScrollTo=window.scrollTo,scrolled=[];
- const inspirationTarget={tagName:'DETAILS',open:false,scrollIntoView(){scrolled.push('landing-inspiration');}};
- document.getElementById=id=>id==='landing-inspiration'?inspirationTarget:{tagName:'SECTION',scrollIntoView(){scrolled.push(id);}};
+ document.getElementById=id=>({tagName:'SECTION',scrollIntoView(){scrolled.push(id);}});
  window.scrollTo=()=>scrolled.push('top');
- try{for(const label of ['首页','创作工具','灵感广场','作品示例'])await click(publicButton(mainNav,label));assert.deepEqual(scrolled,['top','landing-features','landing-inspiration','landing-examples']);assert.equal(inspirationTarget.open,true,'Navigation expands the native inspiration disclosure before scrolling');}
+ try{for(const label of ['首页','功能介绍','创作案例'])await click(publicButton(mainNav,label));assert.deepEqual(scrolled,['top','landing-features','landing-examples']);}
  finally{document.getElementById=originalGetElementById;window.scrollTo=originalScrollTo;}
  const demoDraft='公开演示前写下的故事草稿';await change(publicMain().findByProps({'aria-label':'故事灵感输入'}),demoDraft);
  await click(publicButton(publicMain(),'查看产品演示'));
@@ -183,10 +194,10 @@ try{
  assert.equal(publicMain().findByProps({'aria-label':'故事灵感输入'}).props.value,demoDraft,'Closing an authored preview preserves the public draft');
  await click(publicButton(publicMain(),'查看产品演示'));assert.equal(tabs()[0].props['aria-selected'],true,'Reopening the demo starts with its authored outline');
  await click(renderer.root.findByProps({'aria-label':'关闭公共首页弹窗'}));
- await click(publicButton(mainNav,'创作方案'));
+ await click(publicButton(mainNav,'定价会员'));
  const plans=renderer.root.findByProps({role:'dialog','aria-label':'创作方案演示'});assert.match(plans.props.className,/public-plans-modal/);assert.match(text(plans),/会员与墨点.*功能演示/);assert.match(text(plans),/未接入真实支付/);assert.ok(!/[¥￥]\s*\d/.test(text(plans)),'Public plans must not invent a checkout price');assert.equal(plans.findAllByType('form').length,0);
  await click(renderer.root.findByProps({'aria-label':'关闭公共首页弹窗'}));assertPublic('public-demo-and-plans');assert.ok(!calls.some(call=>call.url==='/api/generate'));
- console.log('PASS five public navigation targets, inspiration disclosure, authored keyboard-accessible demo tabs and no-price public plans with no private calls or draft loss');
+ console.log('PASS centered reference homepage structure, four public navigation targets, authored keyboard-accessible demo tabs and no-price public plans with no private calls or draft loss');
 
  await mount();
  await click(renderer.root.findByProps({'aria-label':'登录'}));
@@ -262,7 +273,7 @@ try{
   if(destination==='tools')await act(async()=>publicMain().findByProps({id:'landing-tools'}).props.onToggle({currentTarget:{open:true}}));
   let action;
   if(label==='公开方案演示'){
-   await click(publicButton(renderer.root.findByProps({'aria-label':'网站主导航'}),'创作方案'));assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);action=publicButton(renderer.root.findByProps({role:'dialog'}),'登录查看方案演示');
+   await click(publicButton(renderer.root.findByProps({'aria-label':'网站主导航'}),'定价会员'));assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);action=publicButton(renderer.root.findByProps({role:'dialog'}),'登录查看方案演示');
   }else if(label==='演示后开始创作'){
    await click(publicButton(publicMain(),'查看产品演示'));assert.deepEqual(privateCalls(),[]);assert.deepEqual(privateReads(),[]);action=publicButton(renderer.root.findByProps({role:'dialog'}),'开始自己的故事');
   }else action=publicMain().findAllByType('button').find(node=>text(node).trim()===label);

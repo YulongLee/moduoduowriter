@@ -15,3 +15,13 @@
 2026-10-27 新增 `home-writing-window-v1.webp`：首页窗边书桌场景。淡蓝远山与城堡、暖木书桌、藤蔓、旧书和打开的笔记本，左侧保留明亮空间供网页标题与对话输入使用。2163×727，176,146 字节，使用内置 imagegen 生成；仓库副本仅做 WebP 编码，保留原图，不含文字或界面元素。完整提示词见根目录「视觉素材提示词.md」。
 
 2026-11-04 新增 `hero-shanshui-v1.webp`：用户参考图对应的原创山水首屏，1942×809、76,510字节。左侧纸白留空，右侧淡蓝灰层峦、暖日、楼阁与披风行者。使用内置image_gen生成，项目副本仅WebP编码；原品牌图标保留。提示词与页面实施记录见 `design/homepage-reference-2026-11-04.md`。
+
+2026-11-04 新增居中山水首页的三张场景插画，均为内置 `image_gen` 生成的原创图片，512×512、RGB WebP，页面使用独立 HTML 展示文字与按钮。素材不含文字、标志、水印或界面；保留全部原始 PNG，仅对项目副本缩放及编码，未替换任何原图标。
+
+- `scene-start-v2.webp`：薄荷色书中山水与亭台，16,800 字节。
+- `scene-continue-v2.webp`：浅杏色旧书叠放与翻起的书页，23,840 字节。
+- `scene-polish-v2.webp`：淡紫色羽毛笔、空白稿纸与小墨水瓶，13,004 字节。
+
+最终提示词、原始 PNG 路径与检查记录见 `design/centered-home-art-2026-11-04.md`。
+
+同日新增 `hero-jianghu-centered-v2.webp`：居中首页专用左右山水背景，2304×768、85,824 字节。内置 `image_gen` 全新生成；中央近白留空，两侧青蓝山峰、桃花与右侧山门行者。完整原始 PNG 保留在 `design/assets/hero-jianghu-centered-v2-original.png`，项目副本仅等比缩放与 WebP 编码。最终提示词与检查记录见 `design/centered-home-hero-art-2026-11-04.md`。
