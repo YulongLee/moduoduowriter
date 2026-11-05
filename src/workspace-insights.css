@@ -76,3 +76,38 @@
 .workspace-insights button:focus-visible {outline:2px solid var(--wi-green);outline-offset:3px;}
 .workspace-insights button:disabled {cursor:default;}
 @media(max-width:600px){.workspace-insights .wi-card {padding:18px;}.workspace-insights .wi-heading h2 {font-size:16px;}.workspace-insights .wi-task-text,.workspace-insights .wi-task-form>input {font-size:13px;}.workspace-insights .wi-shortcuts>button {font-size:12px;}.workspace-insights .wi-day {height:34px;}}
+
+/* Dashboard panels: quiet surfaces with a stronger hierarchy for real data. */
+.workspace-insights {gap:14px;--wi-green:#157349;--wi-muted:#64736b;}
+.workspace-insights .wi-card {padding:20px;border-color:#e8ede8;border-radius:15px;background:#fff;box-shadow:0 5px 18px rgba(28,53,41,.04);}
+.workspace-insights .wi-statistics {order:0;}
+.workspace-insights .wi-tasks {order:1;}
+.workspace-insights .wi-calendar {order:2;}
+.workspace-insights .wi-tools {order:3;}
+.workspace-insights .wi-heading {margin-bottom:17px;}
+.workspace-insights .wi-heading h2 {color:#15261e;font-size:17px;font-weight:700;}
+.workspace-insights .wi-heading h2 svg {color:#196b47;}
+.workspace-insights .wi-stat-grid {gap:0;grid-template-columns:1.25fr .8fr 1fr;}
+.workspace-insights .wi-stat {padding:0 9px;border-left:1px solid #edf0ec;}
+.workspace-insights .wi-stat:first-child {padding-left:0;border-left:0;}
+.workspace-insights .wi-stat>span {white-space:normal;font-size:12px;}
+.workspace-insights .wi-stat>strong {font-size:22px;color:#1e3529;letter-spacing:-.5px;}
+.workspace-insights .wi-stat small {font-size:11px;}
+.workspace-insights .wi-card-note {color:#66776d;font-size:12px;line-height:1.65;}
+.workspace-insights .wi-activity-chart {padding-top:13px;margin-top:13px;border-top:1px solid #edf1ed;}
+.workspace-insights .wi-chart-heading,.workspace-insights .wi-chart-caption {display:flex;justify-content:space-between;gap:8px;color:#627268;font-size:12px;line-height:1.5;}
+.workspace-insights .wi-chart-heading small {color:#657d6a;font-size:12px;}
+.workspace-insights .wi-chart-bars {display:grid;grid-template-columns:repeat(7,1fr);gap:9px;align-items:end;height:45px;margin-top:12px;}
+.workspace-insights .wi-chart-column {display:flex;align-items:flex-end;height:100%;}
+.workspace-insights .wi-chart-column span {display:block;width:100%;min-height:4px;border-radius:3px 3px 1px 1px;background:#edf2ed;}
+.workspace-insights .wi-chart-column span[data-active="true"] {background:linear-gradient(180deg,#80cda0,#409565);}
+.workspace-insights .wi-chart-caption {margin-top:6px;color:#78867d;font-size:11px;}
+.workspace-insights .wi-task-progress {height:5px;overflow:hidden;margin:-4px 0 16px;border-radius:5px;background:#ecf0ec;}
+.workspace-insights .wi-task-progress>span {display:block;height:100%;border-radius:inherit;background:#168353;}
+.workspace-insights .wi-task-list {gap:12px;}
+.workspace-insights .wi-task-text {color:#26392f;font-size:14px;line-height:1.6;}
+.workspace-insights .wi-task-form {min-height:42px;}
+.workspace-insights .wi-task-empty {padding:6px 0 17px;}
+.workspace-insights .wi-day-detail,.workspace-insights .wi-calendar-legend,.workspace-insights .wi-all-tools {font-size:12px;}
+.workspace-insights .wi-shortcuts>button {min-height:48px;font-size:13px;}
+@media(max-width:600px){.workspace-insights .wi-card{padding:18px}.workspace-insights .wi-stat>strong{font-size:21px}}

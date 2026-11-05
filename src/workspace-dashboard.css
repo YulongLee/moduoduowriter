@@ -227,3 +227,44 @@
   .workspace-dashboard .workspace-dashboard-section-heading { flex-wrap: wrap; }
   .workspace-dashboard .workspace-dashboard-section-heading .workspace-dashboard-text-link { font-size: 12px; }
 }
+
+/* Workspace: one clear next step, real works and reusable inspiration examples. */
+.workspace-dashboard .workspace-dashboard-welcome { min-height: 164px; padding: 22px 8px 26px; }
+.workspace-dashboard .workspace-dashboard-welcome::before { width: min(76%, 820px); opacity: .9; }
+.workspace-dashboard .workspace-dashboard-welcome h1 { font-size: clamp(28px, 2.5vw, 38px); color:#14251c; }
+.workspace-dashboard .workspace-dashboard-eyebrow { color:#4d7059; }
+.workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: 1.4fr repeat(5,minmax(0,1fr)); }
+.workspace-dashboard .workspace-dashboard-quick-card { border-radius:14px; min-height:138px; }
+.workspace-dashboard .workspace-dashboard-tone-primary { background:linear-gradient(135deg,#197d47,#07532c); border-color:#176a3c; }
+.workspace-dashboard .workspace-dashboard-resume,.workspace-dashboard .workspace-dashboard-ideas { padding:20px; border:1px solid #e6ebe5; border-radius:14px; background:#fff; box-shadow:0 4px 18px #1b3a2709; }
+.workspace-dashboard .workspace-dashboard-resume { margin-bottom:20px; }
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-section-heading { justify-content:flex-start; margin-bottom:14px; }
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-section-heading>span { color:#66756b; font-size:13px; }
+.workspace-dashboard .workspace-dashboard-resume-card { display:flex; align-items:center; gap:20px; padding:14px; border:1px solid #eef1ec; border-radius:11px; background:#fcfdfb; }
+.workspace-dashboard .workspace-dashboard-resume-info { display:flex; flex:1; flex-direction:column; gap:6px; min-width:0; }
+.workspace-dashboard .workspace-dashboard-resume-info>strong { overflow:hidden; color:#1d2922; font-size:19px; text-overflow:ellipsis; white-space:nowrap; }
+.workspace-dashboard .workspace-dashboard-resume-info p { color:#5e6b62; font-size:13px; }
+.workspace-dashboard .workspace-dashboard-resume-tags { color:#286645; font-size:12px; }
+.workspace-dashboard .workspace-dashboard-resume-stat { display:flex; min-width:100px; flex-direction:column; gap:2px; padding-left:20px; border-left:1px solid #edf0ea; }
+.workspace-dashboard .workspace-dashboard-resume-stat strong { color:#17251d; font-size:19px; }
+.workspace-dashboard .workspace-dashboard-resume-stat span { color:#68766c; font-size:12px; }
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-primary-button { padding:10px 18px; white-space:nowrap; }
+.workspace-dashboard .workspace-dashboard-library { border-radius:14px; }
+.workspace-dashboard .workspace-dashboard-ideas { margin-top:20px; }
+.workspace-dashboard .workspace-dashboard-ideas .workspace-dashboard-section-heading { margin-bottom:3px; }
+.workspace-dashboard .workspace-dashboard-ideas>p { color:#657168; font-size:13px; }
+.workspace-dashboard .workspace-dashboard-idea-filters { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0; }
+.workspace-dashboard .workspace-dashboard-idea-filters button { padding:6px 12px; border:0; border-radius:20px; color:#4a5a50; background:#f0f3ef; font-size:13px; }
+.workspace-dashboard .workspace-dashboard-idea-filters button[aria-pressed='true'] { color:#fff; background:#1a7042; }
+.workspace-dashboard .workspace-dashboard-idea-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.workspace-dashboard .workspace-dashboard-idea-grid>button { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:6px; padding:0 0 10px; overflow:hidden; border:1px solid #e8ede7; border-radius:10px; color:#24352b; background:#fff; text-align:left; }
+.workspace-dashboard .workspace-dashboard-idea-grid>button:hover { border-color:#a6c9ac; }
+.workspace-dashboard .workspace-dashboard-idea-grid>button>span { width:100%; height:82px; background-size:cover; background-position:center; }
+.workspace-dashboard .workspace-dashboard-idea-grid small,.workspace-dashboard .workspace-dashboard-idea-grid strong,.workspace-dashboard .workspace-dashboard-idea-grid em { margin:0 10px; }
+.workspace-dashboard .workspace-dashboard-idea-grid small { color:#698071; font-size:12px; }
+.workspace-dashboard .workspace-dashboard-idea-grid strong { font-size:14px; line-height:1.5; }
+.workspace-dashboard .workspace-dashboard-idea-grid em { display:flex; align-items:center; gap:4px; color:#2d7049; font-size:12px; font-style:normal; }
+.workspace-dashboard .workspace-dashboard-ideas-chat { display:inline-flex; align-items:center; gap:7px; padding:9px 13px; margin-top:14px; border:1px solid #d6e4d9; border-radius:7px; color:#215d3d; background:#f4f9f4; font-size:13px; }
+@media(max-width:1450px){ .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns:repeat(3,minmax(0,1fr)); } .workspace-dashboard .workspace-dashboard-resume-stat { min-width:70px; padding-left:12px; } }
+@media(max-width:680px){ .workspace-dashboard .workspace-dashboard-welcome { padding:20px 15px; } .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns:repeat(2,minmax(0,1fr)); } .workspace-dashboard .workspace-dashboard-quick-card { min-height:94px; padding:12px; } .workspace-dashboard .workspace-dashboard-quick-arrow { display:none; } .workspace-dashboard .workspace-dashboard-resume,.workspace-dashboard .workspace-dashboard-ideas { padding:16px; } .workspace-dashboard .workspace-dashboard-resume-card { display:grid; grid-template-columns:75px minmax(0,1fr); gap:12px; } .workspace-dashboard .workspace-dashboard-resume-stat { min-width:0; padding-left:0; border:0; } .workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-primary-button { grid-column:1/-1; } .workspace-dashboard .workspace-dashboard-idea-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(min-width:1201px){.workspace-dashboard .workspace-dashboard-works-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }}

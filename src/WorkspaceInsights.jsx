@@ -1,5 +1,5 @@
 import React, { useId, useMemo, useState } from 'react';
-import { ArrowUpRight, BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Lightbulb, ListChecks, MessagesSquare, Plus, ScanText, Type, X } from 'lucide-react';
+import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, Lightbulb, ListChecks, MessagesSquare, Plus, ScanText, Type, X } from 'lucide-react';
 import { tools } from './data.js';
 import { newId } from './works.js';
 import { buildWorkspaceActivityDays, MAX_TASK_TEXT_LENGTH, MAX_WORKSPACE_TASKS, normalizeWorkspaceTasks, shiftWorkspaceMonth, toActivityDate, workspaceCalendarCells, workspaceSnapshotStats } from './workspaceActivity.mjs';
@@ -31,6 +31,13 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
   const completed = taskList.filter(task => task.done).length;
   const editable = typeof onTasksChange === 'function';
   const recordedDays = cells.filter(cell => cell?.recordedWorks > 0).length;
+  const recentActivity = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(`${today}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    return { date: key, count: activityDays.find(day => day.date === key)?.recordedWorks || 0 };
+  }), [today, activityDays]);
+  const recentMax = Math.max(1, ...recentActivity.map(day => day.count));
   const selected = cells.find(cell => cell?.date === selectedDay);
   const changeMonth = offset => { setMonth(current => shiftWorkspaceMonth(current, offset)); setSelectedDay(null); };
   const saveTasks = updater => {
@@ -63,13 +70,18 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
 
   return <div className="workspace-insights" aria-label="创作数据与计划">
     <section className="wi-card wi-statistics" aria-labelledby={`${taskInputId}-stats`}>
-      <header className="wi-heading"><h2 id={`${taskInputId}-stats`}>创作数据</h2><span className="wi-range-label">全部作品</span></header>
+      <header className="wi-heading"><h2 id={`${taskInputId}-stats`}><ChartNoAxesCombined size={18} aria-hidden="true" />创作数据</h2><span className="wi-range-label">全部作品</span></header>
       <div className="wi-stat-grid">
         <div className="wi-stat wi-stat-words"><span><FileText size={14} aria-hidden="true" />正文字数</span><strong>{stats.words.toLocaleString('zh-CN')}<small>字</small></strong></div>
         <div className="wi-stat wi-stat-works"><span><BookOpen size={14} aria-hidden="true" />作品</span><strong>{stats.works.toLocaleString('zh-CN')}<small>部</small></strong></div>
         <div className="wi-stat wi-stat-chapters"><span><ListChecks size={14} aria-hidden="true" />章节</span><strong>{stats.chapters.toLocaleString('zh-CN')}<small>章 / 场</small></strong></div>
       </div>
       <p className="wi-card-note">按当前作品正文统计，不含回收站和大纲、人物设定。</p>
+      <div className="wi-activity-chart" aria-label="近 7 天已记录的作品活动">
+        <div className="wi-chart-heading"><span>近 7 天创作活动</span><small>有记录 {recentActivity.filter(day => day.count > 0).length} 天</small></div>
+        <div className="wi-chart-bars">{recentActivity.map(day => <div key={day.date} className="wi-chart-column" aria-label={`${day.date}：${day.count} 部作品有记录`} title={`${day.date}：${day.count} 部作品有记录`}><span style={{height: day.count ? `${Math.max(20, day.count / recentMax * 100)}%` : '4px'}} data-active={day.count > 0} /></div>)}</div>
+        <div className="wi-chart-caption"><span>6 天前</span><span>今天</span></div>
+      </div>
     </section>
 
     <section className="wi-card wi-calendar" aria-labelledby={`${taskInputId}-calendar`}>
@@ -85,7 +97,8 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
     </section>
 
     <section className="wi-card wi-tasks" aria-labelledby={`${taskInputId}-tasks`}>
-      <header className="wi-heading"><h2 id={`${taskInputId}-tasks`}>写作待办</h2><span className="wi-task-count">{completed} / {taskList.length} 已完成</span></header>
+      <header className="wi-heading"><h2 id={`${taskInputId}-tasks`}><Bell size={18} aria-hidden="true" />写作提醒</h2><span className="wi-task-count">{completed} / {taskList.length} 已完成</span></header>
+      {taskList.length > 0 && <div className="wi-task-progress" role="progressbar" aria-label="写作任务完成进度" aria-valuemin={0} aria-valuemax={taskList.length} aria-valuenow={completed}><span style={{width: `${completed / taskList.length * 100}%`}} /></div>}
       {taskList.length ? <ul className="wi-task-list">{taskList.map(task => <li className={task.done ? 'wi-task-done' : undefined} key={task.id}><label><input type="checkbox" aria-label={`完成任务：${task.text}`} checked={task.done} disabled={!editable} onChange={event => toggleTask(task.id, event.target.checked)} /><span className="wi-checkbox-mark" aria-hidden="true">{task.done && <Check size={12} />}</span><span className="wi-task-text">{task.text}</span></label><button type="button" className="wi-remove-task" aria-label={`删除任务：${task.text}`} title="移除任务" disabled={!editable} onClick={() => removeTask(task.id)}><X size={14} /></button></li>)}</ul> : <div className="wi-task-empty"><ListChecks size={23} aria-hidden="true" /><p>给今天留一个小目标</p><span>写下你自己的任务，完成后再勾选。</span></div>}
       <form className="wi-task-form" onSubmit={addTask}><label className="wi-visually-hidden" htmlFor={taskInputId}>新增写作任务</label><input id={taskInputId} aria-label="新增写作任务" aria-invalid={Boolean(taskError)} aria-describedby={taskError ? `${taskInputId}-error` : undefined} value={draft} maxLength={MAX_TASK_TEXT_LENGTH} placeholder="例如：完成第一章的对话修改" disabled={!editable || taskList.length >= MAX_WORKSPACE_TASKS} onChange={event => { setDraft(event.target.value); setTaskError(''); }} /><button type="submit" aria-label="添加写作任务" disabled={!editable || taskList.length >= MAX_WORKSPACE_TASKS}><Plus size={17} /></button></form>
       {taskError && <p className="wi-task-error" id={`${taskInputId}-error`} role="alert">{taskError}</p>}

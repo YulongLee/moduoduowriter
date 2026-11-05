@@ -76,14 +76,22 @@ try {
   assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-right-rail', 'aria-label': '创作概览与计划' }).parent, layout);
 
   const actions = renderer.root.findByProps({ 'aria-label': '开始创作' }).findAllByType('button');
-  assert.equal(actions.length, 5);
+  assert.equal(actions.length, 6);
   await click(actions[0]);
   assert.deepEqual(modals.at(-1), { type: 'create', kind: '长篇小说' });
-  for (const [index, id] of [[1, 'outline'], [2, 'character'], [3, 'continue'], [4, 'polish']]) {
+  for (const [index, id] of [[1, 'outline'], [2, 'character']]) {
     await click(actions[index]);
     assert.equal(modals.at(-1).type, 'tool');
     assert.equal(modals.at(-1).tool, tools.find(tool => tool.id === id), 'Quick actions must open the real tool object without running it');
   }
+  await click(actions[3]);
+  assert.equal(modals.at(-1).type, 'home-conversation');
+  assert.match(modals.at(-1).initialPrompt, /世界观/);
+  await click(actions[4]);
+  assert.equal(opened.at(-1), short, 'Writing opens the work with the latest real edit timestamp');
+  await click(actions[5]);
+  assert.equal(routes.at(-1), 'conversation');
+  assert(!text(renderer.toJSON()).includes('刚刚'), 'Undated legacy display labels must not imply an actual edit time');
   await click(buttonByText(tabs(), '短篇'));
   assert.equal(cards().length, 1);
   assert(text(cards()[0]).includes(short.title));
@@ -121,6 +129,8 @@ try {
 
   await mount([]);
   assert.equal(cards().length, 0);
+  await click(renderer.root.findByProps({ 'aria-label': '开始创作' }).findAllByType('button')[4]);
+  assert.deepEqual(modals.at(-1), { type: 'create', kind: '长篇小说' }, 'Writing without a work should lead to creation');
   assert(text(renderer.toJSON()).includes('你的第一部作品，从这里开始'));
   assert(!text(renderer.toJSON()).includes('长街雾未散'), 'An empty account must not be filled with seed manuscripts');
   assert(!text(renderer.toJSON()).includes(main.title), 'Switching to an empty account must not retain another account’s manuscripts');
@@ -129,7 +139,7 @@ try {
   assert.deepEqual(taskWrites, []);
   assert.deepEqual(activity, []);
   assert.equal(JSON.stringify(works), snapshot);
-  console.log('PASS dashboard real statistics, stable recency, type/word sorting, grid/list views, five quick actions, existing management/editor routes, top-aligned sidebar, account empty states and no automatic data/API writes');
+  console.log('PASS dashboard real statistics, stable recency, type/word sorting, grid/list views, six quick actions, existing management/editor routes, top-aligned sidebar, account empty states and no automatic data/API writes');
 } finally {
   if (renderer) await act(async () => renderer.unmount());
   await server.close();

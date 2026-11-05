@@ -151,6 +151,7 @@ try {
   assert.equal(updaters[0](fullTasks), fullTasks, 'Concurrent additions cannot exceed the one-hundred-task bound');
   await act(async () => label('完成任务：写好第一场对白').props.onChange({ target: { checked: true } }));
   assert.equal(taskSnapshot[0].done, true); assert.match(text(renderer.root), /1 \/ 1 已完成/);
+  assert.equal(label('写作任务完成进度').props['aria-valuenow'], 1, 'Task progress reflects checked tasks');
   await act(async () => label('完成任务：写好第一场对白').props.onChange({ target: { checked: false } })); assert.equal(taskSnapshot[0].done, false);
   await click(label('删除任务：写好第一场对白')); assert.equal(taskSnapshot.length, 0); assert.match(text(renderer.root), /0 \/ 0 已完成/);
   for (const [name, id] of [['灵感生成', 'ideas'], ['书名与简介', 'title'], ['对白打磨', 'dialogue'], ['章节审稿', 'review']]) {
@@ -177,9 +178,11 @@ try {
   assert.ok(renderer.root.findAllByProps({ 'data-known-date': 'true' }).length > 0);
   assert.equal(activeCells().length, 0, 'Fallback dates use a separate visual state, never recorded-activity fill');
   assert.match(text(renderer.root.findByProps({ className: 'wi-record-count' })), /0/);
+  assert.equal(renderer.root.findAllByProps({ 'data-active': true }).length, 0, 'Known creation dates must not become recorded chart activity');
   const realActivity = recordWorkspaceActivity([], { workId: humanDateWork.id, at: now });
   await mount(React.createElement(WorkspaceInsights, { works: [{ ...humanDateWork, createdAt: now }], activity: realActivity, tasks: [] }));
   assert.equal(activeCells().length, 1); assert.equal(renderer.root.findAllByProps({ 'data-known-date': 'true' }).length, 0); assert.match(activeCells()[0].props['aria-label'], /已记录 1 部作品的活动/);
+  assert.equal(renderer.root.findAllByProps({ 'data-active': true }).length, 1, 'Only real recorded activity appears in the recent chart');
   assert.equal(networkCalls, 0); assert.equal(browserReads, 0); assert.equal(browserWrites, 0);
   console.log('PASS known-date versus recorded-activity presentation and zero model/network/browser-storage access throughout');
 } finally {
