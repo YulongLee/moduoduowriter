@@ -318,3 +318,28 @@
   .workspace-dashboard .workspace-dashboard-resume, .workspace-dashboard .workspace-dashboard-library, .workspace-dashboard .workspace-dashboard-ideas { padding: 16px; }
   .workspace-dashboard .workspace-dashboard-resume-card .workspace-dashboard-cover .book-cover { width: 75px; height: 110px; }
 }
+
+/* Match the writing-workspace reference with clearer hierarchy and readable controls. */
+.workspace-dashboard .workspace-dashboard-eyebrow { display: none; }
+.workspace-dashboard .workspace-dashboard-welcome-description { color: #586660; font-size: 16px; }
+.workspace-dashboard .workspace-dashboard-quick-card { justify-content: center; gap: 11px; }
+.workspace-dashboard .workspace-dashboard-quick-icon { width: 32px; height: 32px; color: #08753d; background: transparent; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-icon { color: #fff; background: #ffffff26; }
+.workspace-dashboard .workspace-dashboard-tone-blue .workspace-dashboard-quick-icon,
+.workspace-dashboard .workspace-dashboard-tone-purple .workspace-dashboard-quick-icon,
+.workspace-dashboard .workspace-dashboard-tone-amber .workspace-dashboard-quick-icon,
+.workspace-dashboard .workspace-dashboard-tone-green .workspace-dashboard-quick-icon { color: #08753d; background: transparent; }
+.workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 17px; line-height: 1.4; }
+.workspace-dashboard .workspace-dashboard-quick-copy > span { color: #647069; font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-copy > span { color: #e0eee4; }
+.workspace-dashboard .workspace-dashboard-resume-info p,
+.workspace-dashboard .workspace-dashboard-resume-stat span,
+.workspace-dashboard .workspace-dashboard-work-description,
+.workspace-dashboard .workspace-dashboard-work-numbers { font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-work-grid .workspace-dashboard-work-copy > strong { font-size: 17px; }
+.workspace-dashboard .workspace-dashboard-work-tags > span { font-size: 12px; }
+@media (max-width: 680px) {
+  .workspace-dashboard .workspace-dashboard-welcome-description { font-size: 14px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 15px; }
+  .workspace-dashboard .workspace-dashboard-quick-copy > span { font-size: 12px; }
+}
