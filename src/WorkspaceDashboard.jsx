@@ -85,10 +85,10 @@ function DashboardWork({ work, view, onOpen, onManage }) {
   const progress = dashboardProgress(work);
   const title = work.title || '未命名作品';
   return <article className={`workspace-dashboard-work workspace-dashboard-work-${view}`}>
-    <div className="workspace-dashboard-work-top"><span>{work.kind || '作品'}{work.genre && <><i aria-hidden="true" />{work.genre}</>}</span><button type="button" className="workspace-dashboard-manage" aria-label={`管理作品：${title}`} title="管理作品资料与回收站" onClick={onManage}><Ellipsis size={18} aria-hidden="true" /></button></div>
+    <div className="workspace-dashboard-work-top"><button type="button" className="workspace-dashboard-manage" aria-label={`管理作品：${title}`} title="管理作品资料与回收站" onClick={onManage}><Ellipsis size={18} aria-hidden="true" /></button></div>
     <button type="button" className="workspace-dashboard-work-main" onClick={onOpen} aria-label={`打开作品：${title}`}>
       <span className="workspace-dashboard-cover" aria-hidden="true"><BookCover work={work} /></span>
-      <span className="workspace-dashboard-work-copy"><strong>{title}</strong><span className="workspace-dashboard-work-description">{work.description || '还没有填写简介，可以在作品资料中补充。'}</span><span className="workspace-dashboard-work-numbers">{words.toLocaleString('zh-CN')} 字<span aria-hidden="true">·</span>{chapterCount} 章</span></span>
+      <span className="workspace-dashboard-work-copy"><strong>{title}</strong><span className="workspace-dashboard-work-tags"><span>{work.kind || '作品'}</span>{work.genre && <span>{work.genre}</span>}</span><span className="workspace-dashboard-work-description">{work.description || '还没有填写简介，可以在作品资料中补充。'}</span><span className="workspace-dashboard-work-numbers">{words.toLocaleString('zh-CN')} 字<span aria-hidden="true">·</span>{chapterCount} 章</span></span>
     </button>
     {progress && <div className="workspace-dashboard-progress"><div><span>{progress.words.toLocaleString('zh-CN')} / {progress.target.toLocaleString('zh-CN')} 字</span><span>{Math.round(progress.percent)}%</span></div><span role="progressbar" aria-label={`${title}的创作目标进度`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.percent)}><i style={{ width: `${progress.percent}%` }} /></span></div>}
     <footer className="workspace-dashboard-work-bottom"><span><Clock3 size={12} aria-hidden="true" />{editedLabel(work)}</span><button type="button" onClick={onOpen}>继续写作<ArrowRight size={13} aria-hidden="true" /></button></footer>

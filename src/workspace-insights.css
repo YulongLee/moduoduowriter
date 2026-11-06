@@ -111,3 +111,48 @@
 .workspace-insights .wi-day-detail,.workspace-insights .wi-calendar-legend,.workspace-insights .wi-all-tools {font-size:12px;}
 .workspace-insights .wi-shortcuts>button {min-height:48px;font-size:13px;}
 @media(max-width:600px){.workspace-insights .wi-card{padding:18px}.workspace-insights .wi-stat>strong{font-size:21px}}
+
+/* Workbench overview: the goal and reminders are based on the user's own tasks. */
+.workspace-insights {gap:14px;--wi-green:#087f43;--wi-muted:#6d7772;color:#1a2420;}
+.workspace-insights .wi-card {padding:20px;border:1px solid #edf0ec;border-radius:15px;background:#fff;box-shadow:0 4px 16px rgba(31,51,39,.04);}
+.workspace-insights .wi-statistics {order:0;}
+.workspace-insights .wi-goal {order:1;}
+.workspace-insights .wi-tasks {order:2;}
+.workspace-insights .wi-growth {order:3;}
+.workspace-insights .wi-calendar {order:4;}
+.workspace-insights .wi-tools {order:5;}
+.workspace-insights .wi-heading h2 {font-size:17px;color:#161d19;}
+.workspace-insights .wi-heading h2 svg {color:#07683d;}
+.workspace-insights .wi-stat-grid {grid-template-columns:1.25fr .85fr 1fr;}
+.workspace-insights .wi-stat {display:flex;flex-direction:column;padding:0 10px;}
+.workspace-insights .wi-stat>span {order:2;color:#737d77;font-size:12px;}
+.workspace-insights .wi-stat>span svg {display:none;}
+.workspace-insights .wi-stat>strong {order:1;margin:0 0 6px;color:#101a15;font-size:23px;font-weight:700;}
+.workspace-insights .wi-stat small {color:#53645b;}
+.workspace-insights .wi-statistics>.wi-card-note {font-size:11px;margin-top:10px;}
+.workspace-insights .wi-activity-chart {padding-top:9px;margin-top:10px;}
+.workspace-insights .wi-chart-bars {height:36px;margin-top:8px;gap:10px;}
+.workspace-insights .wi-chart-column span[data-active="true"] {background:#82c99b;}
+.workspace-insights .wi-goal .wi-heading {margin-bottom:12px;}
+.workspace-insights .wi-goal-caption {margin:0;color:#626e67;font-size:13px;line-height:1.6;}
+.workspace-insights .wi-goal-row {display:flex;align-items:center;gap:10px;margin-top:10px;}
+.workspace-insights .wi-goal-row .wi-task-progress {flex:1;margin:0;height:7px;background:#e9eeea;}
+.workspace-insights .wi-goal-row strong {color:#29382f;font-size:12px;font-weight:600;}
+.workspace-insights .wi-task-list {margin-bottom:12px;}
+.workspace-insights .wi-task-empty {align-items:flex-start;padding:0 0 12px;text-align:left;}
+.workspace-insights .wi-task-empty>svg {display:none;}
+.workspace-insights .wi-task-empty>p {color:#43584a;}
+.workspace-insights .wi-growth {position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:104px;padding:20px;border:1px solid #f4e3cb;border-radius:15px;background:linear-gradient(110deg,#fff3df 10%,#ffebd1 68%,#efc393 100%);overflow:hidden;}
+.workspace-insights .wi-growth:after {position:absolute;right:40px;bottom:-34px;width:100px;height:100px;border:1px solid #bc824329;border-radius:50%;box-shadow:0 0 0 13px #bd854015,0 0 0 28px #bd854010;content:"";pointer-events:none;}
+.workspace-insights .wi-growth h2 {position:relative;z-index:1;margin:0;color:#5b341f;font-size:17px;font-weight:700;}
+.workspace-insights .wi-growth p {position:relative;z-index:1;margin:7px 0 0;color:#86644d;font-size:12px;line-height:1.5;}
+.workspace-insights .wi-growth button {position:relative;z-index:1;display:grid;flex:none;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:50%;color:#76502f;background:#fff;cursor:pointer;box-shadow:0 2px 8px #8e5c2c20;}
+.workspace-insights .wi-growth button:hover {color:#087f43;}
+.workspace-insights .wi-calendar,.workspace-insights .wi-tools {padding:14px 20px;}
+.workspace-insights .wi-details-summary {display:flex;justify-content:space-between;align-items:center;gap:10px;color:#263b2f;font-size:14px;font-weight:650;cursor:pointer;list-style:none;}
+.workspace-insights .wi-details-summary::-webkit-details-marker {display:none;}
+.workspace-insights .wi-details-summary>span:first-child {display:inline-flex;align-items:center;gap:8px;}
+.workspace-insights .wi-details-summary>span:first-child svg {color:#196b47;}
+.workspace-insights .wi-details-summary>span:last-child {color:#738078;font-size:12px;font-weight:400;}
+.workspace-insights details[open]>.wi-details-summary {margin-bottom:16px;}
+.workspace-insights .wi-tools details[open] .wi-heading {margin-bottom:12px;}

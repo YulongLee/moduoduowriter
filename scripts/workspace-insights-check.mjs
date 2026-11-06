@@ -159,6 +159,7 @@ try {
     assert.deepEqual(modal, { type: 'tool', tool: tools.find(tool => tool.id === id) }, 'A shortcut must open an existing tool without autoGenerate or private implicit context');
   }
   await click(renderer.root.findByProps({ className: 'wi-all-tools' })); assert.equal(route, 'tools');
+  await click(label('查看写作课堂')); assert.equal(route, 'learn', 'Growth card opens the existing writing classroom');
   console.log('PASS task add/check/uncheck/remove, text validation, stable single-action IDs and four exact existing-tool payloads without generation');
 
   const beforeLimitWrites = taskWrites;

@@ -1,5 +1,5 @@
 import React, { useId, useMemo, useState } from 'react';
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, Lightbulb, ListChecks, MessagesSquare, Plus, ScanText, Type, X } from 'lucide-react';
+import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, Lightbulb, ListChecks, MessagesSquare, Plus, ScanText, Target, Type, X } from 'lucide-react';
 import { tools } from './data.js';
 import { newId } from './works.js';
 import { buildWorkspaceActivityDays, MAX_TASK_TEXT_LENGTH, MAX_WORKSPACE_TASKS, normalizeWorkspaceTasks, shiftWorkspaceMonth, toActivityDate, workspaceCalendarCells, workspaceSnapshotStats } from './workspaceActivity.mjs';
@@ -85,7 +85,7 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
     </section>
 
     <section className="wi-card wi-calendar" aria-labelledby={`${taskInputId}-calendar`}>
-      <header className="wi-heading"><h2 id={`${taskInputId}-calendar`}><CalendarDays size={16} aria-hidden="true" />创作日历</h2><span className="wi-record-count">记录 {recordedDays} 天</span></header>
+      <details><summary className="wi-details-summary"><span id={`${taskInputId}-calendar`}><CalendarDays size={17} aria-hidden="true" />创作日历</span><span className="wi-record-count">记录 {recordedDays} 天 · 展开</span></summary>
       <div className="wi-month-controls"><strong aria-live="polite">{monthLabel(month)}</strong><div><button type="button" aria-label="查看上个月的创作记录" onClick={() => changeMonth(-1)}><ChevronLeft size={16} /></button><button type="button" className="wi-current-month" aria-label="回到本月创作记录" disabled={month === today.slice(0, 7)} onClick={() => { setMonth(today.slice(0, 7)); setSelectedDay(null); }}>本月</button><button type="button" aria-label="查看下个月的创作记录" onClick={() => changeMonth(1)}><ChevronRight size={16} /></button></div></div>
       <div className="wi-weekdays" aria-hidden="true">{['一', '二', '三', '四', '五', '六', '日'].map(day => <span key={day}>{day}</span>)}</div>
       <div className="wi-calendar-grid" role="group" aria-label={`${monthLabel(month)}的已记录活动`}>
@@ -94,11 +94,19 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
       <p className="wi-day-detail" role="status">{selected ? dayLabel(selected) : '选择日期，查看当日记录的来源。'}</p>
       <div className="wi-calendar-legend"><span><i className="wi-legend-recorded" />已记录活动</span><span><i className="wi-legend-known" />已知作品日期</span><span><i className="wi-legend-empty" />无记录</span></div>
       <p className="wi-card-note">仅显示当前作品已记录的活动；创建、更新日期补充为已知日期，不代表完整历史。日期按北京时间显示。</p>
+      </details>
     </section>
 
+    <section className="wi-card wi-goal" aria-labelledby={`${taskInputId}-goal`}>
+      <header className="wi-heading"><h2 id={`${taskInputId}-goal`}><Target size={18} aria-hidden="true" />写作目标</h2></header>
+      <p className="wi-goal-caption">{taskList.length ? `已完成 ${completed} / ${taskList.length} 项写作任务` : '添加写作提醒，开始记录你的目标'}</p>
+      <div className="wi-goal-row">
+        {taskList.length > 0 ? <div className="wi-task-progress" role="progressbar" aria-label="写作任务完成进度" aria-valuemin={0} aria-valuemax={taskList.length} aria-valuenow={completed}><span style={{width: `${completed / taskList.length * 100}%`}} /></div> : <div className="wi-task-progress wi-progress-empty" aria-hidden="true" />}
+        <strong>{taskList.length ? `${Math.round(completed / taskList.length * 100)}%` : '—'}</strong>
+      </div>
+    </section>
     <section className="wi-card wi-tasks" aria-labelledby={`${taskInputId}-tasks`}>
       <header className="wi-heading"><h2 id={`${taskInputId}-tasks`}><Bell size={18} aria-hidden="true" />写作提醒</h2><span className="wi-task-count">{completed} / {taskList.length} 已完成</span></header>
-      {taskList.length > 0 && <div className="wi-task-progress" role="progressbar" aria-label="写作任务完成进度" aria-valuemin={0} aria-valuemax={taskList.length} aria-valuenow={completed}><span style={{width: `${completed / taskList.length * 100}%`}} /></div>}
       {taskList.length ? <ul className="wi-task-list">{taskList.map(task => <li className={task.done ? 'wi-task-done' : undefined} key={task.id}><label><input type="checkbox" aria-label={`完成任务：${task.text}`} checked={task.done} disabled={!editable} onChange={event => toggleTask(task.id, event.target.checked)} /><span className="wi-checkbox-mark" aria-hidden="true">{task.done && <Check size={12} />}</span><span className="wi-task-text">{task.text}</span></label><button type="button" className="wi-remove-task" aria-label={`删除任务：${task.text}`} title="移除任务" disabled={!editable} onClick={() => removeTask(task.id)}><X size={14} /></button></li>)}</ul> : <div className="wi-task-empty"><ListChecks size={23} aria-hidden="true" /><p>给今天留一个小目标</p><span>写下你自己的任务，完成后再勾选。</span></div>}
       <form className="wi-task-form" onSubmit={addTask}><label className="wi-visually-hidden" htmlFor={taskInputId}>新增写作任务</label><input id={taskInputId} aria-label="新增写作任务" aria-invalid={Boolean(taskError)} aria-describedby={taskError ? `${taskInputId}-error` : undefined} value={draft} maxLength={MAX_TASK_TEXT_LENGTH} placeholder="例如：完成第一章的对话修改" disabled={!editable || taskList.length >= MAX_WORKSPACE_TASKS} onChange={event => { setDraft(event.target.value); setTaskError(''); }} /><button type="submit" aria-label="添加写作任务" disabled={!editable || taskList.length >= MAX_WORKSPACE_TASKS}><Plus size={17} /></button></form>
       {taskError && <p className="wi-task-error" id={`${taskInputId}-error`} role="alert">{taskError}</p>}
@@ -106,12 +114,16 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
       {taskList.length >= MAX_WORKSPACE_TASKS && <p className="wi-card-note">已达到 100 个任务的上限，可移除不再需要的任务。</p>}
     </section>
 
+    <section className="wi-growth"><div><h2>写作成长计划</h2><p>提升写作能力，让故事更精彩</p></div><button type="button" aria-label="查看写作课堂" disabled={typeof navigate !== 'function'} onClick={() => navigate('learn')}><ArrowUpRight size={18} /></button></section>
+
     <section className="wi-card wi-tools" aria-labelledby={`${taskInputId}-tools`}>
-      <header className="wi-heading"><h2 id={`${taskInputId}-tools`}>常用工具</h2>{typeof navigate === 'function' && <button type="button" className="wi-all-tools" onClick={() => navigate('tools')}>全部工具<ArrowUpRight size={13} /></button>}</header>
+      <details><summary className="wi-details-summary"><span id={`${taskInputId}-tools`}>常用工具</span><span>展开</span></summary>
+      <header className="wi-heading"><h2>常用工具</h2>{typeof navigate === 'function' && <button type="button" className="wi-all-tools" onClick={() => navigate('tools')}>全部工具<ArrowUpRight size={13} /></button>}</header>
       <div className="wi-shortcuts">{shortcuts.map(({ id, label, Icon, tone }) => {
         const tool = tools.find(item => item.id === id);
         return <button type="button" key={id} aria-label={`打开${label}`} disabled={!tool || typeof setModal !== 'function'} onClick={() => setModal({ type: 'tool', tool })}><span className={`wi-shortcut-icon wi-tone-${tone}`}><Icon size={17} aria-hidden="true" /></span><span>{label}</span></button>;
       })}</div>
+      </details>
     </section>
   </div>;
 }
