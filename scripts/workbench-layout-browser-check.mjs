@@ -40,6 +40,7 @@ try {
   if(!item.broken) assert.ok(m.scroll<=m.viewport+2,`At ${width}px the document must not overflow horizontally`);
   if(item.name==='工作台' && width>1024) {
    assert.ok(Math.abs(m.main.x-(m.sidebar.x+m.sidebar.width))<=2,`At ${width}px dashboard must start beside the ${expanded?'expanded':'collapsed'} sidebar; got main ${m.main.x} sidebar end ${m.sidebar.x+m.sidebar.width}`);
+   assert.ok(m.main.x+m.main.width>=m.viewport-20,`At ${width}px dashboard must fill the available width, allowing for the scrollbar`);
    assert.ok(m.hero.x-m.main.x<=32,`At ${width}px dashboard content must not be pushed away from its main container`);
   }
   console.log(item.broken?`PASS original class collision reproduced at ${m.viewport}px`:`PASS offline Chrome ${width}px (viewport ${m.viewport}px) ${item.name} ${expanded?'expanded':'collapsed'}: required sections present; no page overflow`);

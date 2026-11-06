@@ -53,7 +53,7 @@
 .commercial.private-workbench .topbar .icon-button:hover { background:#eaf0e9; }
 .commercial.private-workbench .topbar .avatar { background:#e2ece4;border:1px solid #d8e4da;color:#315740;width:34px;height:34px; }
 .commercial.private-workbench .main-content { width:100%;max-width:1680px;padding:28px 30px 0;margin:0 auto; }
-.commercial.private-workbench .main-content.dashboard-content { max-width:2400px;padding:12px 30px 0;margin-left:0;margin-right:auto; }
+.commercial.private-workbench .main-content.dashboard-content { max-width:none;padding:12px 30px 0;margin-left:0;margin-right:auto; }
 .commercial.private-workbench .page-footer { color:#7c8880;border-color:#e1e7e1;font-size:11px;margin-top:26px; }
 .commercial.private-workbench :is(button,a,input,select,textarea):focus-visible { outline:2px solid #6ba48a;outline-offset:3px; }
 .commercial.private-workbench .sidebar :is(button,a):focus-visible { outline-color:#c9dcba; }
