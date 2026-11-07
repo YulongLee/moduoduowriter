@@ -97,7 +97,6 @@ const vite = await createServer({ configFile: false, optimizeDeps: { noDiscovery
 let renderer;
 try {
   const { default: WorkspaceInsights } = await vite.ssrLoadModule('/src/WorkspaceInsights.jsx');
-  const { tools } = await vite.ssrLoadModule('/src/data.js');
   let taskWrites = 0, taskSnapshot = [], modal, route;
   const updaters = [];
   const text = node => typeof node === 'string' ? node : (node?.children || []).map(text).join('');
@@ -154,13 +153,9 @@ try {
   assert.equal(label('写作任务完成进度').props['aria-valuenow'], 1, 'Task progress reflects checked tasks');
   await act(async () => label('完成任务：写好第一场对白').props.onChange({ target: { checked: false } })); assert.equal(taskSnapshot[0].done, false);
   await click(label('删除任务：写好第一场对白')); assert.equal(taskSnapshot.length, 0); assert.match(text(renderer.root), /0 \/ 0 已完成/);
-  for (const [name, id] of [['灵感生成', 'ideas'], ['书名与简介', 'title'], ['对白打磨', 'dialogue'], ['章节审稿', 'review']]) {
-    await click(label(`打开${name}`));
-    assert.deepEqual(modal, { type: 'tool', tool: tools.find(tool => tool.id === id) }, 'A shortcut must open an existing tool without autoGenerate or private implicit context');
-  }
-  await click(renderer.root.findByProps({ className: 'wi-all-tools' })); assert.equal(route, 'tools');
-  await click(label('查看写作课堂')); assert.equal(route, 'learn', 'Growth card opens the existing writing classroom');
-  console.log('PASS task add/check/uncheck/remove, text validation, stable single-action IDs and four exact existing-tool payloads without generation');
+  assert.equal(renderer.root.findAllByProps({ className: 'wi-growth' }).length, 0, 'Low-frequency growth promotion is absent from the dashboard');
+  assert.equal(renderer.root.findAllByProps({ className: 'wi-tools' }).length, 0, 'Duplicated tool shortcuts are absent from the dashboard');
+  console.log('PASS task add/check/uncheck/remove, text validation and stable single-action IDs; no duplicate promotional shortcuts');
 
   const beforeLimitWrites = taskWrites;
   await mount(React.createElement(Harness, { initialTasks: fullTasks }));

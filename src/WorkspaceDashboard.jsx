@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, BookOpen, ChevronRight, Clock3, Ellipsis, Feather, Globe2, LayoutGrid, List, ListTree, MessageCircle, PenLine, Plus, Sparkles, Upload, UsersRound } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronRight, Clock3, Ellipsis, Feather, LayoutGrid, List, MessageCircle, PenLine, Plus, Sparkles, Upload } from 'lucide-react';
 import { useAccount } from './Account.jsx';
 import { BookCover } from './Art.jsx';
 import { tools, workWords, inspirations as inspirationExamples } from './data.js';
@@ -9,12 +9,9 @@ import './workspace-dashboard.css';
 const kinds = ['全部', '长篇', '短篇', '剧本'];
 const kindValues = { 长篇: '长篇小说', 短篇: '短篇故事', 剧本: '剧本' };
 const quickActions = [
-  { id: 'create', title: '新建小说', description: '开启你的下一部作品', Icon: Plus, tone: 'primary' },
-  { id: 'outline', title: '生成大纲', description: '梳理主线与章节', Icon: ListTree, tone: 'blue' },
-  { id: 'character', title: '人物设定', description: '塑造鲜活的故事角色', Icon: UsersRound, tone: 'purple' },
-  { id: 'world', title: '世界观设定', description: '一起构思背景与规则', Icon: Globe2, tone: 'green' },
-  { id: 'write', title: '开始写作', description: '进入作品编辑器', Icon: PenLine, tone: 'amber' },
-  { id: 'chat', title: 'AI 对话', description: '一起讨论创作灵感', Icon: MessageCircle, tone: 'blue' },
+  { id: 'create', title: '新建小说', description: '从零开始一个故事', Icon: Plus, tone: 'primary' },
+  { id: 'write', title: '继续写作', description: '进入最近的作品', Icon: PenLine, tone: 'green' },
+  { id: 'chat', title: 'AI 帮我构思', description: '从灵感到创作方案', Icon: MessageCircle, tone: 'blue' },
 ];
 const ideaImages = ['/art/cover-fog.webp', '/art/hero-shanshui-v1.webp', '/art/cover-spring.webp'];
 const inspirations = inspirationExamples.map((item, index) => ({ genre: item.tags[0], title: item.quote.replace(/\n/g, ''), prompt: item.prompt, image: ideaImages[index] }));
@@ -103,16 +100,16 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
   const [ideaGenre, setIdeaGenre] = useState('推荐');
   const list = getDashboardWorks(works, { kind, sort });
   const stats = dashboardStats(works);
-  const shownWorks = list.slice(0, 6);
   const active = activeWorks(works);
   const recentWork = [...active].filter(work => dashboardEditedTime(work) !== null).sort((a, b) => dashboardEditedTime(b) - dashboardEditedTime(a))[0] || active[0];
+  const otherWorks = list.filter(work => work.id !== recentWork?.id);
+  const shownWorks = otherWorks.slice(0, 6);
   const recentChapter = recentWork?.chapters?.find(chapter => chapter.id === recentWork.lastEditedChapterId) || recentWork?.chapters?.[0];
   const displayName = dashboardDisplayName(account?.user);
   const open = work => typeof openWork === 'function' ? openWork(work) : navigate(`editor/${work.id}`);
   const create = () => setModal({ type: 'create', kind: '长篇小说' });
   const useTool = id => {
     if (id === 'create') return create();
-    if (id === 'world') return setModal({ type: 'home-conversation', initialPrompt: '请帮我构思小说世界观，包括背景、地点、规则与势力关系。' });
     if (id === 'write') return recentWork ? open(recentWork) : create();
     if (id === 'chat') return navigate('conversation');
     const tool = tools.find(item => item.id === id);
@@ -128,10 +125,8 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
       {typeof onImport === 'function' && <button type="button" className="workspace-dashboard-import" onClick={onImport}><Upload size={15} aria-hidden="true" />导入文稿</button>}
     </header>
 
-    <section className="workspace-dashboard-quick-actions" aria-label="开始创作">{quickActions.map(({ id, title, description, Icon, tone }) => <button type="button" className={`workspace-dashboard-quick-card workspace-dashboard-tone-${tone}`} key={id} onClick={() => useTool(id)}><span className="workspace-dashboard-quick-icon"><Icon size={23} aria-hidden="true" /></span><span className="workspace-dashboard-quick-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="workspace-dashboard-quick-arrow" size={16} aria-hidden="true" /></button>)}</section>
-
         {recentWork && <section className="workspace-dashboard-resume" aria-label="继续创作">
-          <div className="workspace-dashboard-section-heading"><h2>继续创作</h2><span>{dashboardEditedTime(recentWork) !== null ? '最近编辑的作品' : '编辑时间未记录'}</span></div>
+          <div className="workspace-dashboard-section-heading"><h2>继续创作</h2><span>{dashboardEditedTime(recentWork) !== null ? `最近编辑 · ${editedLabel(recentWork)}` : '编辑时间未记录'}</span></div>
           <div className="workspace-dashboard-resume-card">
             <span className="workspace-dashboard-cover" aria-hidden="true"><BookCover work={recentWork}/></span>
             <div className="workspace-dashboard-resume-info"><strong>{recentWork.title || '未命名作品'}</strong><span className="workspace-dashboard-resume-tags">{recentWork.kind || '作品'}{recentWork.genre ? ` · ${recentWork.genre}` : ''}</span><p>{recentChapter?.title || '开始你的第一章'}</p></div>
@@ -141,6 +136,8 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
           </div>
         </section>}
 
+    <section className="workspace-dashboard-quick-actions" aria-label="开始创作">{quickActions.map(({ id, title, description, Icon, tone }) => <button type="button" className={`workspace-dashboard-quick-card workspace-dashboard-tone-${tone}`} key={id} onClick={() => useTool(id)}><span className="workspace-dashboard-quick-icon"><Icon size={23} aria-hidden="true" /></span><span className="workspace-dashboard-quick-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="workspace-dashboard-quick-arrow" size={16} aria-hidden="true" /></button>)}</section>
+
         <section className="workspace-dashboard-library" aria-labelledby="workspace-dashboard-works-title">
           <div className="workspace-dashboard-section-heading"><h2 id="workspace-dashboard-works-title">我的作品<span>{stats.workCount}</span></h2><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>管理全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>
           <div className="workspace-dashboard-library-toolbar"><div className="workspace-dashboard-kind-tabs" role="group" aria-label="作品类型">{kinds.map(value => <button type="button" key={value} aria-pressed={kind === value} className={kind === value ? 'workspace-dashboard-kind-active' : ''} onClick={() => setKind(value)}>{value}</button>)}</div><div className="workspace-dashboard-library-controls"><label className="workspace-dashboard-sort"><span className="workspace-dashboard-sr-only">作品排序</span><select aria-label="作品排序" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近编辑</option><option value="words">字数最多</option><option value="name">作品名称</option></select></label><div className="workspace-dashboard-view-toggle" role="group" aria-label="作品展示方式"><button type="button" aria-label="卡片视图" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={16} aria-hidden="true" /></button><button type="button" aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17} aria-hidden="true" /></button></div></div></div>
@@ -149,15 +146,15 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
             <div className={`workspace-dashboard-works workspace-dashboard-works-${view}`}>
               {shownWorks.map(work => <DashboardWork key={work.id} work={work} view={view} onOpen={() => open(work)} onManage={() => setModal({ type: 'work-details', work })} />)}
             </div>
-            {list.length > shownWorks.length && <div className="workspace-dashboard-more-works"><span>显示 {shownWorks.length} 部，共 {list.length} 部作品</span><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>}
+            {otherWorks.length > shownWorks.length && <div className="workspace-dashboard-more-works"><span>显示 {shownWorks.length} 部，共 {otherWorks.length} 部其他作品</span><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>}
           </> : <div className="workspace-dashboard-empty">
             <span className="workspace-dashboard-empty-icon"><BookOpen size={31} aria-hidden="true" /></span>
-            <h3>{stats.workCount === 0 ? '你的第一部作品，从这里开始' : `还没有${kind}作品`}</h3>
-            <p>{stats.workCount === 0 ? '新建小说，或导入已有的 TXT 文稿，把想法写成故事。' : '换一个分类，接着上一次的灵感继续写。'}</p>
+            <h3>{stats.workCount === 0 ? '你的第一部作品，从这里开始' : list.length ? '当前作品已在上方展示' : `还没有${kind}作品`}</h3>
+            <p>{stats.workCount === 0 ? '新建小说，或导入已有的 TXT 文稿，把想法写成故事。' : list.length ? '继续上面的作品，或前往书架查看全部作品。' : '换一个分类，接着上一次的灵感继续写。'}</p>
             <div>{stats.workCount === 0 ? <>
               <button type="button" className="workspace-dashboard-primary-button" onClick={create}><Plus size={15} aria-hidden="true" />新建小说</button>
               {typeof onImport === 'function' && <button type="button" className="workspace-dashboard-secondary-button" onClick={onImport}><Upload size={15} aria-hidden="true" />导入文稿</button>}
-            </> : <button type="button" className="workspace-dashboard-secondary-button" onClick={() => setKind('全部')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button>}</div>
+            </> : <button type="button" className="workspace-dashboard-secondary-button" onClick={() => list.length ? navigate('works') : setKind('全部')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button>}</div>
           </div>}
         </section>
 

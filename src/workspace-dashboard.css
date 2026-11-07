@@ -343,3 +343,24 @@
   .workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 15px; }
   .workspace-dashboard .workspace-dashboard-quick-copy > span { font-size: 12px; }
 }
+
+/* Return to writing first; keep secondary actions compact and easy to scan. */
+.workspace-dashboard .workspace-dashboard-resume { margin: 0 0 18px; padding: 20px; background: #fff; }
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-section-heading h2 { font-size: 21px; }
+.workspace-dashboard .workspace-dashboard-resume-card { min-height: 154px; border-color: #e4ece5; background: #f9fcf9; }
+.workspace-dashboard .workspace-dashboard-resume-card .workspace-dashboard-cover .book-cover { width: 90px; height: 128px; }
+.workspace-dashboard .workspace-dashboard-resume-info > strong { font-size: 20px; }
+.workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
+.workspace-dashboard .workspace-dashboard-quick-card { flex-direction: row; align-items: center; justify-content: flex-start; min-height: 94px; padding: 16px 19px; }
+.workspace-dashboard .workspace-dashboard-quick-icon { width: 40px; height: 40px; }
+.workspace-dashboard .workspace-dashboard-quick-copy strong { font-size: 16px; }
+.workspace-dashboard .workspace-dashboard-quick-arrow { display: block; }
+.workspace-dashboard .workspace-dashboard-empty { min-height: 150px; padding: 22px; }
+.workspace-dashboard .workspace-dashboard-empty-icon { width: 42px; height: 42px; margin-bottom: 8px; border-radius: 12px; }
+.workspace-dashboard .workspace-dashboard-empty-icon svg { width: 23px; height: 23px; }
+.workspace-dashboard .workspace-dashboard-empty > div { margin-top: 12px; }
+@media (max-width: 680px) {
+ .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: 1fr; }
+ .workspace-dashboard .workspace-dashboard-quick-card { min-height: 72px; padding: 12px 15px; }
+ .workspace-dashboard .workspace-dashboard-resume-card .workspace-dashboard-cover .book-cover { width: 75px; height: 110px; }
+}

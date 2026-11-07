@@ -1,16 +1,9 @@
 import React, { useId, useMemo, useState } from 'react';
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, Lightbulb, ListChecks, MessagesSquare, Plus, ScanText, Target, Type, X } from 'lucide-react';
-import { tools } from './data.js';
+import { Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, ListChecks, Plus, Target, X } from 'lucide-react';
 import { newId } from './works.js';
 import { buildWorkspaceActivityDays, MAX_TASK_TEXT_LENGTH, MAX_WORKSPACE_TASKS, normalizeWorkspaceTasks, shiftWorkspaceMonth, toActivityDate, workspaceCalendarCells, workspaceSnapshotStats } from './workspaceActivity.mjs';
 import './workspace-insights.css';
 
-const shortcuts = [
-  { id: 'ideas', label: '灵感生成', Icon: Lightbulb, tone: 'amber' },
-  { id: 'title', label: '书名与简介', Icon: Type, tone: 'green' },
-  { id: 'dialogue', label: '对白打磨', Icon: MessagesSquare, tone: 'purple' },
-  { id: 'review', label: '章节审稿', Icon: ScanText, tone: 'blue' },
-];
 const monthLabel = month => `${Number(month.slice(0, 4))} 年 ${Number(month.slice(5))} 月`;
 const dayLabel = cell => {
   const date = cell.date.replace(/^(\d+)-(\d+)-(\d+)$/, (_, year, month, day) => `${Number(year)}年${Number(month)}月${Number(day)}日`);
@@ -18,7 +11,7 @@ const dayLabel = cell => {
   return `${date}：${sources.length ? sources.join('；') : '无已记录活动或已知作品日期'}`;
 };
 
-export default function WorkspaceInsights({ works = [], activity = [], tasks = [], onTasksChange, navigate, setModal, notify = () => {} }) {
+export default function WorkspaceInsights({ works = [], activity = [], tasks = [], onTasksChange, notify = () => {} }) {
   const [today] = useState(() => toActivityDate(new Date().toISOString()));
   const [month, setMonth] = useState(() => today.slice(0, 7));
   const [selectedDay, setSelectedDay] = useState(null);
@@ -114,16 +107,5 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
       {taskList.length >= MAX_WORKSPACE_TASKS && <p className="wi-card-note">已达到 100 个任务的上限，可移除不再需要的任务。</p>}
     </section>
 
-    <section className="wi-growth"><div><h2>写作成长计划</h2><p>提升写作能力，让故事更精彩</p></div><button type="button" aria-label="查看写作课堂" disabled={typeof navigate !== 'function'} onClick={() => navigate('learn')}><ArrowUpRight size={18} /></button></section>
-
-    <section className="wi-card wi-tools" aria-labelledby={`${taskInputId}-tools`}>
-      <details><summary className="wi-details-summary"><span id={`${taskInputId}-tools`}>常用工具</span><span>展开</span></summary>
-      <header className="wi-heading"><h2>常用工具</h2>{typeof navigate === 'function' && <button type="button" className="wi-all-tools" onClick={() => navigate('tools')}>全部工具<ArrowUpRight size={13} /></button>}</header>
-      <div className="wi-shortcuts">{shortcuts.map(({ id, label, Icon, tone }) => {
-        const tool = tools.find(item => item.id === id);
-        return <button type="button" key={id} aria-label={`打开${label}`} disabled={!tool || typeof setModal !== 'function'} onClick={() => setModal({ type: 'tool', tool })}><span className={`wi-shortcut-icon wi-tone-${tone}`}><Icon size={17} aria-hidden="true" /></span><span>{label}</span></button>;
-      })}</div>
-      </details>
-    </section>
   </div>;
 }

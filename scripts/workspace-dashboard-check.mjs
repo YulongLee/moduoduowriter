@@ -65,7 +65,7 @@ try {
   const cards = () => renderer.root.findAll(node => node.type === 'article' && node.props.className?.startsWith('workspace-dashboard-work '));
   const tabs = () => renderer.root.findByProps({ 'aria-label': '作品类型' });
   await mount();
-  assert.equal(cards().length, 4);
+  assert.equal(cards().length, 3);
   assert(!text(renderer.toJSON()).includes(deleted.title));
   assert(text(renderer.toJSON()).includes('测试作者'));
   const layout = renderer.root.findByProps({ className: 'workspace-dashboard-layout' });
@@ -76,25 +76,18 @@ try {
   assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-right-rail', 'aria-label': '创作概览与计划' }).parent, layout);
 
   const actions = renderer.root.findByProps({ 'aria-label': '开始创作' }).findAllByType('button');
-  assert.equal(actions.length, 6);
+  assert.equal(actions.length, 3);
   await click(actions[0]);
   assert.deepEqual(modals.at(-1), { type: 'create', kind: '长篇小说' });
-  for (const [index, id] of [[1, 'outline'], [2, 'character']]) {
-    await click(actions[index]);
-    assert.equal(modals.at(-1).type, 'tool');
-    assert.equal(modals.at(-1).tool, tools.find(tool => tool.id === id), 'Quick actions must open the real tool object without running it');
-  }
-  await click(actions[3]);
-  assert.equal(modals.at(-1).type, 'home-conversation');
-  assert.match(modals.at(-1).initialPrompt, /世界观/);
-  await click(actions[4]);
+  await click(actions[1]);
   assert.equal(opened.at(-1), short, 'Writing opens the work with the latest real edit timestamp');
-  await click(actions[5]);
+  await click(actions[2]);
   assert.equal(routes.at(-1), 'conversation');
+  assert(!cards().some(card => text(card).includes(short.title)), 'The featured work should not repeat in the library');
   assert(!text(renderer.toJSON()).includes('刚刚'), 'Undated legacy display labels must not imply an actual edit time');
   await click(buttonByText(tabs(), '短篇'));
-  assert.equal(cards().length, 1);
-  assert(text(cards()[0]).includes(short.title));
+  assert.equal(cards().length, 0);
+  assert(text(renderer.toJSON()).includes('当前作品已在上方展示'));
   await click(buttonByText(tabs(), '剧本'));
   assert.equal(cards().length, 1);
   assert(text(cards()[0]).includes(script.title));
@@ -118,18 +111,19 @@ try {
   assert.equal(routes.at(-1), 'conversation');
 
   await mount([main], { openWork: undefined });
-  await click(renderer.root.findByProps({ 'aria-label': `打开作品：${main.title}` }));
+  await click(buttonByText(renderer.root, '继续写作'));
   assert.equal(routes.at(-1), `editor/${main.id}`);
   await click(buttonByText(tabs(), '短篇'));
   assert.equal(cards().length, 0);
   const filteredEmpty = renderer.root.findByProps({ className: 'workspace-dashboard-empty' });
   assert(text(filteredEmpty).includes('还没有短篇作品'));
   await click(buttonByText(filteredEmpty, '查看全部作品'));
-  assert.equal(cards().length, 1);
+  assert.equal(cards().length, 0);
+  assert(text(renderer.toJSON()).includes('当前作品已在上方展示'));
 
   await mount([]);
   assert.equal(cards().length, 0);
-  await click(renderer.root.findByProps({ 'aria-label': '开始创作' }).findAllByType('button')[4]);
+  await click(renderer.root.findByProps({ 'aria-label': '开始创作' }).findAllByType('button')[1]);
   assert.deepEqual(modals.at(-1), { type: 'create', kind: '长篇小说' }, 'Writing without a work should lead to creation');
   assert(text(renderer.toJSON()).includes('你的第一部作品，从这里开始'));
   assert(!text(renderer.toJSON()).includes('长街雾未散'), 'An empty account must not be filled with seed manuscripts');
@@ -139,7 +133,7 @@ try {
   assert.deepEqual(taskWrites, []);
   assert.deepEqual(activity, []);
   assert.equal(JSON.stringify(works), snapshot);
-  console.log('PASS dashboard real statistics, stable recency, type/word sorting, grid/list views, six quick actions, existing management/editor routes, top-aligned sidebar, account empty states and no automatic data/API writes');
+  console.log('PASS dashboard real statistics, stable recency, type/word sorting, grid/list views, three quick actions and no duplicated featured work, existing management/editor routes, top-aligned sidebar, account empty states and no automatic data/API writes');
 } finally {
   if (renderer) await act(async () => renderer.unmount());
   await server.close();

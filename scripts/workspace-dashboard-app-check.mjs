@@ -135,7 +135,7 @@ try {
 
   await go('workspace');
   const readOnlyActivity = clone(data('workspaceActivity')), readOnlyUpdatedAt = data('works')[0].updatedAt, beforeOpenPuts = putCount('workspaceActivity');
-  await click(byLabel(`打开作品：${createdTitle}`)); await settled();
+  await click(button(dashboard().findByProps({ 'aria-label': '继续创作' }), '继续写作')); await settled();
   assert.equal(byLabel('章节正文').props.value, '');
   assert.deepEqual(data('workspaceActivity'), readOnlyActivity, 'Opening an editor must not count as editing');
   assert.equal(data('works')[0].updatedAt, readOnlyUpdatedAt);
