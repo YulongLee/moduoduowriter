@@ -20,7 +20,6 @@ import { WorkDetailsDialog, ChapterManager, VersionDialog } from './WorkManageme
 import { VideoStudio, SubmissionDesk } from './StudioPages';
 import { AccountProvider,AccountAccess,PrivateAccountGate,canAccessPrivate,useAccount } from './Account';
 import {PublicHomeShell} from './PublicHome.jsx';
-import {SiteRegistration} from './SiteRegistration.jsx';
 import {HomeConversation} from './HomeConversation.jsx';
 import { WorkspaceProvider,WorkspaceStatus,useCollection,useWorkspace } from './Workspace.jsx';
 import {workspaceFeedback} from './workspaceFeedback.js';
@@ -216,7 +215,7 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
      {route === 'service-admin' && <ServiceAdmin/>}
      {!navItems.some(item => item.id === route) && !['video','service-admin','membership'].includes(route) && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity}/>}
      </>}
-     <footer className="page-footer"><div className="site-footer-summary"><span>墨多多</span><i/>让灵感落笔，让故事生长。</div><SiteRegistration/></footer>
+     <footer className="page-footer"><div className="site-footer-summary"><span>墨多多</span><i/>让灵感落笔，让故事生长。</div></footer>
     </main>
   </WorkbenchFrame>}
   {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal',modal.type==='home-conversation'&&'home-conversation-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" ref={modalElement} aria-label={modal.type === 'create' ? '新建作品' : '墨多多'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>

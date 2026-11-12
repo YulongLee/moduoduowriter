@@ -72,7 +72,9 @@ try{
   assert.equal(links[0].props.target,'_blank');assert.match(links[0].props.rel,/noopener/);assert.match(links[0].props.rel,/noreferrer/);
  };
  const assertUniqueNavigationIds=()=>{
-  assertRegistration(renderer.root.findByProps({className:'page-footer'}));
+  const workbenchFooter=renderer.root.findByProps({className:'page-footer'});
+  assert.equal(workbenchFooter.findAllByProps({'aria-label':'网站备案信息'}).length,0,'The private workbench footer must not show registration information');
+  assert.ok(text(workbenchFooter).includes('墨多多'),'Keep the workbench footer summary');
   const ids=renderer.root.findAll(node=>typeof node.type==='string'&&node.props.id).map(node=>node.props.id);
   assert.equal(new Set(ids).size,ids.length,'The landing and private workbench must not duplicate native DOM ids');
   assert.equal(renderer.root.findAll(node=>node.type==='aside'&&String(node.props.className||'').split(/\s+/).includes('sidebar')).length,1,'The private workbench must mount one navigation sidebar, independently of dashboard side panels');
@@ -115,6 +117,12 @@ try{
   const heading=publicMain().findAllByType('h1').map(text),sections=publicMain().findAllByType('section').map(node=>node.props['aria-label']||node.props.className||'');
   if(!publicHeading){publicHeading=heading;publicSections=sections;}else{assert.deepEqual(heading,publicHeading,'auth state must not replace the public homepage title');assert.deepEqual(sections,publicSections,'auth state must keep the same public homepage structure');}
  }
+ for(const route of ['workspace','works','novels','create','conversation','tools','workflows','dismantle','scripts','submit','learn','history','membership']){
+  await mount({state:member('alice'),hash:`#${route}`});
+  const footer=renderer.root.findByProps({className:'page-footer'});
+  assert.equal(footer.findAllByProps({'aria-label':'网站备案信息'}).length,0,`Private #${route} footer must not include registration`);
+ }
+ console.log('PASS registration remains on the public homepage and is absent from private workbench footers');
  // Account management is public-shell UI, not a reason to initialize the private workspace.
  await mount({state:member('alice')});assertPublic('member-before-account-dialog');
  const accountDraft='打开账号入口时保留的公开故事草稿';await change(publicMain().findByProps({'aria-label':'故事灵感输入'}),accountDraft);
