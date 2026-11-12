@@ -45,6 +45,7 @@ import './home.css';
 import './saas.css';
 import './editor.css';
 import './private-workbench.css';
+import './creation-inline.css';
 
 const iconMap = { BookOpen, Feather, Clapperboard, ScanText, Lightbulb, ListTree, UsersRound, WandSparkles, MessagesSquare, Type };
 const navItems = [
@@ -88,7 +89,7 @@ export function ApplicationRouter() {
 }
 
 export function WritingApp({initialModal=null,initialConversation=null,onReturnPublicHome}) {
- const billing=useBilling(),workspace=useWorkspace();
+ const billing=useBilling(),workspace=useWorkspace(),account=useAccount();
  const [route, setRoute] = useState(location.hash.slice(1) || 'home');
  const routeRef=useRef(route);routeRef.current=route;
  const conversationIntent=useRef(initialConversation);
@@ -101,8 +102,19 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const [submissions, setSubmissions] = useStored('mdd-submissions-v1', []);
  const [workspaceTasks,setWorkspaceTasks] = useStored('mdd-workspaceTasks-v1',[]);
  const [workspaceActivity,setWorkspaceActivity] = useStored('mdd-workspaceActivity-v1',[]);
- const [modal, setModalState] = useState(initialModal?.type==='create'?null:initialModal);
- const [creationDraft,setCreationDraft]=useState(()=>createWorkDraft(initialModal?.type==='create'?initialModal:{}));
+ const inlineTypes=['tool','workflow','quick-start','home-conversation','chapter-plan','story-memory','chapter-queue'];
+ const sessionKey=id=>`mdd-creation-session:${account?.spaceId||'local'}:${id}`;
+ const readInline=state=>{try{const id=state?.mddCreationPage;if(typeof id!=='string')return null;const value=JSON.parse(sessionStorage.getItem(sessionKey(id))||'null');return value?.route===location.hash.slice(1)&&inlineTypes.includes(value?.view?.type)?value:null;}catch{return null;}};
+ const restoreInline=state=>readInline(state)?.view||null;
+ const rememberInline=(id,view)=>{try{sessionStorage.setItem(sessionKey(id),JSON.stringify({route:location.hash.slice(1),view,creationDraft}));return true;}catch{return false;}};
+ const [creationView,setCreationView]=useState(()=>restoreInline(globalThis.history?.state)||(inlineTypes.includes(initialModal?.type)?initialModal:null));
+ const [inlineRecoveryError,setInlineRecoveryError]=useState(false);
+ const inlineHistoryEntry=useRef(Boolean(restoreInline(globalThis.history?.state))), creationViewRef=useRef(creationView);creationViewRef.current=creationView;
+ useEffect(()=>{const onPop=event=>{const saved=readInline(event.state);inlineHistoryEntry.current=Boolean(saved);setModalState(null);setCreationView(saved?.view||null);if(saved?.creationDraft)setCreationDraft(createWorkDraft(saved.creationDraft));};window.addEventListener('popstate',onPop);return()=>window.removeEventListener('popstate',onPop);},[]);
+ useEffect(()=>{if(creationView && !inlineHistoryEntry.current && globalThis.history?.pushState){const id=uid();if(rememberInline(id,creationView)){history.pushState({...history.state,mddCreationPage:id},'',location.href);inlineHistoryEntry.current=true;}else setInlineRecoveryError(true);}},[]);
+ const closeCreation=()=>{if(inlineHistoryEntry.current && globalThis.history?.back){inlineHistoryEntry.current=false;setCreationView(null);history.back();}else setCreationView(null);};
+ const [modal, setModalState] = useState(initialModal?.type==='create'||inlineTypes.includes(initialModal?.type)?null:initialModal);
+ const [creationDraft,setCreationDraft]=useState(()=>createWorkDraft(readInline(globalThis.history?.state)?.creationDraft||(initialModal?.type==='create'?initialModal:{})));
  const creationReturn=useRef('works');
  const [videoHandoff,setVideoHandoff]=useState(null),[submissionWorkId,setSubmissionWorkId]=useState('');const [workspaceRevision,setWorkspaceRevision]=useState(0);
  const initialBillingNavigation=useRef(billing?.navigationKey);
@@ -116,16 +128,16 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const notify = message => { setToast(message); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 3200); };
  const navigate = id => {
   if(id==='create'&&routeRef.current!=='create')creationReturn.current=['workspace','works','novels','scripts','tools','workflows','dismantle','learn','history','submit','membership','conversation'].includes(routeRef.current)?routeRef.current:'works';
-  if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId('');setModalState(null);location.hash='#'+id;setRoute(id);window.scrollTo(0,0);
+  inlineHistoryEntry.current=false;setCreationView(null);if(id!=='video')setVideoHandoff(null);if(id!=='submit')setSubmissionWorkId('');setModalState(null);location.hash='#'+id;setRoute(id);window.scrollTo(0,0);
  };
  const setModal=value=>{
   const next=typeof value==='function'?value(modal):value;
   if(next?.type==='create'){
    setCreationDraft(previous=>createWorkDraft({...previous,...next}));
    navigate('create');
-  }else setModalState(next);
+  }else if(inlineTypes.includes(next?.type)){if(!creationViewRef.current && globalThis.history?.pushState){const id=uid();if(rememberInline(id,next)){history.pushState({...history.state,mddCreationPage:id},'',location.href);inlineHistoryEntry.current=true;}else setInlineRecoveryError(true);}else if(inlineHistoryEntry.current && typeof globalThis.history?.state?.mddCreationPage==='string' && !rememberInline(history.state.mddCreationPage,next))setInlineRecoveryError(true);setModalState(null);setCreationView(next);window.scrollTo?.(0,0);}else setModalState(next);
  };
- useEffect(() => { const change = () => {const next=location.hash.slice(1)||'home';if(next!==routeRef.current){setRoute(next);setModal(null);}window.scrollTo(0,0);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
+ useEffect(() => { const change = () => {const next=location.hash.slice(1)||'home';if(next!==routeRef.current){setRoute(next);setModal(null);const saved=readInline(globalThis.history?.state);setCreationView(saved?.view||null);inlineHistoryEntry.current=Boolean(saved);if(saved?.creationDraft)setCreationDraft(createWorkDraft(saved.creationDraft));}window.scrollTo(0,0);};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[]);
  useEffect(() => { const onKey = event => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setModal({ type:'search' }); } if (event.key === 'Escape') { setModal(null); } }; window.addEventListener('keydown',onKey); return () => window.removeEventListener('keydown',onKey); }, []);
  useEffect(() => {
   if(!modal) return;
@@ -169,11 +181,22 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
  const common = { works, navigate, setModal, notify, favorites, authenticated:true,onRequireAccount:action=>action(),openVideo,openSubmission, toggleFavorite, createWork, onImport:() => importRef.current.click(), trashWorks, onRestoreWork:work=>{updateWork({...work,deletedAt:undefined});notify('作品已恢复到书架');} };
  const currentWork = route.startsWith('editor/') && works.find(work => work.id === route.split('/')[1]);
  const modalWork=allWorks.find(work=>work.id===modal?.workId&&!work.deletedAt)||currentWork;
+ const creationWork=allWorks.find(work=>work.id===creationView?.workId&&!work.deletedAt)||currentWork;
  return <>
   {(workspace?Boolean(workspace.cacheError):workSaveError)&&<div className="storage-error-banner" role="alert"><FileText size={16}/><span>{workspace?.status==='saved'?'当前更改已保存到创作空间，但设备离线缓存未能更新。建议先导出备份。':'设备缓存未能更新，部分更改可能尚未保存。请保持页面打开并导出备份。'}</span>{currentWork&&<button onClick={()=>{downloadText(`${currentWork.title}.txt`,`${currentWork.title}\n\n${currentWork.chapters.map(ch=>`${ch.title}\n\n${ch.text}`).join('\n\n')}`);notify('当前作品已导出');}}>导出当前作品<Download size={14}/></button>}</div>}
   <input type="file" accept=".txt,text/plain" ref={importRef} className="hidden" onChange={importFile}/>
-  {currentWork ? <Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/> : <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
+  {currentWork && <div hidden={Boolean(creationView)}><Editor key={currentWork.id} work={currentWork} onChange={updateWork} onBack={() => navigate('works')} notify={notify} setModal={setModal} saveError={workSaveError} openVideo={openVideo} openSubmission={openSubmission}/></div>}
+  {(!currentWork || creationView) && <WorkbenchFrame publicView={route==='home'} items={navItems} route={route} navigate={navigate} setModal={setModal} dialogOpen={Boolean(modal)} onSearch={() => {setSearch(''); setModal({type:'search'});}}>
     <main className={cn("main-content",(route==='home'||route==='tools')&&"market-content",route==='home'&&"home-content",route==='workspace'&&'dashboard-content',route==='works'&&'library-content',route==='create'&&'creation-content',route==='conversation'&&'conversation-content')} key={`${route}-${workspaceRevision}`}>
+     {creationView ? <section className="creation-inline" aria-label="创作工作区"><header className="creation-inline-header"><button type="button" className="creation-inline-back" onClick={closeCreation}><ArrowLeft size={17}/>返回</button><div><h1>{creationView.type==='tool'?'创作工具':creationView.type==='workflow'?'创作工作流':creationView.type==='quick-start'?'创作规划':creationView.type==='chapter-plan'?'章节规划':creationView.type==='story-memory'?'故事记忆':creationView.type==='chapter-queue'?'章节创作队列':'创作对话'}</h1><p>在这里整理想法，继续你的创作。</p></div></header><div className="modal creation-inline-body">{inlineRecoveryError&&<p role="status">当前浏览器无法保留页面入口，刷新前请先保存或复制正在创作的内容。</p>}
+      {creationView.type==='tool' && <ToolDialog key={creationView.tool.id} getWork={id=>worksRef.current.find(work=>work.id===id&&!work.deletedAt)} tool={creationView.tool} works={works} onFavorite={()=>toggleFavorite(creationView.tool.id)} favorite={favorites.includes(creationView.tool.id)} initial={creationView} createWork={createWork} notify={notify} setModal={setModal} onChange={updateWork}/>}
+      {creationView.type==='workflow' && <WorkflowDialog key={creationView.flow.id} flow={creationView.flow} works={works} getWork={id=>worksRef.current.find(work=>work.id===id&&!work.deletedAt)} createWork={createWork} initial={creationView} onChange={updateWork} setModal={setModal} notify={notify}/>}
+      {creationView.type==='quick-start' && <QuickStartDialog initial={creationView} initialPlanning={creationView.creationPlanning} createWork={payload=>createWork(route==='create'?{...payload,description:creationDraft.description,styles:creationDraft.styles,templateId:creationDraft.templateId,notes:creationDraft.notes}:payload)}/>}
+      {creationView.type==='home-conversation' && <HomeConversation works={works} work={null} initialPrompt={creationView.initialPrompt||''} setModal={setModal} notify={notify}/>}
+      {creationView.type==='chapter-plan' && creationWork && <ChapterPlanner work={creationWork} initialPlans={creationView.plans} onChange={updateWork} notify={notify} onClose={closeCreation} onOpenQueue={work=>setModal({type:'chapter-queue',workId:work.id})}/>}
+      {creationView.type==='story-memory' && creationWork && <StoryMemoryPanel work={creationWork} initialExtraction={creationView.initialExtraction} extractionText={creationView.extractionText} chapterId={creationView.chapterId} onChange={updateWork} notify={notify}/>}
+      {creationView.type==='chapter-queue' && creationWork && <ChapterQueue work={creationWork} onChange={updateWork} notify={notify} onClose={closeCreation}/>}
+     </div></section> : <>
      {route === 'workspace' && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity} openWork={work=>navigate(`editor/${work.id}`)}/>}
      {route === 'create' && <CreateWorkPage draft={creationDraft} onDraftChange={setCreationDraft} onCreate={createWork} onCancel={()=>navigate(creationReturn.current)} onAI={startCreationAI}/>}
      {route === 'home' && <ReferenceHome {...common}/>}
@@ -191,23 +214,17 @@ export function WritingApp({initialModal=null,initialConversation=null,onReturnP
      {route === 'membership' && <MembershipPage navigate={navigate}/>}
      {route === 'service-admin' && <ServiceAdmin/>}
      {!navItems.some(item => item.id === route) && !['video','service-admin','membership'].includes(route) && <WorkspaceDashboard {...common} tasks={workspaceTasks} onTasksChange={setWorkspaceTasks} activity={workspaceActivity}/>}
+     </>}
      <footer className="page-footer"><div className="site-footer-summary"><span>墨多多</span><i/>让灵感落笔，让故事生长。</div><SiteRegistration/></footer>
     </main>
   </WorkbenchFrame>}
   {modal && <div className="modal-backdrop" onMouseDown={event => { if(event.target === event.currentTarget) setModal(null); }}><section className={cn('modal',modal.type === 'search' && 'search-modal',modal.type === 'workflow' && 'workflow-modal',modal.type === 'draft-review'&&'draft-review-modal',modal.type==='home-conversation'&&'home-conversation-modal', ['settings','chapters','versions','chapter-plan','story-memory','chapter-queue'].includes(modal.type)&&'wide-modal')} role="dialog" aria-modal="true" ref={modalElement} aria-label={modal.type === 'create' ? '新建作品' : '墨多多'}><button className="modal-close icon-button" aria-label="关闭" onClick={() => setModal(null)}><X size={20}/></button>
-   {modal.type === 'home-conversation' && <HomeConversation works={works} work={null} initialPrompt={modal.initialPrompt||''} setModal={setModal} notify={notify}/>}
    {modal.type === 'import' && <><h2>导入你的文稿</h2><p className="modal-desc">选择 TXT 文件，文稿将保存到当前创作空间。</p><button type="button" className="button primary full" onClick={()=>importRef.current?.click()}><Upload size={16}/>选择 TXT 文稿</button></>}
    {modal.type === 'settings' && <SettingsDialog works={allWorks} notify={notify} onRestore={data=>{setWorks(data.works);setFavorites(data.favorites);setSubmissions(data.submissions);setWorkspaceRevision(value=>value+1);}}/>}
    {modal.type === 'work-details' && <WorkDetailsDialog work={allWorks.find(w=>w.id===modal.work.id)||modal.work} onSave={work=>{updateWork(work);setModal(null);notify('作品资料已保存');}} onTrash={work=>{updateWork({...work,deletedAt:new Date().toISOString()});setModal(null);if(currentWork)navigate('works');notify('作品已移入回收站，可随时恢复');}}/>}
-   {modal.type === 'chapter-plan' && <ChapterPlanner work={allWorks.find(w=>w.id===modal.workId)||currentWork} initialPlans={modal.plans} onChange={updateWork} notify={notify} onClose={()=>setModal(null)} onOpenQueue={work=>setModal({type:'chapter-queue',workId:work.id})}/>}
-   {modal.type === 'story-memory' && modalWork && <StoryMemoryPanel work={modalWork} initialExtraction={modal.initialExtraction} extractionText={modal.extractionText} chapterId={modal.chapterId} onChange={updateWork} notify={notify}/>}
-   {modal.type === 'chapter-queue' && modalWork && <ChapterQueue work={modalWork} onChange={updateWork} notify={notify} onClose={()=>setModal(null)}/>}
    {modal.type === 'chapters' && <ChapterManager work={currentWork} chapterId={modal.chapterId} onChange={updateWork} notify={notify}/>}
    {modal.type === 'versions' && <VersionDialog work={currentWork} chapterId={modal.chapterId} onChange={updateWork} notify={notify}/>}
-   {modal.type === 'quick-start' && <QuickStartDialog initial={modal} initialPlanning={modal.creationPlanning} createWork={payload=>createWork(route==='create'?{...payload,description:creationDraft.description,styles:creationDraft.styles,templateId:creationDraft.templateId,notes:creationDraft.notes}:payload)}/>}
    {modal.type === 'draft-review' && <DraftReviewDialog {...modal}/>}
-   {modal.type === 'tool' && <ToolDialog getWork={id=>worksRef.current.find(work=>work.id===id&&!work.deletedAt)} tool={modal.tool} works={works} onFavorite={() => toggleFavorite(modal.tool.id)} favorite={favorites.includes(modal.tool.id)} initial={modal} createWork={createWork} notify={notify} setModal={setModal} onChange={updateWork}/>}
-   {modal.type === 'workflow' && <WorkflowDialog flow={modal.flow} works={works} getWork={id=>worksRef.current.find(work=>work.id===id&&!work.deletedAt)} createWork={createWork} initial={modal} onChange={updateWork} setModal={setModal} notify={notify}/>}
    {modal.type === 'search' && <><div className="search-dialog-input"><Search size={22}/><input autoFocus placeholder="查找你的作品、写作工具和工作流…" value={search} onChange={e => setSearch(e.target.value)}/><kbd>ESC</kbd></div><div className="search-results"><span className="eyebrow">{search ? '搜索结果' : '快速前往'}</span>{works.filter(w => !search || `${w.title}${w.genre}`.includes(search)).map(w => <button key={w.id} onClick={() => {setModal(null); navigate(`editor/${w.id}`);}}><BookOpen size={19}/><span>{w.title}<small>{w.kind} · {w.genre}</small></span><ArrowUpRight size={16}/></button>)}{tools.filter(t => search && `${t.title}${t.desc}`.includes(search)).map(t => <button key={t.id} onClick={() => setModal({type:'tool',tool:t})}><Icon name={t.icon} size={19}/><span>{t.title}<small>AI 工具 · {t.category}</small></span><ArrowUpRight size={16}/></button>)}{workflows.filter(f => search && `${f.title}${f.desc}`.includes(search)).map(f => <button key={f.id} onClick={() => setModal({type:'workflow',flow:f})}><Workflow size={19}/><span>{f.title}<small>创作工作流</small></span><ArrowUpRight size={16}/></button>)}{search && ![...works.map(w=>w.title+w.genre),...tools.map(t=>t.title+t.desc),...workflows.map(f=>f.title+f.desc)].some(t=>t.includes(search)) && <Empty title="还没有找到" text="试试作品名称，或搜索“大纲”“灵感”。"/>}</div></>}
    {modal.type === 'help' && <><div className="modal-symbol"><CircleHelp/></div><h2>让创作顺畅一点</h2><p className="modal-desc">几个小提示，帮你更快进入写作状态。</p><div className="help-items"><div><kbd>⌘ K</kbd><span>快速查找作品与工具</span></div><div><BookOpen size={18}/><span>在「我的作品」新建或导入 TXT 文稿</span></div><div><Download size={18}/><span>编辑器右上角可导出完整作品</span></div><div><CheckCheck size={18}/><span>作品自动保存到创作空间，并保留浏览器缓存，建议定期导出备份</span></div></div><button className="button primary full" onClick={() => setModal(null)}>知道了，继续创作</button></>}
    {modal.type === 'notifications' && <><div className="modal-symbol"><Bell/></div><h2>消息通知</h2><div className="notice-item"><span className="notice-dot"/><div><h4>欢迎来到你的创作空间</h4><p>三部示例作品和精选 AI 工具已准备好。打开一本，试着写下你的第一句话。</p><small>今天</small></div></div><div className="notice-item"><CheckCircle2 size={19}/><div><h4>你的文字会被好好保存</h4><p>当前作品自动保存到创作空间，保留浏览器缓存，随时可以导出 TXT 文稿。</p><small>创作提示</small></div></div></>}

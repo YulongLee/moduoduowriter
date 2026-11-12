@@ -7,7 +7,7 @@ import { collectionKeys } from '../src/workspace.js';
 
 // Full application with synthetic account-scoped collections and cache only.
 // Real files, production accounts, SMS/email, models and payments are prohibited.
-const names = ['fetch', 'window', 'document', 'location', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'IS_REACT_ACT_ENVIRONMENT'];
+const names = ['fetch', 'window', 'document', 'location', 'localStorage', 'sessionStorage', 'history', 'requestAnimationFrame', 'cancelAnimationFrame', 'IS_REACT_ACT_ENVIRONMENT'];
 const originals = new Map(names.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
 const listeners = new Map(), cache = new Map(), reads = [], writes = [], calls = [], failures = [], spaces = new Map();
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -19,8 +19,12 @@ const data = (name, id = auth.spaceId) => space(id)[name].data ?? [];
 const puts = name => calls.filter(call => call.url === `/api/data/${name}` && call.method === 'PUT').length;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 globalThis.localStorage = { getItem(key) { reads.push(key); return cache.get(key) ?? null; }, setItem(key, value) { writes.push(key); cache.set(key, value); }, removeItem(key) { cache.delete(key); } };
-globalThis.location = { get hash() { return hash; }, set hash(value) { const next = String(value).startsWith('#') ? String(value) : `#${value}`; if (next !== hash) { hash = next; queueMicrotask(() => { for (const listener of listeners.get('hashchange') || []) listener(); }); } } };
+globalThis.location = { get hash() { return hash; }, set hash(value) { const next = String(value).startsWith('#') ? String(value) : `#${value}`; if (next !== hash) { hash = next; globalThis.history?._hash?.(); queueMicrotask(() => { for (const listener of listeners.get('hashchange') || []) listener(); }); } } };
 globalThis.window = { innerWidth: 1440, addEventListener(type, listener) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(listener); }, removeEventListener(type, listener) { listeners.get(type)?.delete(listener); }, scrollTo() {}, matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
+const session = new Map();
+globalThis.sessionStorage = { getItem(key) { return session.get(key) ?? null; }, setItem(key, value) { session.set(key, String(value)); }, removeItem(key) { session.delete(key); } };
+let historyEntries=[null],historyIndex=0;
+globalThis.history = { _hash(){historyEntries=historyEntries.slice(0,historyIndex+1);historyEntries.push(null);historyIndex++;}, get state(){return historyEntries[historyIndex];}, pushState(state){historyEntries=historyEntries.slice(0,historyIndex+1);historyEntries.push(state);historyIndex++;}, back(){if(historyIndex>0){historyIndex--;queueMicrotask(()=>{for(const fn of listeners.get('popstate')||[])fn({state:historyEntries[historyIndex]});});}}, forward(){if(historyIndex<historyEntries.length-1){historyIndex++;queueMicrotask(()=>{for(const fn of listeners.get('popstate')||[])fn({state:historyEntries[historyIndex]});});}} };
 globalThis.document = { activeElement: null, body: { style: {} }, querySelector() { return null; }, querySelectorAll() { return []; }, getElementById() { return null; }, addEventListener() {}, removeEventListener() {}, createElement() { return { style: {}, click() {}, remove() {} }; } };
 globalThis.requestAnimationFrame = listener => setTimeout(listener, 0); globalThis.cancelAnimationFrame = clearTimeout;
 globalThis.fetch = async (url, options = {}) => {
@@ -52,7 +56,7 @@ try {
   const { ScriptDesk } = await vite.ssrLoadModule('/src/ScriptDesk.jsx');
   const { default: CreateWorkPage } = await vite.ssrLoadModule('/src/CreateWorkPage.jsx');
   const { creationTemplates } = await vite.ssrLoadModule('/src/createWork.mjs');
-  const { initialWorks, inspirations } = await vite.ssrLoadModule('/src/data.js');
+  const { initialWorks, inspirations, tools } = await vite.ssrLoadModule('/src/data.js');
   const text = node => typeof node === 'string' ? node : (node?.children || []).map(text).join('');
   const byLabel = label => renderer.root.findByProps({ 'aria-label': label });
   const button = (scope, label) => scope.findAllByType('button').find(node => node.props['aria-label'] === label || text(node).trim() === label || node.findAllByType('strong').some(strong => text(strong) === label));
@@ -101,7 +105,8 @@ try {
   assert.equal(byLabel('作品名称').props.value, title); assert.equal(byLabel('作品简介').props.value, description);
   const beforeAI = clone(creation().props.draft), activityBeforeAI = clone(data('workspaceActivity')), worksBeforeAI = clone(data('works'));
   await click(button(creation(), 'AI 帮我构思'));
-  const planning = renderer.root.findByProps({ role: 'dialog' });
+  const planning = renderer.root.findByProps({ 'aria-label': '创作工作区' });
+  assert.equal(renderer.root.findAllByProps({ role: 'dialog' }).length, 0);
   assert.ok(text(planning).includes('灵感') || text(planning).includes('规划'));
   const planNode = renderer.root.findAll(node => typeof node.type === 'function' && node.props.initial?.autoGenerate === false)[0];
   assert.ok(planNode, 'The AI action must explicitly disable automatic generation');
@@ -110,7 +115,15 @@ try {
   assert.deepEqual(planNode.props.initialPlanning,{title,outline:template.outline,characters:template.characters,text:''});
   assert.ok(planNode.findAllByType('input').some(node=>node.props.value===title),'The planning UI must actually display the author’s current title');
   await settled(); assert.deepEqual(data('works'), worksBeforeAI); assert.deepEqual(data('workspaceActivity'), activityBeforeAI); noGeneration();
-  await click(byLabel('关闭')); assert.equal(location.hash, '#create'); assert.deepEqual(creation().props.draft, beforeAI);
+  const recoveredPlanning=template.outline+'\n作者手写补充，刷新后必须保留'; await change(byLabel('初始创作规划'),recoveredPlanning); await settled();
+  const inlineState=history.state; assert.ok(inlineState?.mddCreationPage && !JSON.stringify(inlineState).includes(title), 'History must hold an opaque identifier, never story content');
+  await unmount(); await mount(member('alice'),'create');
+  assert.ok(byLabel('创作工作区')); assert.equal(byLabel('初始创作规划').props.value, recoveredPlanning, 'Reload restores the author’s saved planning draft');
+  await act(async()=>{history.back();await sleep(30);}); assert.equal(renderer.root.findAllByProps({'aria-label':'创作工作区'}).length,0);
+  await act(async()=>{history.forward();await sleep(30);}); assert.ok(byLabel('创作工作区')); assert.equal(byLabel('初始创作规划').props.value,recoveredPlanning,'Forward restores the author’s saved planning draft');
+  await unmount(); await mount(member('bob'),'create'); assert.equal(renderer.root.findAllByProps({'aria-label':'创作工作区'}).length,0,'Another account cannot restore an earlier account’s draft');
+  await unmount(); await mount(member('alice'),'create'); assert.ok(byLabel('创作工作区'));
+  await click(button(byLabel('创作工作区'),'返回')); assert.equal(location.hash, '#create'); assert.deepEqual(creation().props.draft, beforeAI);
 
   const beforeCreate = Date.now(), priorCreatePuts = puts('workspaceActivity'), form = creation().findByType('form');
   await act(async () => { const first = form.props.onSubmit({ preventDefault() {} }); form.props.onSubmit({ preventDefault() {} }); await first; }); await settled();
@@ -131,7 +144,7 @@ try {
   await click(button(creation(),'AI 帮我构思'));
   const manualOutline=aiTemplate.outline+'\n作者补充：主角在返航前主动公开一项证据。',manualProse='作者在规划窗口手写的开场，不来自模型。';
   await change(byLabel('初始创作规划'),manualOutline);await change(byLabel('开篇正文'),manualProse);
-  await click(button(renderer.root.findByProps({role:'dialog'}),'保存规划，进入编辑器'));await settled();
+  await click(button(renderer.root.findByProps({'aria-label':'创作工作区'}),'保存规划，进入编辑器'));await settled();
   const plannedWork=data('works').find(item=>item.title===aiTitle);assert.ok(plannedWork);assert.equal(data('works').length,2);
   assert.equal(plannedWork.description,aiDescription);assert.equal(plannedWork.templateId,aiTemplate.id);assert.deepEqual(plannedWork.styles,aiTemplate.styles);assert.equal(plannedWork.notes,aiTemplate.notes);assert.equal(plannedWork.outline,manualOutline);assert.equal(plannedWork.characters,aiTemplate.characters);assert.equal(plannedWork.kind,'剧本');assert.equal(plannedWork.chapters[0].text,manualProse);
   assert.equal(data('workspaceActivity').filter(entry=>entry.workId===plannedWork.id).length,1);noGeneration();
@@ -159,6 +172,28 @@ try {
   assert.ok(calls.slice(callStart).every(call => ['/api/auth/status', '/api/auth/methods'].includes(call.url)), 'Refreshing #create as a guest must not initialize private APIs');
   assert.ok(!reads.slice(readStart).some(key => /mdd-(works|workspaceActivity|workspaceTasks|planningDrafts)/.test(key)), 'The guest create route must not read any existing account manuscript/draft cache');
   assert.deepEqual(failures, []); noGeneration();
+  const editorFixture={id:'inline-editor-fixture',title:'页面返回测试',kind:'长篇小说',genre:'都市',chapters:[{id:'first',title:'第一章',text:'正文一'},{id:'second',title:'第二章',text:'正文二'}]};
+  space('alice').works.data=[editorFixture];space('alice').works.revision++;
+  await mount(member('alice'),'editor/inline-editor-fixture');
+  const chapterButton=renderer.root.findByProps({className:'chapter-list'}).findAllByType('button').find(node=>text(node).includes('第二章'));
+  await click(chapterButton);
+  let editorNode=renderer.root.findAll(node=>typeof node.type==='function'&&node.type.name==='Editor')[0]; assert.ok(editorNode);
+  await act(async()=>editorNode.props.setModal({type:'story-memory',workId:editorFixture.id,chapterId:'second'}));
+  assert.ok(byLabel('创作工作区'));assert.equal(renderer.root.findAll(node=>typeof node.type==='function'&&node.type.name==='Editor').length,1,'Editor stays mounted under the page');
+  await click(button(byLabel('创作工作区'),'返回')); await act(async()=>sleep(40));
+  const second=renderer.root.findByProps({className:'chapter-list'}).findAllByType('button').find(node=>text(node).includes('第二章'));assert.equal(second.props.className,'active','Returning keeps the selected unedited chapter');
+  console.log('PASS in-page creation preserves the mounted editor and the selected unedited chapter');
+  editorNode=renderer.root.findAll(node=>typeof node.type==='function'&&node.type.name==='Editor')[0];
+  await act(async()=>editorNode.props.setModal({type:'tool',tool:tools.find(t=>t.id==='polish'),workId:editorFixture.id,chapterId:'second'}));
+  await change(byLabel('工具创作需求'),'这是作者要求，预览关闭后仍需保留');
+  await act(async()=>editorNode.props.setModal({type:'draft-review',before:'正文二',candidate:'候选正文',task:'润色',onApply(){throw Error('Must not apply during a read-only test');}}));
+  assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,1); await click(byLabel('关闭'));
+  assert.equal(byLabel('工具创作需求').props.value,'这是作者要求，预览关闭后仍需保留');
+  await act(async()=>editorNode.props.setModal({type:'draft-review',before:'正文二',candidate:'候选正文',task:'润色',onApply(){throw Error('Must not apply during a read-only test');}}));
+  await act(async()=>{history.back();await sleep(40);});
+  assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,0,'Back closes the old confirmation');assert.equal(renderer.root.findAllByProps({'aria-label':'创作工作区'}).length,0);
+  console.log('PASS confirmation cancel preserves the tool draft, and browser back removes the stale confirmation');
+
   console.log('PASS inherited public idea/fallback cancel, memory-only per-account draft isolation and refreshed guest #create login boundary without private calls');
 } finally {
   if (renderer) await act(async () => renderer.unmount());

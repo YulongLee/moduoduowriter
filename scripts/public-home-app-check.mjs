@@ -291,11 +291,11 @@ try{
  await mount({state:member('alice')});
  assert.ok(cache.get('mdd-space:alice:mdd-works-v1').includes('ALICE_SECRET'),'the fast-mount regression starts with an existing account cache');
  await click(publicMain().findByProps({'aria-label':'体验故事大纲'}));
- assert.equal(location.hash,'#tools');assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,1);
- assert.equal(renderer.root.findAllByProps({'aria-label':'工具创作需求'}).length,1);assert.ok(text(renderer.root.findByProps({role:'dialog'})).includes('长篇大纲规划师'));
+ assert.equal(location.hash,'#tools');assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,0);assert.equal(renderer.root.findAllByProps({'aria-label':'创作工作区'}).length,1);
+ assert.equal(renderer.root.findAllByProps({'aria-label':'工具创作需求'}).length,1);assert.ok(text(renderer.root.findByProps({'aria-label':'创作工作区'})).includes('长篇大纲规划师'));
  const workspaceLoads=calls.filter(call=>call.url==='/api/data').length;
  await act(async()=>{for(const handler of listeners.get('hashchange')||[])handler();await sleep(20);});
- assert.equal(renderer.root.findAllByProps({role:'dialog'}).length,1,'a delayed hashchange for the current route must not clear the initial tool modal');
+ assert.equal(renderer.root.findAllByProps({'aria-label':'创作工作区'}).length,1,'a delayed hashchange for the current route must not clear the tool page');
  assert.equal(renderer.root.findAllByProps({'aria-label':'工具创作需求'}).length,1);assert.equal(calls.filter(call=>call.url==='/api/data').length,workspaceLoads);
  assert.ok(!calls.some(call=>call.url==='/api/generate'),'opening an initial tool modal does not execute the tool');
  await click(renderer.root.findByProps({'data-nav':'works'}));
