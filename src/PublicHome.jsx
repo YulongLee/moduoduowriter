@@ -52,7 +52,7 @@ export function PublicHomeShell({visible=true,onLaunch,onNavigate}) {
  const enterStudio=()=>requireAccount(()=>onNavigate('workspace'));
  const scrollTo=(label,id)=>{setActiveSection(label);const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';if(id){const target=document.getElementById(id);if(target?.tagName==='DETAILS')target.open=true;target?.scrollIntoView?.({behavior,block:'start'});}else window.scrollTo?.({top:0,behavior});};
  const openPublicDialog=type=>{triggerRef.current=globalThis.document?.activeElement;if(type==='demo')setDemoTab('outline');setDialog(type);};
- const sections=[['首页',''],['功能介绍','landing-features'],['创作案例','landing-examples'],['定价会员',null]];
+ const sections=[['首页',''],['功能介绍','landing-features'],['创作示例','landing-examples'],['会员方案（演示）',null]];
  const pageModal=options=>{if(options.type==='product-demo')openPublicDialog('demo');else if(['help','notifications'].includes(options.type))setDialog(options.type);else onLaunch(options);};
  const demoTabKey=(event,index)=>{let next;if(event.key==='ArrowRight')next=(index+1)%productDemoTabs.length;else if(event.key==='ArrowLeft')next=(index+productDemoTabs.length-1)%productDemoTabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=productDemoTabs.length-1;else return;event.preventDefault();const id=productDemoTabs[next].id;setDemoTab(id);demoTabRefs.current.get(id)?.focus?.();};
  return <div className="public-landing public-centered-shell" data-public-home="true" hidden={!visible}>

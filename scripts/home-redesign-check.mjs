@@ -60,6 +60,9 @@ try{
 
  // The public input may prepare a prompt; only explicit account-gated actions can enter private creation.
  const chatInput=byLabel('故事灵感输入'),chatForm=(()=>{let node=chatInput.parent;while(node&&node.type!=='form')node=node.parent;return node;})();assert.ok(chatForm);
+ assert.ok(text(byLabel('开始创作')).includes('开始创作'), 'The primary submit action must have a visible label');
+ assert.match(text(renderer.root),/未登录时需先登录/);
+ assert.match(text(renderer.root),/以下为原创预写示例/);
  const beforeBlank=pendingActions.length;await act(async()=>chatForm.props.onSubmit({preventDefault(){}}));assert.equal(pendingActions.length,beforeBlank);assert.equal(byLabel('故事灵感输入').props['aria-invalid'],true);assert.ok(text(renderer.root.findByProps({role:'alert'})).includes('先写下'));assert.equal(document.activeElement.label,'故事灵感输入');
  await click(byLabel('优化当前故事灵感'));assert.equal(pendingActions.length,beforeBlank,'Blank inspiration optimization must not open private creation');assert.equal(byLabel('故事灵感输入').props['aria-invalid'],true);assert.equal(document.activeElement.label,'故事灵感输入');
  const firstPending=pendingActions.length;
@@ -136,7 +139,7 @@ try{
  const gallery=renderer.root.findByProps({id:'landing-inspiration'});assert.equal(gallery.type,'details');assert.equal(gallery.findAllByType('button').length,6);
  for(const entry of gallery.findAllByType('button')){await click(entry);assert.equal(byLabel('故事灵感输入').props.value,text(entry.findByType('strong')));assert.equal(document.activeElement.label,'故事灵感输入');assert.equal(pendingActions.length,beforeExample);assert.equal(networkRequests.length,0,'Public inspiration gallery only fills a draft');}
  await change(byLabel('故事灵感输入'),'');
- await gated(()=>click(byLabel('添加参考资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
+ await gated(()=>click(byLabel('进入对话引用作品资料')));assert.equal(modal.type,'home-conversation');assert.equal(modal.initialPrompt,'');
  for(const [label,expected]of [['小说写作','novels'],['剧本创作','scripts'],['小说拆书','dismantle'],['投稿中心','submit']]){route=undefined;await gated(()=>click(button(renderer.root,label)));assert.equal(route,expected);}
  route=undefined;await gated(()=>click(button(renderer.root,'进入工具库')));assert.equal(route,'tools');route=undefined;await gated(()=>click(byLabel('进入创作空间').findByType('button')));assert.equal(route,'works');await gated(()=>click(button(renderer.root,'查看创作方案')));assert.equal(route,'membership');
  assert.equal(imports,0,'Supplying a private import callback must not cause the public page to inspect or import documents');
