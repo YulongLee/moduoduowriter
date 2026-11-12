@@ -35,7 +35,7 @@ try {
   assert.ok(m.hero && m.shortcuts && m.shelf && m.card,'Core regions and a synthetic work must be rendered');
   if(item.broken && width===1440) assert.ok(m.shortcuts.y < m.hero.y+m.hero.height-2,'Regression fixture reproduces the original horizontal layout collision');
   if(item.name==='作品') assert.ok(m.shortcuts.y>=m.hero.y+m.hero.height-2,`At ${width}px shortcuts must be below the header`);
-  if(item.name==='作品') assert.ok(m.shelf.y>=m.shortcuts.y+m.shortcuts.height-2,`At ${width}px works must be below the shortcuts`);
+  if(item.name==='作品') assert.ok(m.shortcuts.y>=m.shelf.y+m.shelf.height-2,`At ${width}px writing tools must follow the bookshelf`);
   if(item.name==='作品') assert.ok(m.card.width>=Math.min(210,width*.5),`At ${width}px work cards must not collapse into narrow vertical strips`);
   if(!item.broken) assert.ok(m.scroll<=m.viewport+2,`At ${width}px the document must not overflow horizontally`);
   if(item.name==='工作台' && width===500) {

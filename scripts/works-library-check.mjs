@@ -62,6 +62,10 @@ try {
   const pageRoot = renderer.root.findByProps({ className: 'works-library-view' });
   assert.ok(pageRoot.findAllByProps({ className: 'novel-library-hero' }).length === 1);
   assert.ok(pageRoot.findAllByProps({ className: 'novel-library-shortcuts', 'aria-label': '创作快捷入口' }).length === 1);
+  const pageSections = pageRoot.findByProps({ className: 'works-library-view' }).children.filter(node => typeof node !== 'string');
+  assert.ok(pageSections.findIndex(node => node.props.className === 'novel-library-shelf') < pageSections.findIndex(node => node.props.className === 'novel-library-more'), 'Bookshelf comes before secondary writing tools');
+  assert.equal(text(pageRoot.findByProps({ id: 'novel-library-shelf-title' })), '作品书架5');
+  assert.ok(button(pageRoot.findByProps({ className: 'novel-library-hero' }), '新建作品'), 'Create action is available at the top of the bookshelf');
   assert.equal(renderer.root.findAllByProps({ className: 'novel-library' }).length, 0, 'The page must not inherit the legacy novel-card grid layout');
   assert.equal(text(renderer.root.findByType('h1')), '我的作品');
   assert.deepEqual(workOrder(), [short.id, script.id, main.id, serial.id, undated.id], 'Recent sorting uses real ISO dates and leaves unknown dates at the end');
@@ -101,8 +105,8 @@ try {
   assert.equal(JSON.stringify(fixtures), snapshot, 'Filtering and sorting cannot mutate the input works');
   console.log('PASS crossing kind/status/search filters, actual facet counts, empty-filter reset, all three orders and grid/list controls');
 
-  const shortcuts = byLabel('创作快捷入口'); assert.equal(shortcuts.findAllByType('button').length, 5);
-  modal = undefined; await click(button(shortcuts, '新建小说')); assert.equal(modal.type, 'create'); assert.equal(modal.kind, '长篇小说'); assert.notEqual(modal.autoGenerate, true);
+  const shortcuts = byLabel('创作快捷入口'); assert.equal(shortcuts.findAllByType('button').length, 4);
+  modal = undefined; await click(button(pageRoot.findByProps({ className: 'novel-library-hero' }), '新建作品')); assert.equal(modal.type, 'create'); assert.equal(modal.kind, '长篇小说'); assert.notEqual(modal.autoGenerate, true);
   for (const [label, id] of [['生成大纲', 'outline'], ['人物设定', 'character']]) { modal = undefined; await click(button(shortcuts, label)); assert.deepEqual(modal, { type: 'tool', tool: tools.find(tool => tool.id === id) }); }
   await click(button(shortcuts, '世界观设定')); assert.equal(modal.type, 'home-conversation'); assert.match(modal.initialPrompt, /世界观/); assert.match(modal.initialPrompt, /规则/); assert.equal(modal.workId, undefined); assert.notEqual(modal.autoGenerate, true);
   await click(button(shortcuts, '灵感广场')); assert.equal(destination, 'tools');
@@ -118,7 +122,7 @@ try {
   }
   await click(byLabel('列表视图')); await click(byLabel(`管理${short.title}`)); assert.equal(modal.work, short); await click(byLabel(`导出${short.title}`)); assert.equal(downloads.at(-1).name, `${short.title}.txt`);
   assert.deepEqual(requests, []); assert.deepEqual(reads, []); assert.deepEqual(writes, []);
-  console.log('PASS five real quick actions, explicit creation/import, exact editor/manage targets and selected-work BOM TXT exports without auto-generation');
+  console.log('PASS four real quick actions, explicit creation/import, exact editor/manage targets and selected-work BOM TXT exports without auto-generation');
 
   await click(button(renderer.root, '回收站（1）')); assert.ok(text(renderer.root).includes(trashed.title));
   await click(byLabel(`恢复${trashed.title}`)); assert.equal(restored.length, 1); assert.equal(restored[0], trashed); assert.match(text(renderer.root), /回收站是空的/);
