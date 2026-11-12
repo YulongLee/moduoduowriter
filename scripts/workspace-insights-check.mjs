@@ -117,6 +117,15 @@ try {
   await mount(React.createElement(Harness));
   assert.match(text(renderer.root), /任务进度/);
   assert.match(text(renderer.root.findByProps({ className: 'wi-chart-empty' })), /近 7 天暂无活动记录/);
+  const calendarDetails = renderer.root.findByProps({ className: 'wi-card wi-calendar' }).findByType('details');
+  assert.equal(calendarDetails.props.open, true, 'Calendar is expanded by default');
+  assert.match(text(calendarDetails.findByType('summary')), /收起/);
+  await act(async () => calendarDetails.props.onToggle({ currentTarget: { open: false } }));
+  assert.equal(calendarDetails.props.open, false);
+  assert.match(text(calendarDetails.findByType('summary')), /展开/);
+  await act(async () => calendarDetails.props.onToggle({ currentTarget: { open: true } }));
+  assert.equal(calendarDetails.props.open, true);
+  assert.match(text(calendarDetails.findByType('summary')), /收起/);
   assert.equal(renderer.root.findAllByProps({ className: 'wi-card wi-tasks' }).length, 1, 'Reminders and task progress share one card');
   assert.equal(renderer.root.findAllByProps({ className: 'wi-card wi-goal' }).length, 0, 'No duplicate task progress card');
   assert.equal(renderer.root.findAllByProps({ 'aria-label': '写作任务完成进度' }).length, 0, 'An empty task list must not imply a numeric goal');

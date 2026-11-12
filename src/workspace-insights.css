@@ -185,3 +185,27 @@
   .workspace-insights .wi-stat>strong {font-size:20px;}
   .workspace-insights .wi-task-form>input {font-size:14px;}
 }
+
+/* The calendar uses the same seven columns for its headings and dates. */
+.workspace-insights .wi-calendar {padding:20px;}
+.workspace-insights .wi-calendar .wi-details-summary {min-height:26px;font-size:16px;color:#1d3025;}
+.workspace-insights .wi-calendar .wi-record-count {display:inline-flex;align-items:center;gap:10px;color:#64756b;}
+.workspace-insights .wi-calendar-toggle {display:inline-flex;align-items:center;gap:3px;color:#346c50;}
+.workspace-insights details[open] .wi-calendar-toggle svg {transform:rotate(180deg);}
+.workspace-insights .wi-calendar details[open]>.wi-details-summary {margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #edf1ed;}
+.workspace-insights .wi-month-controls {min-height:32px;margin:0 0 12px;}
+.workspace-insights .wi-month-controls>strong {font-size:14px;color:#263f31;}
+.workspace-insights .wi-month-controls>div {gap:2px;}
+.workspace-insights .wi-month-controls button {width:30px;height:30px;padding:0;}
+.workspace-insights .wi-month-controls .wi-current-month {width:auto;min-width:40px;font-size:12px;}
+.workspace-insights .wi-weekdays,.workspace-insights .wi-calendar-grid {width:100%;grid-template-columns:repeat(7,minmax(0,1fr));column-gap:5px;}
+.workspace-insights .wi-weekdays {align-items:center;margin:0 0 7px;font-weight:500;}
+.workspace-insights .wi-weekdays>span {display:grid;place-items:center;min-width:0;height:24px;}
+.workspace-insights .wi-calendar-grid {row-gap:5px;}
+.workspace-insights .wi-day,.workspace-insights .wi-empty-day {box-sizing:border-box;width:100%;height:32px;margin:0;}
+.workspace-insights .wi-day {font-size:13px;line-height:1;}
+.workspace-insights .wi-day-detail {margin-top:12px;}
+@media(max-width:600px) {
+ .workspace-insights .wi-calendar {padding:16px;}
+ .workspace-insights .wi-day,.workspace-insights .wi-empty-day {height:36px;}
+}

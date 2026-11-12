@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, FileText, ListChecks, Plus, X } from 'lucide-react';
+import { Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, ListChecks, Plus, X } from 'lucide-react';
 import { newId } from './works.js';
 import { buildWorkspaceActivityDays, MAX_TASK_TEXT_LENGTH, MAX_WORKSPACE_TASKS, normalizeWorkspaceTasks, shiftWorkspaceMonth, toActivityDate, workspaceCalendarCells, workspaceSnapshotStats } from './workspaceActivity.mjs';
 import './workspace-insights.css';
@@ -17,6 +17,7 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
   const todayRef = useRef(today);
   const [month, setMonth] = useState(() => today.slice(0, 7));
   const [selectedDay, setSelectedDay] = useState(null);
+  const [calendarOpen, setCalendarOpen] = useState(true);
   const [draft, setDraft] = useState(''), [taskError, setTaskError] = useState('');
   useEffect(() => {
     let timer;
@@ -106,7 +107,7 @@ export default function WorkspaceInsights({ works = [], activity = [], tasks = [
     </section>
 
     <section className="wi-card wi-calendar" aria-labelledby={`${taskInputId}-calendar`}>
-      <details><summary className="wi-details-summary"><span id={`${taskInputId}-calendar`}><CalendarDays size={17} aria-hidden="true" />创作日历</span><span className="wi-record-count">记录 {recordedDays} 天 · 展开</span></summary>
+      <details open={calendarOpen} onToggle={event => setCalendarOpen(event.currentTarget.open)}><summary className="wi-details-summary"><span id={`${taskInputId}-calendar`}><CalendarDays size={17} aria-hidden="true" />创作日历</span><span className="wi-record-count">记录 {recordedDays} 天 <span className="wi-calendar-toggle">{calendarOpen ? '收起' : '展开'}<ChevronDown size={14} aria-hidden="true" /></span></span></summary>
       <div className="wi-month-controls"><strong aria-live="polite">{monthLabel(month)}</strong><div><button type="button" aria-label="查看上个月的创作记录" onClick={() => changeMonth(-1)}><ChevronLeft size={16} /></button><button type="button" className="wi-current-month" aria-label="回到本月创作记录" disabled={month === today.slice(0, 7)} onClick={() => { setMonth(today.slice(0, 7)); setSelectedDay(null); }}>本月</button><button type="button" aria-label="查看下个月的创作记录" onClick={() => changeMonth(1)}><ChevronRight size={16} /></button></div></div>
       <div className="wi-weekdays" aria-hidden="true">{['一', '二', '三', '四', '五', '六', '日'].map(day => <span key={day}>{day}</span>)}</div>
       <div className="wi-calendar-grid" role="group" aria-label={`${monthLabel(month)}的已记录活动`}>
