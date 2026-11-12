@@ -96,7 +96,9 @@ globalThis.localStorage = { getItem() { browserReads++; throw Error('No browser 
 const vite = await createServer({ configFile: false, optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false }, appType: 'custom' });
 let renderer;
 try {
-  const { default: WorkspaceInsights } = await vite.ssrLoadModule('/src/WorkspaceInsights.jsx');
+  const { default: WorkspaceInsights, millisecondsToBeijingMidnight } = await vite.ssrLoadModule('/src/WorkspaceInsights.jsx');
+  assert.equal(millisecondsToBeijingMidnight(Date.parse('2026-11-30T15:59:59Z')), 1000);
+  assert.equal(millisecondsToBeijingMidnight(Date.parse('2026-11-30T16:00:00Z')), 86400000);
   let taskWrites = 0, taskSnapshot = [], modal, route;
   const updaters = [];
   const text = node => typeof node === 'string' ? node : (node?.children || []).map(text).join('');
@@ -113,6 +115,9 @@ try {
   }
 
   await mount(React.createElement(Harness));
+  assert.match(text(renderer.root), /任务进度/);
+  assert.match(text(renderer.root), /无记录不代表没有写作/);
+  assert.ok(renderer.root.findAll(node => node.props?.title?.includes('暂无活动记录')).length > 0);
   assert.equal(taskWrites, 0, 'Mounting a dashboard must not create default tasks or records');
   assert.match(text(renderer.root), /0 \/ 0 已完成/);
   assert.equal(renderer.root.findAllByType('input').filter(node => node.props.type === 'checkbox').length, 0);
@@ -181,6 +186,27 @@ try {
   assert.equal(renderer.root.findAllByProps({ 'data-active': true }).length, 1, 'Only real recorded activity appears in the recent chart');
   assert.equal(networkCalls, 0); assert.equal(browserReads, 0); assert.equal(browserWrites, 0);
   console.log('PASS known-date versus recorded-activity presentation and zero model/network/browser-storage access throughout');
+
+  await unmount();
+  const OriginalDate = globalThis.Date, originalSetTimeout = globalThis.setTimeout, originalClearTimeout = globalThis.clearTimeout;
+  let clock = Date.parse('2026-11-30T15:59:59Z'), scheduled, cancelled = 0;
+  try {
+    globalThis.Date = class extends OriginalDate { constructor(...args) { super(...(args.length ? args : [clock])); } static now() { return clock; } };
+    globalThis.setTimeout = (callback, delay) => { scheduled = { callback, delay }; return scheduled; };
+    globalThis.clearTimeout = timer => { if (timer) cancelled++; };
+    await mount(React.createElement(WorkspaceInsights, { works: [], tasks: [] }));
+    assert.match(text(renderer.root.findByProps({ className: 'wi-month-controls' }).findByType('strong')), /2026 年 11 月/);
+    assert.equal(scheduled.delay, 1100);
+    clock += 1100;
+    await act(async () => scheduled.callback());
+    assert.match(text(renderer.root.findByProps({ className: 'wi-month-controls' }).findByType('strong')), /2026 年 12 月/);
+    assert.ok(renderer.root.findAll(node => node.type === 'button' && node.props.title?.startsWith('2026年12月1日')).length);
+    await unmount();
+    assert.ok(cancelled >= 1, 'The rollover timer is cleared on unmount');
+  } finally {
+    globalThis.Date = OriginalDate; globalThis.setTimeout = originalSetTimeout; globalThis.clearTimeout = originalClearTimeout;
+  }
+  console.log('PASS Beijing midnight rollover refreshes current month and timer cleanup');
 } finally {
   if (renderer) await act(async () => renderer.unmount());
   await vite.close();

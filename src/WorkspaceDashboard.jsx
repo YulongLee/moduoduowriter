@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, BookOpen, ChevronRight, Clock3, Ellipsis, Feather, LayoutGrid, List, MessageCircle, PenLine, Plus, Sparkles, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronRight, Clock3, Ellipsis, Feather, LayoutGrid, List, MessageCircle, Plus, Sparkles, Upload } from 'lucide-react';
 import { useAccount } from './Account.jsx';
 import { BookCover } from './Art.jsx';
 import { tools, workWords, inspirations as inspirationExamples } from './data.js';
@@ -10,7 +10,7 @@ const kinds = ['全部', '长篇', '短篇', '剧本'];
 const kindValues = { 长篇: '长篇小说', 短篇: '短篇故事', 剧本: '剧本' };
 const quickActions = [
   { id: 'create', title: '新建小说', description: '从零开始一个故事', Icon: Plus, tone: 'primary' },
-  { id: 'write', title: '继续写作', description: '进入最近的作品', Icon: PenLine, tone: 'green' },
+  { id: 'import', title: '导入文稿', description: '继续创作已有故事', Icon: Upload, tone: 'green' },
   { id: 'chat', title: 'AI 帮我构思', description: '从灵感到创作方案', Icon: MessageCircle, tone: 'blue' },
 ];
 const ideaImages = ['/art/cover-fog.webp', '/art/hero-shanshui-v1.webp', '/art/cover-spring.webp'];
@@ -73,7 +73,7 @@ export function dashboardGreeting(date = new Date()) {
 function editedLabel(work) {
   const timestamp = dashboardEditedTime(work);
   if (timestamp !== null) return new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(timestamp));
-  return '尚未记录编辑时间';
+  return '尚未记录更新时间';
 }
 
 function DashboardWork({ work, view, onOpen, onManage }) {
@@ -108,9 +108,11 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
   const displayName = dashboardDisplayName(account?.user);
   const open = work => typeof openWork === 'function' ? openWork(work) : navigate(`editor/${work.id}`);
   const create = () => setModal({ type: 'create', kind: '长篇小说' });
+  const actions = typeof onImport === 'function' ? quickActions : quickActions.map(action => action.id === 'import' ? { id: 'tools', title: '创作工具', description: '探索更多写作工具', Icon: Sparkles, tone: 'green' } : action);
   const useTool = id => {
     if (id === 'create') return create();
-    if (id === 'write') return recentWork ? open(recentWork) : create();
+    if (id === 'import') return onImport();
+    if (id === 'tools') return navigate('tools');
     if (id === 'chat') return navigate('conversation');
     const tool = tools.find(item => item.id === id);
     if (tool) setModal({ type: 'tool', tool });
@@ -122,11 +124,10 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
       <div className="workspace-dashboard-main-column">
     <header className="workspace-dashboard-welcome">
       <div className="workspace-dashboard-welcome-copy"><p className="workspace-dashboard-eyebrow"><Feather size={14} aria-hidden="true" />我的创作空间</p><h1>{dashboardGreeting()}，{displayName}</h1><p className="workspace-dashboard-welcome-description">今天，想写一个什么故事？让每一次灵感，都有下文。</p></div>
-      {typeof onImport === 'function' && <button type="button" className="workspace-dashboard-import" onClick={onImport}><Upload size={15} aria-hidden="true" />导入文稿</button>}
     </header>
 
         {recentWork && <section className="workspace-dashboard-resume" aria-label="继续创作">
-          <div className="workspace-dashboard-section-heading"><h2>继续创作</h2><span>{dashboardEditedTime(recentWork) !== null ? `最近编辑 · ${editedLabel(recentWork)}` : '编辑时间未记录'}</span></div>
+          <div className="workspace-dashboard-section-heading"><h2>继续创作</h2><span>{dashboardEditedTime(recentWork) !== null ? `最近更新 · ${editedLabel(recentWork)}` : '更新时间未记录'}</span></div>
           <div className="workspace-dashboard-resume-card">
             <span className="workspace-dashboard-cover" aria-hidden="true"><BookCover work={recentWork}/></span>
             <div className="workspace-dashboard-resume-info"><strong>{recentWork.title || '未命名作品'}</strong><span className="workspace-dashboard-resume-tags">{recentWork.kind || '作品'}{recentWork.genre ? ` · ${recentWork.genre}` : ''}</span><p>{recentChapter?.title || '开始你的第一章'}</p></div>
@@ -136,14 +137,14 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
           </div>
         </section>}
 
-    <section className="workspace-dashboard-quick-actions" aria-label="开始创作">{quickActions.map(({ id, title, description, Icon, tone }) => <button type="button" className={`workspace-dashboard-quick-card workspace-dashboard-tone-${tone}`} key={id} onClick={() => useTool(id)}><span className="workspace-dashboard-quick-icon"><Icon size={23} aria-hidden="true" /></span><span className="workspace-dashboard-quick-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="workspace-dashboard-quick-arrow" size={16} aria-hidden="true" /></button>)}</section>
+    <section className="workspace-dashboard-quick-actions" aria-label="开始创作">{actions.map(({ id, title, description, Icon, tone }) => <button type="button" className={`workspace-dashboard-quick-card workspace-dashboard-tone-${tone}`} key={id} onClick={() => useTool(id)}><span className="workspace-dashboard-quick-icon"><Icon size={23} aria-hidden="true" /></span><span className="workspace-dashboard-quick-copy"><strong>{title}</strong><span>{description}</span></span><ChevronRight className="workspace-dashboard-quick-arrow" size={16} aria-hidden="true" /></button>)}</section>
 
         <section className="workspace-dashboard-library" aria-labelledby="workspace-dashboard-works-title">
-          <div className="workspace-dashboard-section-heading"><h2 id="workspace-dashboard-works-title">我的作品<span>{stats.workCount}</span></h2><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>管理全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>
-          <div className="workspace-dashboard-library-toolbar"><div className="workspace-dashboard-kind-tabs" role="group" aria-label="作品类型">{kinds.map(value => <button type="button" key={value} aria-pressed={kind === value} className={kind === value ? 'workspace-dashboard-kind-active' : ''} onClick={() => setKind(value)}>{value}</button>)}</div><div className="workspace-dashboard-library-controls"><label className="workspace-dashboard-sort"><span className="workspace-dashboard-sr-only">作品排序</span><select aria-label="作品排序" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近编辑</option><option value="words">字数最多</option><option value="name">作品名称</option></select></label><div className="workspace-dashboard-view-toggle" role="group" aria-label="作品展示方式"><button type="button" aria-label="卡片视图" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={16} aria-hidden="true" /></button><button type="button" aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17} aria-hidden="true" /></button></div></div></div>
+          <div className="workspace-dashboard-section-heading"><div><h2 id="workspace-dashboard-works-title">{recentWork ? '其他作品' : '我的作品'}<span>{Math.max(0, stats.workCount - (recentWork ? 1 : 0))}</span></h2>{recentWork && <p className="workspace-dashboard-library-note">当前作品已在上方展示 · 共 {stats.workCount} 部作品</p>}</div><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>
+          <div className="workspace-dashboard-library-toolbar"><div className="workspace-dashboard-kind-tabs" role="group" aria-label="作品类型">{kinds.map(value => <button type="button" key={value} aria-pressed={kind === value} className={kind === value ? 'workspace-dashboard-kind-active' : ''} onClick={() => setKind(value)}>{value}</button>)}</div><div className="workspace-dashboard-library-controls"><label className="workspace-dashboard-sort"><span className="workspace-dashboard-sr-only">作品排序</span><select aria-label="作品排序" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近更新</option><option value="words">字数最多</option><option value="name">作品名称</option></select></label><div className="workspace-dashboard-view-toggle" role="group" aria-label="作品展示方式"><button type="button" aria-label="卡片视图" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={16} aria-hidden="true" /></button><button type="button" aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17} aria-hidden="true" /></button></div></div></div>
 
           {shownWorks.length > 0 ? <>
-            <div className={`workspace-dashboard-works workspace-dashboard-works-${view}`}>
+            <div className={`workspace-dashboard-works workspace-dashboard-works-${view}${view === 'grid' && shownWorks.length === 2 ? ' workspace-dashboard-works-two' : ''}`}>
               {shownWorks.map(work => <DashboardWork key={work.id} work={work} view={view} onOpen={() => open(work)} onManage={() => setModal({ type: 'work-details', work })} />)}
             </div>
             {otherWorks.length > shownWorks.length && <div className="workspace-dashboard-more-works"><span>显示 {shownWorks.length} 部，共 {otherWorks.length} 部其他作品</span><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>}
@@ -154,11 +155,11 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
             <div>{stats.workCount === 0 ? <>
               <button type="button" className="workspace-dashboard-primary-button" onClick={create}><Plus size={15} aria-hidden="true" />新建小说</button>
               {typeof onImport === 'function' && <button type="button" className="workspace-dashboard-secondary-button" onClick={onImport}><Upload size={15} aria-hidden="true" />导入文稿</button>}
-            </> : <button type="button" className="workspace-dashboard-secondary-button" onClick={() => list.length ? navigate('works') : setKind('全部')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button>}</div>
+            </> : <button type="button" className="workspace-dashboard-secondary-button" onClick={() => list.length ? navigate('works') : setKind('全部')}>{list.length ? '查看全部作品' : '清除筛选'}<ArrowRight size={14} aria-hidden="true" /></button>}</div>
           </div>}
         </section>
 
-        <section className="workspace-dashboard-ideas" aria-label="灵感广场"><div className="workspace-dashboard-section-heading"><h2>灵感广场</h2><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('tools')}>查看全部工具<ArrowRight size={14}/></button></div><p>从一个故事种子开始，找到你的下一次灵感。</p><div className="workspace-dashboard-idea-filters" role="group" aria-label="灵感题材">{['推荐', ...inspirations.map(item => item.genre)].map(value => <button type="button" key={value} aria-pressed={ideaGenre===value} onClick={()=>setIdeaGenre(value)}>{value}</button>)}</div><div className="workspace-dashboard-idea-grid">{inspirations.filter(item=>ideaGenre==='推荐'||item.genre===ideaGenre).map(item=><button type="button" key={item.title} onClick={()=>setModal({type:'tool',tool:tools.find(tool=>tool.id==='ideas'),prompt:item.prompt})}><span style={{backgroundImage:`url(${item.image})`}}/><small>{item.genre} · 原创示例</small><strong>{item.title}</strong><em>以此构思 <ArrowRight size={13}/></em></button>)}</div><button type="button" className="workspace-dashboard-ideas-chat" onClick={()=>navigate('conversation')}><Sparkles size={16}/>开启创作对话<ArrowRight size={15}/></button></section>
+        <section className="workspace-dashboard-ideas" aria-label="灵感广场"><div className="workspace-dashboard-section-heading"><h2>灵感广场</h2><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('tools')}>探索更多创作工具<ArrowRight size={14}/></button></div><p>从一个故事种子开始，找到你的下一次灵感。</p><div className="workspace-dashboard-idea-filters" role="group" aria-label="灵感题材">{['推荐', ...inspirations.map(item => item.genre)].map(value => <button type="button" key={value} aria-pressed={ideaGenre===value} onClick={()=>setIdeaGenre(value)}>{value}</button>)}</div><div className="workspace-dashboard-idea-grid">{inspirations.filter(item=>ideaGenre==='推荐'||item.genre===ideaGenre).map(item=><button type="button" key={item.title} onClick={()=>setModal({type:'tool',tool:tools.find(tool=>tool.id==='ideas'),prompt:item.prompt})}><span style={{backgroundImage:`url(${item.image})`}}/><small>{item.genre} · 原创示例</small><strong>{item.title}</strong><em>以此构思 <ArrowRight size={13}/></em></button>)}</div><button type="button" className="workspace-dashboard-ideas-chat" onClick={()=>navigate('conversation')}><Sparkles size={16}/>开启创作对话<ArrowRight size={15}/></button></section>
       </div>
       <aside className="workspace-dashboard-right-rail" aria-label="创作概览与计划">{rightRail ?? <WorkspaceInsights works={works} activity={activity} tasks={tasks} onTasksChange={onTasksChange} navigate={navigate} setModal={setModal} notify={notify} />}</aside>
     </div>

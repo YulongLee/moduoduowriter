@@ -359,6 +359,10 @@
 .workspace-dashboard .workspace-dashboard-empty-icon { width: 42px; height: 42px; margin-bottom: 8px; border-radius: 12px; }
 .workspace-dashboard .workspace-dashboard-empty-icon svg { width: 23px; height: 23px; }
 .workspace-dashboard .workspace-dashboard-empty > div { margin-top: 12px; }
+.workspace-dashboard .workspace-dashboard-library-note { margin-top: 4px; color: #69766f; font-size: 12px; line-height: 1.5; }
+@media (min-width: 681px) {
+ .workspace-dashboard .workspace-dashboard-works-grid.workspace-dashboard-works-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 680px) {
  .workspace-dashboard .workspace-dashboard-quick-actions { grid-template-columns: 1fr; }
  .workspace-dashboard .workspace-dashboard-quick-card { min-height: 72px; padding: 12px 15px; }
