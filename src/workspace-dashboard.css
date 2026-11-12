@@ -368,3 +368,84 @@
  .workspace-dashboard .workspace-dashboard-quick-card { min-height: 72px; padding: 12px 15px; }
  .workspace-dashboard .workspace-dashboard-resume-card .workspace-dashboard-cover .book-cover { width: 75px; height: 110px; }
 }
+
+/* A quiet, book-first dashboard: the landscape introduces a single aligned work area. */
+.workspace-dashboard .workspace-dashboard-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  column-gap: 24px;
+  row-gap: 0;
+}
+.workspace-dashboard .workspace-dashboard-welcome {
+  grid-column: 1 / -1;
+  min-height: 164px;
+  padding: 24px 10px 30px;
+}
+.workspace-dashboard .workspace-dashboard-welcome::before {
+  width: min(72%, 1080px);
+  opacity: .78;
+}
+.workspace-dashboard .workspace-dashboard-right-rail { margin-top: 0; }
+.workspace-dashboard .workspace-dashboard-resume {
+  padding: 20px 22px;
+  border: 1px solid #dce9de;
+  background: linear-gradient(120deg, #ffffff 35%, #f4f9f4 100%);
+  box-shadow: 0 4px 18px #254a3209;
+}
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-section-heading {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.workspace-dashboard .workspace-dashboard-resume-card {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.workspace-dashboard .workspace-dashboard-resume-info { gap: 6px; }
+.workspace-dashboard .workspace-dashboard-resume-info p { font-size: 14px; }
+.workspace-dashboard .workspace-dashboard-resume-stat { min-width: 92px; }
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-primary-button {
+  min-height: 44px;
+  padding: 10px 20px;
+  border-color: #205d42;
+  background: #205d42;
+}
+.workspace-dashboard .workspace-dashboard-resume .workspace-dashboard-primary-button:hover { background: #174a33; }
+.workspace-dashboard .workspace-dashboard-quick-actions { gap: 12px; }
+.workspace-dashboard .workspace-dashboard-quick-card {
+  min-height: 86px;
+  border-color: #e2e9e2;
+  background: #fff;
+}
+.workspace-dashboard .workspace-dashboard-tone-primary { color: #203a2b; background: #f0f7f1; border-color: #d8e9dc; box-shadow: none; }
+.workspace-dashboard .workspace-dashboard-tone-primary:hover { background: #e8f3eb; border-color: #a8cbb1; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-icon { color: #1d6842; background: #dceee1; }
+.workspace-dashboard .workspace-dashboard-tone-primary .workspace-dashboard-quick-copy > span { color: #5b7062; }
+.workspace-dashboard .workspace-dashboard-quick-arrow { color: #748c7b; }
+.workspace-dashboard .workspace-dashboard-library,
+.workspace-dashboard .workspace-dashboard-ideas { padding: 20px 22px; }
+.workspace-dashboard .workspace-dashboard-text-link { font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-kind-tabs > button,
+.workspace-dashboard .workspace-dashboard-sort select { font-size: 13px; }
+.workspace-dashboard .workspace-dashboard-work-bottom > span { color: #697970; font-size: 12px; }
+.workspace-dashboard .workspace-dashboard-work-grid { box-shadow: none; }
+.workspace-dashboard .workspace-dashboard-works-one { grid-template-columns: minmax(0, 480px); }
+.workspace-dashboard .workspace-dashboard-ideas { margin-top: 18px; }
+.workspace-dashboard .workspace-dashboard-idea-grid > button { background: #f8faf8; padding-bottom: 12px; }
+.workspace-dashboard .workspace-dashboard-idea-grid > button > span { height: 92px; }
+.workspace-dashboard .workspace-dashboard-idea-grid strong { font-size: 14px; }
+@media (max-width: 1100px) {
+  .workspace-dashboard .workspace-dashboard-layout { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .workspace-dashboard .workspace-dashboard-right-rail { margin-top: 18px; }
+}
+@media (max-width: 680px) {
+  .workspace-dashboard .workspace-dashboard-welcome { min-height: 138px; padding: 20px 4px 25px; }
+  .workspace-dashboard .workspace-dashboard-welcome::before { width: 88%; opacity: .4; }
+  .workspace-dashboard .workspace-dashboard-resume,
+  .workspace-dashboard .workspace-dashboard-library,
+  .workspace-dashboard .workspace-dashboard-ideas { padding: 16px; }
+  .workspace-dashboard .workspace-dashboard-resume-card { grid-template-columns: 75px minmax(0, 1fr); gap: 12px; }
+  .workspace-dashboard .workspace-dashboard-resume-stat { min-width: 0; }
+  .workspace-dashboard .workspace-dashboard-works-one { grid-template-columns: minmax(0, 1fr); }
+  .workspace-dashboard .workspace-dashboard-idea-grid > button > span { height: 76px; }
+}

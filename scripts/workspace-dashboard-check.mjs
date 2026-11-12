@@ -71,7 +71,7 @@ try {
   const layout = renderer.root.findByProps({ className: 'workspace-dashboard-layout' });
   const mainColumn = renderer.root.findByProps({ className: 'workspace-dashboard-main-column' });
   assert.equal(mainColumn.parent, layout);
-  assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-welcome' }).parent, mainColumn, 'The right rail starts beside the welcome, not underneath quick actions');
+  assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-welcome' }).parent, layout, 'The welcome spans the dashboard while the main content and insights align beneath it');
   assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-quick-actions', 'aria-label': '开始创作' }).parent, mainColumn);
   assert.equal(renderer.root.findByProps({ className: 'workspace-dashboard-right-rail', 'aria-label': '创作概览与计划' }).parent, layout);
 

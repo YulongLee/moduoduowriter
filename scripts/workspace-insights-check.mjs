@@ -116,6 +116,10 @@ try {
 
   await mount(React.createElement(Harness));
   assert.match(text(renderer.root), /任务进度/);
+  assert.match(text(renderer.root.findByProps({ className: 'wi-chart-empty' })), /近 7 天暂无活动记录/);
+  assert.equal(renderer.root.findAllByProps({ className: 'wi-card wi-tasks' }).length, 1, 'Reminders and task progress share one card');
+  assert.equal(renderer.root.findAllByProps({ className: 'wi-card wi-goal' }).length, 0, 'No duplicate task progress card');
+  assert.equal(renderer.root.findAllByProps({ 'aria-label': '写作任务完成进度' }).length, 0, 'An empty task list must not imply a numeric goal');
   assert.match(text(renderer.root), /无记录不代表没有写作/);
   assert.ok(renderer.root.findAll(node => node.props?.title?.includes('暂无活动记录')).length > 0);
   assert.equal(taskWrites, 0, 'Mounting a dashboard must not create default tasks or records');
@@ -182,6 +186,7 @@ try {
   assert.equal(renderer.root.findAllByProps({ 'data-active': true }).length, 0, 'Known creation dates must not become recorded chart activity');
   const realActivity = recordWorkspaceActivity([], { workId: humanDateWork.id, at: now });
   await mount(React.createElement(WorkspaceInsights, { works: [{ ...humanDateWork, createdAt: now }], activity: realActivity, tasks: [] }));
+  assert.equal(renderer.root.findAllByProps({ className: 'wi-chart-empty' }).length, 0, 'Recorded activity replaces the empty chart message');
   assert.equal(activeCells().length, 1); assert.equal(renderer.root.findAllByProps({ 'data-known-date': 'true' }).length, 0); assert.match(activeCells()[0].props['aria-label'], /已记录 1 部作品的活动/);
   assert.equal(renderer.root.findAllByProps({ 'data-active': true }).length, 1, 'Only real recorded activity appears in the recent chart');
   assert.equal(networkCalls, 0); assert.equal(browserReads, 0); assert.equal(browserWrites, 0);

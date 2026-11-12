@@ -156,3 +156,32 @@
 .workspace-insights .wi-details-summary>span:last-child {color:#738078;font-size:12px;font-weight:400;}
 .workspace-insights details[open]>.wi-details-summary {margin-bottom:16px;}
 .workspace-insights .wi-tools details[open] .wi-heading {margin-bottom:12px;}
+
+/* Keep the secondary column concise and readable at every width. */
+.workspace-insights .wi-tasks {order:1;}
+.workspace-insights .wi-calendar {order:2;}
+.workspace-insights .wi-heading {margin-bottom:16px;}
+.workspace-insights .wi-card-note {color:#617068;font-size:12px;line-height:1.65;}
+.workspace-insights .wi-statistics>.wi-card-note {font-size:12px;}
+.workspace-insights .wi-stat>span,.workspace-insights .wi-range-label,.workspace-insights .wi-task-count {color:#58695f;font-size:12px;}
+.workspace-insights .wi-stat {padding:0 6px;}
+.workspace-insights .wi-chart-plot {position:relative;min-height:44px;}
+.workspace-insights .wi-chart-plot[data-empty="true"] .wi-chart-bars {opacity:.45;}
+.workspace-insights .wi-chart-empty {position:absolute;inset:0 0 7px;display:flex;align-items:center;justify-content:center;color:#61756a;font-size:12px;pointer-events:none;}
+.workspace-insights .wi-task-summary {margin:0 0 16px;}
+.workspace-insights .wi-task-summary-heading {display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#617068;font-size:12px;}
+.workspace-insights .wi-task-summary-heading strong {color:#276a4c;font-weight:650;}
+.workspace-insights .wi-task-summary .wi-task-progress {height:6px;margin:0;}
+.workspace-insights .wi-task-empty {padding:1px 0 14px;}
+.workspace-insights .wi-task-empty>p {font-size:14px;}
+.workspace-insights .wi-task-empty>span {color:#62736a;font-size:12px;}
+.workspace-insights .wi-task-form:focus-within {border-color:#4d9472;box-shadow:0 0 0 3px #4d94721a;}
+.workspace-insights .wi-task-form>input::placeholder {color:#66776d;}
+.workspace-insights .wi-details-summary:focus-visible,.workspace-insights button:focus-visible {outline:2px solid #25835b;outline-offset:2px;}
+@media(max-width:600px){
+  .workspace-insights {gap:12px;}
+  .workspace-insights .wi-card {padding:16px;}
+  .workspace-insights .wi-stat-grid {gap:4px;}
+  .workspace-insights .wi-stat>strong {font-size:20px;}
+  .workspace-insights .wi-task-form>input {font-size:14px;}
+}

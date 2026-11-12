@@ -121,10 +121,10 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
 
   return <div className="workspace-dashboard">
     <div className="workspace-dashboard-layout">
-      <div className="workspace-dashboard-main-column">
     <header className="workspace-dashboard-welcome">
       <div className="workspace-dashboard-welcome-copy"><p className="workspace-dashboard-eyebrow"><Feather size={14} aria-hidden="true" />我的创作空间</p><h1>{dashboardGreeting()}，{displayName}</h1><p className="workspace-dashboard-welcome-description">今天，想写一个什么故事？让每一次灵感，都有下文。</p></div>
     </header>
+      <div className="workspace-dashboard-main-column">
 
         {recentWork && <section className="workspace-dashboard-resume" aria-label="继续创作">
           <div className="workspace-dashboard-section-heading"><h2>继续创作</h2><span>{dashboardEditedTime(recentWork) !== null ? `最近更新 · ${editedLabel(recentWork)}` : '更新时间未记录'}</span></div>
@@ -144,7 +144,7 @@ export default function WorkspaceDashboard({ works = [], navigate, setModal, not
           <div className="workspace-dashboard-library-toolbar"><div className="workspace-dashboard-kind-tabs" role="group" aria-label="作品类型">{kinds.map(value => <button type="button" key={value} aria-pressed={kind === value} className={kind === value ? 'workspace-dashboard-kind-active' : ''} onClick={() => setKind(value)}>{value}</button>)}</div><div className="workspace-dashboard-library-controls"><label className="workspace-dashboard-sort"><span className="workspace-dashboard-sr-only">作品排序</span><select aria-label="作品排序" value={sort} onChange={event => setSort(event.target.value)}><option value="recent">最近更新</option><option value="words">字数最多</option><option value="name">作品名称</option></select></label><div className="workspace-dashboard-view-toggle" role="group" aria-label="作品展示方式"><button type="button" aria-label="卡片视图" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={16} aria-hidden="true" /></button><button type="button" aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17} aria-hidden="true" /></button></div></div></div>
 
           {shownWorks.length > 0 ? <>
-            <div className={`workspace-dashboard-works workspace-dashboard-works-${view}${view === 'grid' && shownWorks.length === 2 ? ' workspace-dashboard-works-two' : ''}`}>
+            <div className={`workspace-dashboard-works workspace-dashboard-works-${view}${view === 'grid' && shownWorks.length === 2 ? ' workspace-dashboard-works-two' : view === 'grid' && shownWorks.length === 1 ? ' workspace-dashboard-works-one' : ''}`}>
               {shownWorks.map(work => <DashboardWork key={work.id} work={work} view={view} onOpen={() => open(work)} onManage={() => setModal({ type: 'work-details', work })} />)}
             </div>
             {otherWorks.length > shownWorks.length && <div className="workspace-dashboard-more-works"><span>显示 {shownWorks.length} 部，共 {otherWorks.length} 部其他作品</span><button type="button" className="workspace-dashboard-text-link" onClick={() => navigate('works')}>查看全部作品<ArrowRight size={14} aria-hidden="true" /></button></div>}
